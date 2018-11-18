@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+
+    build:
+        image: golang:1.11
+        command: go build -o server
+        working_dir: /go/src/gola
+        volumes:
+            - .:/go/src/gola
+            - gopath:/go
+        environment:
+            - GO111MODULE=on
+
+    # 開發容器
+    web-dev:
+        image: golang:1.11
+        command: ./server
+        working_dir: /app
+        restart: on-failure
+        ports:
+            - "${PORT}:8000"
+        environment:
+            - GIN_MODE=debug
+            - APP_ENV=${APP_ENV}
+        volumes:
+            - .:/app
+        depends_on:
+            - build
+            - db
+
+    # 網站服務
+    web:
+        build: .
+        image: 127.0.0.1:5000/gola/web
+        restart: on-failure
+        ports:
+            - "80:8000"
+        environment:
+            - GIN_MODE=debug
+            - APP_ENV=${APP_ENV}
+        volumes:
+            - ./storage:/app/storage
+
+    adminer:
+        image: adminer
+        ports:
+            - "8080:8080"
+
+    db:
+        image: mysql:5.6
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_USER: root
+            MYSQL_ROOT_PASSWORD: qwe123
+            MYSQL_DATABASE: gola
+        volumes:
+            - data:/var/lib/mysql
+        depends_on:
+            - adminer
+
+volumes:
+    data:
+        driver: local
+    gopath:
+        driver: local

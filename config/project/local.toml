@@ -1,0 +1,29 @@
+[app]
+env = "local"
+ip = "127.0.0.1"
+host = "localhost:8000"
+port = ":8000"
+secure = false
+debug = true
+
+[database_master]
+db = "gola"
+host = "127.0.0.1"
+port = "3306"
+username = "root"
+password = "qwe123"
+
+[database_slave]
+db = "gola"
+host = "127.0.0.1"
+port = "3306"
+username = "root"
+password = "qwe123"
+
+[server]
+    [server.google]
+        ip = "google.com"
+        port = ":80"
+        host = "google.com"
+        secure = false
+        api_key = ""
