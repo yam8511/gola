@@ -1,9 +1,10 @@
-package router
+package server
 
 import (
 	"fmt"
 	"gola/internal/bootstrap"
-	"gola/router/provider"
+	"gola/router"
+	"net"
 	"net/http"
 	"sync"
 
@@ -20,7 +21,7 @@ func SetupRouter() (r *gin.Engine) {
 		r.Use(gin.Recovery())
 	}
 
-	provider.RouteProvider(r)
+	router.RouteProvider(r)
 
 	return r
 }
@@ -49,10 +50,17 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 		}
 	}()
 
+	l, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		bootstrap.WriteLog("ERROR", fmt.Sprintf("❌  Server 建立監聽連線失敗 (%v) ❌", err))
+		return
+	}
+
 	wg := make(chan int, 2)
 
 	go func() {
-		err := server.ListenAndServe()
+		// err := http.Serve(l, server)
+		err := server.Serve(l)
 		bootstrap.WriteLog("WARNING", fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
 		wg <- 1
 	}()
@@ -63,7 +71,7 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 		wg <- 0
 	}()
 
-	bootstrap.WriteLog("INFO", "🐳  Web Server 開始服務! 🐳")
+	bootstrap.WriteLog("INFO", "🐳  Web Server 開始服務! "+l.Addr().String()+"🐳")
 	defer bootstrap.WriteLog("INFO", "🔥  Web Server 結束服務!🔥")
 	select {
 	case <-wg:

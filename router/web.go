@@ -1,4 +1,4 @@
-package provider
+package router
 
 import (
 	"gola/app/handler"

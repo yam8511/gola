@@ -2,9 +2,10 @@ version: '3'
 
 services:
 
+    # 編譯檔案
     build:
         image: golang:1.11
-        command: go build -o server
+        command: go build -o gola
         working_dir: /go/src/gola
         volumes:
             - .:/go/src/gola
@@ -15,7 +16,7 @@ services:
     # 開發容器
     web-dev:
         image: golang:1.11
-        command: ./server
+        command: ./gola server
         working_dir: /app
         restart: on-failure
         ports:
@@ -29,18 +30,37 @@ services:
             - build
             - db
 
+    # 編譯映像檔案
+    build-image:
+        build: .
+        image: 127.0.0.1:5000/gola/web_${APP_ENV}
+
     # 網站服務
     web:
         build: .
-        image: 127.0.0.1:5000/gola/web
-        restart: on-failure
+        image: 127.0.0.1:5000/gola/web_${APP_ENV}
+        command: server
+        restart: always
         ports:
-            - "80:8000"
+            - "${PORT}:8000"
         environment:
             - GIN_MODE=debug
             - APP_ENV=${APP_ENV}
         volumes:
-            - ./storage:/app/storage
+            - storage_app:/app/storage/app
+            - storage_logs:/app/storage/logs
+
+    # 排程服務
+    cronjob:
+        build: .
+        image: 127.0.0.1:5000/gola/web_${APP_ENV}
+        command: schedule
+        restart: always
+        environment:
+            - APP_ENV=${APP_ENV}
+        volumes:
+            - storage_app:/app/storage/app
+            - storage_logs:/app/storage/logs
 
     adminer:
         image: adminer
@@ -64,4 +84,8 @@ volumes:
     data:
         driver: local
     gopath:
+        driver: local
+    storage_app:
+        driver: local
+    storage_logs:
         driver: local

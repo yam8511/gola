@@ -11,7 +11,7 @@ var middlewareGroups = map[string][]gin.HandlerFunc{}
 
 // 獨立的中介層
 var routeMiddleware = map[string]gin.HandlerFunc{
-	"check_old_login": checkOldSystemLogin,
+	"check_google_login": checkGoogleLogin,
 }
 
 // GetMiddleware 取獨立的中介層

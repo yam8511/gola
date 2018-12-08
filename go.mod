@@ -2,7 +2,7 @@ module gola
 
 require (
 	cloud.google.com/go v0.33.1 // indirect
-	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/naoina/toml v0.1.1
 	github.com/swaggo/gin-swagger v1.0.0
-	github.com/swaggo/swag v1.3.2
+	github.com/swaggo/swag v1.3.2 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181116192919-e105254e6a51 // indirect
 	golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869 // indirect
 	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a // indirect
@@ -34,4 +34,5 @@ require (
 	google.golang.org/appengine v1.3.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
+	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 )

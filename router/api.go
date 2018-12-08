@@ -1,4 +1,4 @@
-package provider
+package router
 
 import (
 	"gola/app/handler"
@@ -11,7 +11,7 @@ import (
 func LoadAPIRouter(r *gin.Engine) {
 	api := r.Group(
 		"/api",
-		middleware.GetMiddleware("check_old_login"),
+		middleware.GetMiddleware("check_google_login"),
 	)
 	api.GET("/hello", handler.API)
 	api.POST("/seed", handler.Seed)

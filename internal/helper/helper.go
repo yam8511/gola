@@ -72,3 +72,13 @@ func InArrayInt64(array []int64, target int64) bool {
 	}
 	return false
 }
+
+// InArrayInt 指定值是否在陣列中
+func InArrayInt(array []int, target int) bool {
+	for i := range array {
+		if target == array[i] {
+			return true
+		}
+	}
+	return false
+}

@@ -54,3 +54,10 @@ func SetupGracefulSignal() {
 func GracefulDown() <-chan os.Signal {
 	return serverClose
 }
+
+// WaitOnceSignal 等待一次的訊號
+func WaitOnceSignal() (sig chan os.Signal) {
+	sig = make(chan os.Signal)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	return
+}

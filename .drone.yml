@@ -42,7 +42,7 @@ pipeline:
     secrets: [ plugin_host, plugin_port, plugin_username, plugin_password ]
     command_timeout: 300
     script:
-      - cd /home/toshms/server/human/qatest/gola
+      - cd /home/admin/go/src/gola
       - export APP_ENV=qatest PORT=8001
       - docker-compose up -d --build web
       - docker image prune -f

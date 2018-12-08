@@ -11,7 +11,7 @@ import (
 )
 
 // 驗證舊系統登入
-func checkOldSystemLogin(c *gin.Context) {
+func checkGoogleLogin(c *gin.Context) {
 	sid, err := c.Cookie("sid")
 	if err != nil {
 		apiErr := errorCode.GetAPIError(1000)
