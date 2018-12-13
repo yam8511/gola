@@ -17,6 +17,7 @@ type DBConf struct {
 	Port     string `toml:"port"`
 	Username string `toml:"username"`
 	Password string `toml:"password"`
+	MaxConn  int    `toml:"max_conn"`
 }
 
 // BotConf 機器人設定
@@ -30,8 +31,8 @@ type BotConf struct {
 type Config struct {
 	App      App        `toml:"app"`
 	Bot      BotConf    `toml:"bot"`
-	DBMaster DBConf     `toml:"database_master"`
-	DBSlave  DBConf     `toml:"database_slave"`
+	DBMaster *DBConf    `toml:"database_master"`
+	DBSlave  *DBConf    `toml:"database_slave"`
 	Servers  ServerList `toml:"server"`
 }
 
