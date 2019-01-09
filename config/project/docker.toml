@@ -5,6 +5,7 @@ host = "localhost:8000"
 port = ":8000"
 secure = false
 debug = true
+auto_port = true
 
 [database_master]
 db = "gola"

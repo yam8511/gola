@@ -1,9 +1,8 @@
 package server
 
 import (
-	"gola/app/model"
 	"gola/internal/bootstrap"
-	"gola/internal/database"
+	"os"
 	"sync"
 )
 
@@ -11,15 +10,22 @@ import (
 func Run() {
 	// 載入設定檔資料
 	Conf := bootstrap.LoadConfig()
+
 	// 設置資料表
-	model.SetupTable()
-	go database.SetupPool(150)
+	// model.SetupTable()
+	// go database.SetupPool(150)
 
 	// 設置 router
 	r := SetupRouter()
 
+	// 設定 Port
+	var port = Conf.App.Port
+	if Conf.App.AutoPort && os.Getenv("PORT") != "" {
+		port = ":" + os.Getenv("PORT")
+	}
+
 	// 建立 server
-	server := CreateServer(r, Conf.App.Port, Conf.App.Host)
+	server := CreateServer(r, port, Conf.App.Host)
 	waitFinish := new(sync.WaitGroup)
 
 	// 系統信號監聽
@@ -32,5 +38,5 @@ func Run() {
 
 	// 等待結束
 	waitFinish.Wait()
-	database.WailDatabaseConnClosed()
+	// database.WailDatabaseConnClosed()
 }

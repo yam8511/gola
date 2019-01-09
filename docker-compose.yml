@@ -23,7 +23,8 @@ services:
             - "${PORT}:8000"
         environment:
             - GIN_MODE=debug
-            - APP_ENV=${APP_ENV}
+            - APP_ENV=docker
+            - PORT=8000
         volumes:
             - .:/app
         depends_on:
@@ -46,6 +47,7 @@ services:
         environment:
             - GIN_MODE=debug
             - APP_ENV=${APP_ENV}
+            - PORT=8000
         volumes:
             - storage_app:/app/storage/app
             - storage_logs:/app/storage/logs

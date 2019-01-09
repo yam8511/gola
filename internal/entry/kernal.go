@@ -34,8 +34,6 @@ func usage(exitCode int, extraMessage ...interface{}) {
 		✏ qatest 測試
 		✏ prod 正式
 
-	📌  舉例： APP_ENV=local ./app
-
 	--------------
 
 	📖 指令說明 📖

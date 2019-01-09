@@ -33,7 +33,7 @@ func Seed(c *gin.Context) {
 	db, err := database.NewOrmConnection(true)
 	if err != nil {
 		bootstrap.WriteLog("ERROR", "Seed: DB連線失敗, "+err.Error())
-		errorCode.GetAPIError(500)
+		c.JSON(http.StatusOK, errorCode.GetAPIError("new_db_err", err))
 		return
 	}
 	defer db.Close()
@@ -41,7 +41,7 @@ func Seed(c *gin.Context) {
 	err = model.UserSeed(db)
 	if err != nil {
 		bootstrap.WriteLog("ERROR", "Seed: 新增使用者資料失敗, "+err.Error())
-		errorCode.GetAPIError(500)
+		c.JSON(http.StatusOK, errorCode.GetAPIError("seed_err", err))
 		return
 	}
 }

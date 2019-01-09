@@ -21,3 +21,21 @@ func NewOrmConnection(master bool) (db *gorm.DB, err error) {
 	}
 	return
 }
+
+// NewOrmConnectionWithConf 用Conf建立新DB連線
+func NewOrmConnectionWithConf(conf *bootstrap.DBConf) (db *gorm.DB, err error) {
+	connectName := getConnectName(
+		"mysql",
+		conf.Host,
+		conf.Port,
+		conf.DB,
+		conf.Username,
+		conf.Password,
+	)
+
+	db, err = gorm.Open("mysql", connectName)
+	if bootstrap.GetAppConf().App.Env == "local" {
+		db.LogMode(true)
+	}
+	return
+}

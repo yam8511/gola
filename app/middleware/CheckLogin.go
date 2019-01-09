@@ -14,29 +14,29 @@ import (
 func checkGoogleLogin(c *gin.Context) {
 	sid, err := c.Cookie("sid")
 	if err != nil {
-		apiErr := errorCode.GetAPIError(1000)
+		apiErr := errorCode.GetAPIError("no_cookie", nil)
 		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
+			ErrorCode: apiErr.ErrorCode(),
+			ErrorText: apiErr.ErrorText(),
 		})
 		return
 	}
 
 	isLogin, apiErr := google.CheckLogin(sid)
-	if apiErr.ErrorCode != 0 {
+	if apiErr != nil {
 		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
+			ErrorCode: apiErr.ErrorCode(),
+			ErrorText: apiErr.ErrorText(),
 		})
 		return
 	}
 
 	if !isLogin {
 		bootstrap.WriteLog("INFO", "登入失敗！")
-		apiErr := errorCode.GetAPIError(1004)
+		apiErr := errorCode.GetAPIError("not_login", nil)
 		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
+			ErrorCode: apiErr.ErrorCode(),
+			ErrorText: apiErr.ErrorText(),
 		})
 	} else {
 		bootstrap.WriteLog("INFO", "登入成功！")

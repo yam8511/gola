@@ -2,12 +2,13 @@ package bootstrap
 
 // App 應用環境
 type App struct {
-	Env    string `toml:"env"`
-	IP     string `toml:"ip"`
-	Host   string `toml:"host"`
-	Port   string `toml:"port"`
-	Secure bool   `toml:"secure"`
-	Debug  bool   `toml:"debug"`
+	Env      string `toml:"env"`
+	IP       string `toml:"ip"`
+	Host     string `toml:"host"`
+	Port     string `toml:"port"`
+	Secure   bool   `toml:"secure"`
+	Debug    bool   `toml:"debug"`
+	AutoPort bool   `toml:"auto_port"`
 }
 
 // DBConf 資料庫設定
