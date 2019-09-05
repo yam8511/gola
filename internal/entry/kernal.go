@@ -63,7 +63,9 @@ func Run() {
 	if bootstrap.GetAppEnv() == "" {
 		usage(0)
 	} else {
+		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_ROOT: %s", bootstrap.GetAppRoot()))
 		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_ENV: %s", bootstrap.GetAppEnv()))
+		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_SITE: %s", bootstrap.GetAppSite()))
 	}
 	args := os.Args
 	if len(args) < 2 {

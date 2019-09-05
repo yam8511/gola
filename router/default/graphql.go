@@ -1,16 +1,21 @@
 package router
 
 import (
-	"gola/app/common/error_code"
+	errorcode "gola/app/common/error_code"
+	appGql "gola/app/graphql"
 
 	"github.com/gin-gonic/gin"
-	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/gqlerrors"
 	graphqlH "github.com/graphql-go/handler"
 )
 
 // LoadGraphQLRouter 載入GraphQL的路由
-func LoadGraphQLRouter(r *gin.Engine, schema graphql.Schema) {
+func LoadGraphQLRouter(r *gin.Engine) {
+	schema, err := appGql.SetupGraphQLSchema()
+	if err != nil {
+		panic(err)
+	}
+
 	// 設置 graphiql
 	h := graphqlH.New(&graphqlH.Config{
 		Schema:   &schema,

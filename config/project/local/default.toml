@@ -1,21 +1,22 @@
 [app]
-env = "prod"
+env = "local"
 ip = "127.0.0.1"
-host = "localhost"
-port = ":80"
+host = "localhost:8000"
+port = ":8000"
 secure = false
-debug = false
+debug = true
+site = "default"
 
 [database_master]
-db = "gola_prod"
-host = "10.0.2.15"
+db = "gola"
+host = "127.0.0.1"
 port = "3306"
 username = "root"
 password = "qwe123"
 
 [database_slave]
-db = "gola_prod"
-host = "10.0.2.15"
+db = "gola"
+host = "127.0.0.1"
 port = "3306"
 username = "root"
 password = "qwe123"

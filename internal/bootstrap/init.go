@@ -15,7 +15,7 @@ var Conf *Config
 
 // LoadConfig 載入 config
 func LoadConfig() *Config {
-	configFile := GetAppRoot() + "/config/project/" + GetAppEnv() + ".toml"
+	configFile := GetAppRoot() + "/config/project/" + GetAppEnv() + "/" + GetAppEnv() + ".toml"
 	tomlData, readFileErr := ioutil.ReadFile(configFile)
 	if readFileErr != nil {
 		msg := fmt.Sprintf("❌ 讀取Config錯誤： %v ❌", readFileErr)

@@ -5,17 +5,26 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
 // GetAppEnv 取環境變數
 func GetAppEnv() string {
-	return os.Getenv("APP_ENV")
+	env := strings.TrimSpace(os.Getenv("APP_ENV"))
+	if env == "" {
+		env = "default"
+	}
+	return env
 }
 
 // GetAppSite 取賽程控客端變數
 func GetAppSite() string {
-	return os.Getenv("APP_SITE")
+	site := strings.TrimSpace(os.Getenv("APP_SITE"))
+	if site == "" {
+		site = "default"
+	}
+	return site
 }
 
 // GetAppRoot 取專案的根目錄

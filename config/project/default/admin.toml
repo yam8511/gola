@@ -5,18 +5,18 @@ host = "localhost:8000"
 port = ":8000"
 secure = false
 debug = true
-auto_port = true
+site = "admin"
 
 [database_master]
 db = "gola"
-host = "db"
+host = "127.0.0.1"
 port = "3306"
 username = "root"
 password = "qwe123"
 
 [database_slave]
 db = "gola"
-host = "db"
+host = "127.0.0.1"
 port = "3306"
 username = "root"
 password = "qwe123"

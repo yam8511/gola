@@ -9,6 +9,7 @@ type App struct {
 	Secure   bool   `toml:"secure"`
 	Debug    bool   `toml:"debug"`
 	AutoPort bool   `toml:"auto_port"`
+	Site     string `toml:"site"`
 }
 
 // DBConf 資料庫設定

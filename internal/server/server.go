@@ -9,11 +9,7 @@ import (
 // Run 啟動伺服器
 func Run() {
 	// 載入設定檔資料
-	Conf := bootstrap.LoadConfig()
-
-	// 設置資料表
-	// model.SetupTable()
-	// go database.SetupPool(150)
+	Conf := bootstrap.GetAppConf()
 
 	// 設置 router
 	r := SetupRouter()
