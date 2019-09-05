@@ -26,7 +26,7 @@ func Run() {
 
 	// 系統信號監聽
 	waitFinish.Add(1)
-	go SignalListenAndServe(server, waitFinish)
+	go SignalListenAndServe(server, waitFinish, Conf.App.MaxConn)
 
 	// 設置機器人監聽指令
 	// waitFinish.Add(1)

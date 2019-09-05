@@ -10,6 +10,7 @@ type App struct {
 	Debug    bool   `toml:"debug"`
 	AutoPort bool   `toml:"auto_port"`
 	Site     string `toml:"site"`
+	MaxConn  int    `toml:"max_conn"`
 }
 
 // DBConf 資料庫設定

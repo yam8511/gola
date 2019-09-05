@@ -6,6 +6,7 @@ port = ":8001"
 secure = false
 debug = true
 site = "admin"
+max_conn = 100000
 
 [database_master]
 db = "gola"
