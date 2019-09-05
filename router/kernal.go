@@ -1,6 +1,7 @@
 package router
 
 import (
+	"gola/app/middleware"
 	"gola/internal/bootstrap"
 	defaultR "gola/router/default"
 
@@ -9,9 +10,10 @@ import (
 
 // RouteProvider 路由提供者
 func RouteProvider(r *gin.Engine) {
+	// 全域載入
+	r.Use(middleware.GlobalMiddlewares()...)
 
-	Conf := bootstrap.LoadConfig()
-
+	Conf := bootstrap.GetAppConf()
 	switch Conf.App.Site {
 	case "admin":
 		// 專屬admin的route

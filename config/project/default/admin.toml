@@ -1,8 +1,8 @@
 [app]
 env = "local"
 ip = "127.0.0.1"
-host = "localhost:8000"
-port = ":8000"
+host = "localhost:8001"
+port = ":8001"
 secure = false
 debug = true
 site = "admin"

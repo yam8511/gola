@@ -59,7 +59,7 @@ func usage(exitCode int, extraMessage ...interface{}) {
 }
 
 // Run 執行CronJob的 Command Line
-func Run() {
+func Run(payload ...func()) {
 	if bootstrap.GetAppEnv() == "" {
 		usage(0)
 	} else {
@@ -72,6 +72,8 @@ func Run() {
 		usage(0)
 		return
 	}
+
+	bootstrap.LoadConfig()
 
 	// 設定優雅結束程序
 	bootstrap.SetupGracefulSignal()

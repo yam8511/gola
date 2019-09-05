@@ -13,14 +13,11 @@ import (
 
 // SetupRouter 配置路由
 func SetupRouter() (r *gin.Engine) {
-	if bootstrap.LoadConfig().App.Debug {
-		r = gin.Default()
-	} else {
+	if !bootstrap.GetAppConf().App.Debug {
 		gin.SetMode(gin.ReleaseMode)
-		r = gin.New()
-		r.Use(gin.Recovery())
 	}
 
+	r = gin.New()
 	router.RouteProvider(r)
 
 	return r
