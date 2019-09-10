@@ -2,7 +2,6 @@ package router
 
 import (
 	"gola/app/handler"
-	"gola/app/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,8 +10,10 @@ import (
 func LoadAPIRouter(r *gin.Engine) {
 	api := r.Group(
 		"/api",
-		middleware.Middleware("check_google_login"),
+		// middleware.Middleware("check_google_login"),
 	)
 	api.GET("/hello", handler.API)
-	api.POST("/seed", handler.Seed)
+	// api.POST("/seed", handler.Seed)
+
+	r.GET("/wf/game", handler.JoinGame)
 }

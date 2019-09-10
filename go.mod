@@ -27,7 +27,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/naoina/toml v0.1.1
-	github.com/swaggo/gin-swagger v1.0.0
+	github.com/swaggo/gin-swagger v1.0.0 // indirect
 	github.com/swaggo/swag v1.3.2 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181116192919-e105254e6a51 // indirect
 	golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869 // indirect
