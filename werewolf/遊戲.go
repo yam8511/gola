@@ -3,6 +3,8 @@ package werewolf
 import (
 	"encoding/json"
 	"log"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -10,16 +12,17 @@ import (
 
 // Game sera找明俊玩遊戲
 type Game struct {
-	房主  *websocket.Conn
-	讀寫鎖 sync.RWMutex
-	玩家們 []Player
-	連線池 []*websocket.Conn
-	階段  階段
-	通訊  chan int
+	房主    *websocket.Conn
+	讀寫鎖   sync.RWMutex
+	玩家們   []Player
+	連線池   []*websocket.Conn
+	階段    階段
+	通訊    chan int
+	夜晚淘汰者 map[KILL]Player
 }
 
-// Join 加入遊戲
-func (遊戲 *Game) Join(連線 *websocket.Conn) {
+// 加入 加入遊戲
+func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	遊戲.讀寫鎖.RLock()
 	遊戲已經開始 := 遊戲.階段 == 開始階段
 	遊戲.讀寫鎖.RUnlock()
@@ -50,7 +53,7 @@ func (遊戲 *Game) Join(連線 *websocket.Conn) {
 
 		err = json.Unmarshal(msg, &選擇位子)
 		if err == nil {
-			玩家 = 遊戲.玩家們[選擇位子]
+			玩家 = 遊戲.玩家們[選擇位子-1]
 			if !玩家.已經被選擇() {
 				break
 			}
@@ -62,6 +65,7 @@ func (遊戲 *Game) Join(連線 *websocket.Conn) {
 	遊戲.讀寫鎖.RUnlock()
 	連線.WriteJSON(map[string]interface{}{
 		"event": "你的角色",
+		"位子":    玩家.號碼(),
 		"職業":    玩家.職業(),
 		"種族":    玩家.種族(),
 		"房主":    是房主,
@@ -109,10 +113,7 @@ func (遊戲 *Game) 開始() {
 }
 
 func (遊戲 *Game) 天黑請閉眼() {
-	for i := range 遊戲.連線池 {
-		連線 := 遊戲.連線池[i]
-		連線.WriteJSON("天黑請閉眼")
-	}
+	遊戲.旁白("天黑請閉眼")
 
 	for i := range 遊戲.玩家們 {
 		玩家 := 遊戲.玩家們[i]
@@ -132,12 +133,14 @@ func (遊戲 *Game) 天黑請閉眼() {
 	}
 
 	// 狼人請睜眼
+	遊戲.旁白("狼人請睜眼")
 	for i := range 狼人玩家們 {
 		狼人 := 狼人玩家們[i]
 		狼人.開眼睛()
 	}
 
 	// 狼人請殺人
+	遊戲.旁白("狼人請殺人")
 	for i := range 狼人玩家們 {
 		狼人 := 狼人玩家們[i]
 		狼人.能力()
@@ -148,51 +151,88 @@ func (遊戲 *Game) 天黑請閉眼() {
 		狼人 := 狼人玩家們[i]
 		狼人.閉眼睛()
 	}
+	遊戲.旁白("狼人請閉眼")
 
 	// 神職請睜眼
 	for i := range 神職玩家們 {
 		神 := 神職玩家們[i]
+		遊戲.旁白(神.職業() + "請睜眼")
 		神.開眼睛()
 		神.能力()
 		神.閉眼睛()
+		遊戲.旁白(神.職業() + "請閉眼")
 	}
 }
 
 func (遊戲 *Game) 天亮請睜眼() {
-	for i := range 遊戲.連線池 {
-		連線 := 遊戲.連線池[i]
-		連線.WriteJSON("天亮請睜眼")
-	}
+	遊戲.旁白("天亮請睜眼")
 
 	for i := range 遊戲.玩家們 {
 		玩家 := 遊戲.玩家們[i]
 		玩家.開眼睛()
 	}
+
+	// 公布淘汰者
+	死者名單 := []string{}
+	for 殺法 := range 遊戲.夜晚淘汰者 {
+		死者名單 = append(死者名單, strconv.Itoa(遊戲.夜晚淘汰者[殺法].號碼()))
+		遊戲.夜晚淘汰者[殺法].出局(殺法)
+	}
+
+	遊戲.旁白("昨晚 " + strings.Join(死者名單, ",") + " 淘汰!")
 }
 
 func (遊戲 *Game) 全員請投票() {
+	可投票玩家號碼 := map[int]int{}
+	還沒出局的玩家們 := 遊戲.存活玩家們()
+	for i := range 還沒出局的玩家們 {
+		玩家 := 還沒出局的玩家們[i]
+		可投票玩家號碼[玩家.號碼()] = 0
+	}
+
+	遊戲.旁白(map[string]interface{}{
+		"event": "請投票",
+		"玩家":    可投票玩家號碼,
+	})
 
 	投票結果 := map[int]int{}
 	for i := range 遊戲.玩家們 {
 		玩家 := 遊戲.玩家們[i]
-		no := 玩家.投票()
-		投票結果[玩家.號碼()] = no
-	}
-
-	// 顯示給所有玩家看
-	for i := range 遊戲.連線池 {
-		連線 := 遊戲.連線池[i]
-		err := 連線.WriteJSON(投票結果)
-		if err != nil {
-			遊戲.移除連線(連線)
+		投給誰 := 玩家.投票()
+		_, 有效投票 := 可投票玩家號碼[投給誰]
+		if 有效投票 {
+			投票結果[玩家.號碼()] = 投給誰
 		}
 	}
 
+	// 顯示給所有玩家看
+	遊戲.旁白(map[string]interface{}{
+		"event": "投票結果",
+		"玩家":    投票結果,
+	})
+
 	// 統計票數
-	票數 := map[int]int{}
+	最高票數 := 0
+	平票號碼 := map[int]int{}
 	for 玩家號碼 := range 投票結果 {
 		投給誰 := 投票結果[玩家號碼]
-		票數[投給誰]++
+		可投票玩家號碼[投給誰]++
+		if 可投票玩家號碼[投給誰] > 最高票數 {
+			最高票數 = 可投票玩家號碼[投給誰]
+			平票號碼 = map[int]int{
+				投給誰: 最高票數,
+			}
+		} else if 可投票玩家號碼[投給誰] == 最高票數 {
+			平票號碼[投給誰] = 最高票數
+		}
+	}
+
+	// 有平票出現，需要投第二輪
+	有平票出現 := len(平票號碼) > 1
+	if 有平票出現 {
+
+	} else {
+
 	}
 }
 
@@ -232,13 +272,42 @@ func (遊戲 *Game) 初始設定(
 	遊戲.讀寫鎖.Unlock()
 }
 
+func (遊戲 *Game) 旁白(台詞 interface{}) {
+	for i := range 遊戲.連線池 {
+		連線 := 遊戲.連線池[i]
+		err := 連線.WriteJSON(台詞)
+		if err != nil {
+			遊戲.移除連線(連線)
+		}
+	}
+}
+
+func (遊戲 *Game) 存活玩家們() []Player {
+	還沒出局的玩家 := []Player{}
+	for i := range 遊戲.玩家們 {
+		玩家 := 遊戲.玩家們[i]
+		if !玩家.出局了() {
+			還沒出局的玩家 = append(還沒出局的玩家, 玩家)
+		}
+	}
+
+	return 還沒出局的玩家
+}
+
+func (遊戲 *Game) 殺玩家(殺法 KILL, 被殺玩家 Player) {
+	if 遊戲.夜晚淘汰者 == nil {
+		遊戲.夜晚淘汰者 = map[KILL]Player{}
+	}
+	遊戲.夜晚淘汰者[殺法] = 被殺玩家
+}
+
 // 顯示可選位子 顯示可選位子
 func (遊戲 *Game) 顯示可選位子() []int {
 	可選位子 := []int{}
 	for i := range 遊戲.玩家們 {
 		還沒被選擇 := !遊戲.玩家們[i].已經被選擇()
 		if 還沒被選擇 {
-			可選位子 = append(可選位子, i)
+			可選位子 = append(可選位子, 遊戲.玩家們[i].號碼())
 		}
 	}
 	return 可選位子

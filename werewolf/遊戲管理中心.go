@@ -68,7 +68,7 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 		}
 	}
 
-	遊戲.Join(連線)
+	遊戲.加入(連線)
 }
 
 var 遊戲管理中心 = struct {

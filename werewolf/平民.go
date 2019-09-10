@@ -43,13 +43,17 @@ func (我 *Human) 投票() int {
 		return 0
 	}
 
-	_, msg, err := 我.連線.ReadMessage()
-	if err != nil {
-		return 0
+	var 投票號碼 int
+	var err error
+	for {
+		msg := <-我.傳話筒
+		投票號碼, err = strconv.Atoi(string(msg))
+		if err != nil {
+			continue
+		}
+		break
 	}
-
-	no, _ := strconv.Atoi(string(msg))
-	return no
+	return 投票號碼
 }
 
 func (我 *Human) 被投票(是 bool) {
