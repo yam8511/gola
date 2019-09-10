@@ -11,7 +11,8 @@ import (
 // Game sera找明俊玩遊戲
 type Game struct {
 	房主  *websocket.Conn
-	讀寫鎖 sync.RWMutex	玩家們 []Player
+	讀寫鎖 sync.RWMutex
+	玩家們 []Player
 	連線池 []*websocket.Conn
 	階段  階段
 	通訊  chan int
