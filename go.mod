@@ -12,6 +12,7 @@ require (
 	github.com/go-openapi/spec v0.17.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
 	github.com/graphql-go/graphql v0.7.8
 	github.com/graphql-go/handler v0.2.3
@@ -39,3 +40,5 @@ require (
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 )
+
+go 1.13
