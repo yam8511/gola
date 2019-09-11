@@ -53,7 +53,7 @@ const (
 
 // Player 玩家
 type Player interface {
-	加入(*Game, *websocket.Conn)
+	加入(*websocket.Conn)
 	退出()
 	號碼() int
 	閉眼睛()

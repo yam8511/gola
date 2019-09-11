@@ -8,9 +8,10 @@ import (
 )
 
 // NewHuman 建立新玩家
-func NewHuman(位子 int) *Human {
+func NewHuman(遊戲 *Game, 位子 int) *Human {
 	return &Human{
 		位子: 位子,
+		遊戲: 遊戲,
 	}
 }
 
@@ -87,10 +88,9 @@ func (我 *Human) 換位子(新位子 int) int {
 	return 舊的位子
 }
 
-func (我 *Human) 加入(遊戲 *Game, 連線 *websocket.Conn) {
+func (我 *Human) 加入(連線 *websocket.Conn) {
 	我.讀寫鎖.Lock()
 	我.連線 = 連線
-	我.遊戲 = 遊戲
 	我.傳話筒 = make(chan []byte)
 	我.讀寫鎖.Unlock()
 
@@ -106,11 +106,11 @@ func (我 *Human) 加入(遊戲 *Game, 連線 *websocket.Conn) {
 			continue
 		}
 
-		if 遊戲.目前階段() == 準備階段 {
-			if 遊戲.是房主(連線) {
+		if 我.遊戲.目前階段() == 準備階段 {
+			if 我.遊戲.是房主(連線) {
 				if string(msg) == "start" {
 					go func() {
-						遊戲.開始()
+						我.遊戲.開始()
 					}()
 				}
 			}

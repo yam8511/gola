@@ -72,7 +72,7 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		"房主":    是房主,
 	})
 
-	玩家.加入(遊戲, 連線)
+	玩家.加入(連線)
 }
 
 // 開始 開始遊戲
@@ -200,8 +200,8 @@ func (遊戲 *Game) 全員請投票() {
 	})
 
 	投票結果 := map[int]int{}
-	for i := range 遊戲.玩家們 {
-		玩家 := 遊戲.玩家們[i]
+	for i := range 還沒出局的玩家們 {
+		玩家 := 還沒出局的玩家們[i]
 		投給誰 := 玩家.投票()
 		_, 有效投票 := 可投票玩家號碼[投給誰]
 		if 有效投票 {
@@ -266,9 +266,9 @@ func (遊戲 *Game) 初始設定(
 	for i := range 隨機可選角色 {
 		switch 隨機可選角色[i] {
 		case 平民:
-			玩家們 = append(玩家們, NewHuman(i+1))
+			玩家們 = append(玩家們, NewHuman(遊戲, i+1))
 		case 狼人:
-			玩家們 = append(玩家們, NewWolf(i+1))
+			玩家們 = append(玩家們, NewWolf(遊戲, i+1))
 		}
 	}
 	遊戲.玩家們 = 玩家們
@@ -285,7 +285,7 @@ func (遊戲 *Game) 旁白(台詞 interface{}) {
 		}
 	}
 
-	time.Sleep(time.Millisecond * 1500)
+	time.Sleep(time.Millisecond * 500)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {

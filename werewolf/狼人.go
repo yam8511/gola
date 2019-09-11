@@ -8,17 +8,16 @@ import (
 )
 
 // NewWolf 建立新Wolf
-func NewWolf(位子 int) *Wolf {
+func NewWolf(遊戲 *Game, 位子 int) *Wolf {
+	human := NewHuman(遊戲, 位子)
 	return &Wolf{
-		Human: Human{
-			位子: 位子,
-		},
+		Human: human,
 	}
 }
 
 // Wolf 玩家
 type Wolf struct {
-	Human
+	*Human
 }
 
 func (我 *Wolf) 種族() GROUP {
