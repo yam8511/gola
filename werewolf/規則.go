@@ -7,7 +7,6 @@ type 階段 int
 const (
 	準備階段 = 階段(iota)
 	開始階段
-	結束階段
 )
 
 type 遊戲結果 string

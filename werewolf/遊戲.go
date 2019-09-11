@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -83,33 +84,36 @@ func (遊戲 *Game) 開始() {
 	夜晚 := true
 	輪數 := 0
 
+	var 遊戲結果 遊戲結果
 	for {
 		輪數++
 		if 夜晚 {
 			遊戲.天黑請閉眼()
 		} else {
 			遊戲.天亮請睜眼()
+			遊戲結果 = 遊戲.判斷勝負()
+			if 遊戲結果 != 進行中 {
+				break
+			}
+
 			遊戲.全員請投票()
 		}
 
-		遊戲結果 := 遊戲.判斷勝負()
-		if 遊戲結果 == 進行中 {
-			夜晚 = !夜晚
-			continue
+		遊戲結果 = 遊戲.判斷勝負()
+		if 遊戲結果 != 進行中 {
+			break
 		}
-
-		log.Print(遊戲結果)
-		for i := range 遊戲.連線池 {
-			連線 := 遊戲.連線池[i]
-			連線.WriteJSON(遊戲結果)
-		}
-
-		遊戲.讀寫鎖.Lock()
-		遊戲.階段 = 結束階段
-		遊戲.讀寫鎖.Unlock()
-
-		return
+		夜晚 = !夜晚
 	}
+
+	log.Print(遊戲結果)
+	遊戲.旁白(遊戲結果)
+	遊戲.讀寫鎖.Lock()
+	遊戲.階段 = 準備階段
+	遊戲.讀寫鎖.Unlock()
+
+	return
+
 }
 
 func (遊戲 *Game) 天黑請閉眼() {
@@ -280,6 +284,8 @@ func (遊戲 *Game) 旁白(台詞 interface{}) {
 			遊戲.移除連線(連線)
 		}
 	}
+
+	time.Sleep(time.Millisecond * 1500)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
