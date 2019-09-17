@@ -72,4 +72,5 @@ type Player interface {
 type Skiller interface {
 	Player
 	能力()
+	需要夜晚行動() bool
 }

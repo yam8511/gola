@@ -79,3 +79,7 @@ func (我 *Wolf) 能力() {
 		}
 	}
 }
+
+func (我 *Wolf) 需要夜晚行動() bool {
+	return true
+}
