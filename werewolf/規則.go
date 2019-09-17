@@ -45,6 +45,7 @@ const (
 type KILL string
 
 const (
+	票殺 = KILL("票殺")
 	狼殺 = KILL("狼殺")
 	毒殺 = KILL("毒殺")
 	獵殺 = KILL("獵殺")
@@ -59,8 +60,6 @@ type Player interface {
 	閉眼睛()
 	開眼睛()
 	投票() int
-	被投票(bool)
-	被投票了() bool
 	出局(KILL)
 	出局了() bool
 	種族() GROUP
