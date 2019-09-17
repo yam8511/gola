@@ -9,5 +9,6 @@ import (
 // LoadWebRouter 載入 router 設定
 func LoadWebRouter(r *gin.Engine) {
 	// 頁面進入點
-	r.Use(handler.HomeFile())
+	r.NoRoute(handler.HomeFile())
+	// r.Use(handler.HomeFile())
 }

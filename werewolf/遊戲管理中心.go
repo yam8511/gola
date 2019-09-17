@@ -22,23 +22,48 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 
 	// 檢查遊戲是否設定了
 	if !遊戲.初始設定過() {
-		ruleOptionData := map[string]interface{}{
-			"event": "遊戲角色設定",
-			"rule":  RuleOptions(),
+		ruleOptionData := 傳輸資料{
+			Sound:  "請輸入角色設定",
+			Action: 角色設定,
+			Data: map[string]interface{}{
+				"rule":    RuleOptions(),
+				"combine": []string{"4", "5", "6"},
+			},
 		}
 		連線.WriteJSON(ruleOptionData)
 
-		rules := map[string]int{}
+		rules := map[RULE]int{}
 		for {
 			_, msg, err := 連線.ReadMessage()
 			if err != nil {
 				return
 			}
 
-			err = json.Unmarshal(msg, &rules)
-			if err != nil {
-				連線.WriteJSON(ruleOptionData)
-				return
+			switch string(msg) {
+			case "4":
+				rules = map[RULE]int{
+					平民: 2,
+					狼人: 1,
+					騎士: 1,
+				}
+			case "5":
+				rules = map[RULE]int{
+					平民: 3,
+					狼人: 1,
+					騎士: 1,
+				}
+			case "6":
+				rules = map[RULE]int{
+					平民: 2,
+					狼人: 2,
+					騎士: 2,
+				}
+			default:
+				err = json.Unmarshal(msg, &rules)
+				if err != nil {
+					連線.WriteJSON(ruleOptionData)
+					continue
+				}
 			}
 
 			break
@@ -52,9 +77,10 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 	}
 
 	if 新進入 {
-		連線.WriteJSON(map[string]interface{}{
-			"event": "遊戲建立成功",
-			"token": 編號,
+		連線.WriteJSON(傳輸資料{
+			Sound:  "可分享序號一起玩",
+			Action: 新序號,
+			Data:   編號,
 		})
 
 		for {

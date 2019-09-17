@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>小小狼人殺</title>
+
+    <style>
+        /* * {
+            padding: 0%;
+            margin: 0%;
+        } */
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>歡迎狼人殺 🤪</h1>
+        <input v-model="token" placeholder="輸入Token..." />
+        <button @click="joinGame()">加入遊戲</button>
+        <hr>
+        <textarea v-model="input" placeholder="輸入遊戲指令..."></textarea>
+        <button @click="sendGame()">輸入訊息</button>
+        <hr>
+        <div>{{ output }}</div>
+        <hr>
+        <div>{{ list }}</div>
+        <div>{{ player }}</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                token: '',
+                input: '',
+                output: '',
+                list: '',
+                no: '',
+                leader: false,
+                ws: null,
+                speech: null,
+            },
+            methods: {
+                joinGame() {
+                    console.log('token => ', this.token)
+                    const ws = new WebSocket(this.wsURL + '?token=' + this.token)
+                    this.ws = ws
+                    ws.onmessage = this.receiveGame
+                    this.speech = new  window.SpeechSynthesisUtterance()
+                },
+                sendGame() {
+                    this.ws.send(this.input)
+                },
+                receiveGame(e) {
+                    const tmp = JSON.parse(e.data)
+                    this.output = tmp.sound
+                    this.speech.text = tmp.sound
+                    window.speechSynthesis.speak(this.speech)
+
+                    switch (tmp.action) {
+                        case 'role_setup':
+                            // 角色設定
+                            this.list = tmp.data
+                            break;
+                        case 'new_token':
+                            // 新遊戲房
+                            this.list = tmp.data
+                        default:
+                            this.list = tmp.data
+                            break;
+                    }
+                    console.log(e)
+                }
+            },
+            computed: {
+                player() {
+                    if (this.no === '') {
+                        return ''
+                    }
+
+                    if (this.leader) {
+                        return `我是${no}號, 也是房主`
+                    }
+
+                    return `我是${no}號`
+                },
+                wsURL() {
+                    let url = window.location.host + '/wf/game'
+                    if (window.location.protocol === 'http:') {
+                        url = 'ws://' + url
+                    } else {
+                        url = 'wss://' + url
+                    }
+                    return url
+                }
+            },
+            mounted() {
+                console.log('Ws URL', this.wsURL)
+            }
+        })
+    </script>
+</body>
+
+</html>

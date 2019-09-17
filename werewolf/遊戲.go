@@ -22,13 +22,15 @@ type Game struct {
 	夜晚淘汰者 map[KILL]Player
 }
 
-// 加入 加入遊戲
 func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	遊戲.讀寫鎖.RLock()
 	遊戲已經開始 := 遊戲.階段 == 開始階段
 	遊戲.讀寫鎖.RUnlock()
 	if 遊戲已經開始 {
-		連線.WriteJSON("遊戲已經開始")
+		連線.WriteJSON(傳輸資料{
+			Sound:  "遊戲已經開始",
+			Action: 遊戲已開始,
+		})
 		return
 	}
 
@@ -40,9 +42,10 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	var 選擇位子 int
 	for {
 		pos := 遊戲.顯示可選位子()
-		連線.WriteJSON(map[string]interface{}{
-			"event":    "選擇位子",
-			"position": pos,
+		連線.WriteJSON(傳輸資料{
+			Sound:  "請選擇號碼",
+			Action: 選號碼,
+			Data:   pos,
 		})
 
 		_, msg, err := 連線.ReadMessage()
@@ -64,18 +67,20 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	遊戲.讀寫鎖.RLock()
 	是房主 := 連線 == 遊戲.房主
 	遊戲.讀寫鎖.RUnlock()
-	連線.WriteJSON(map[string]interface{}{
-		"event": "你的角色",
-		"位子":    玩家.號碼(),
-		"職業":    玩家.職業(),
-		"種族":    玩家.種族(),
-		"房主":    是房主,
+	連線.WriteJSON(傳輸資料{
+		Sound:  "你的角色",
+		Action: 拿到角色,
+		Data: map[string]interface{}{
+			"位子": 玩家.號碼(),
+			"職業": 玩家.職業(),
+			"種族": 玩家.種族(),
+			"房主": 是房主,
+		},
 	})
 
 	玩家.加入(連線)
 }
 
-// 開始 開始遊戲
 func (遊戲 *Game) 開始() {
 	遊戲.讀寫鎖.Lock()
 	遊戲.階段 = 開始階段
@@ -326,7 +331,6 @@ func (遊戲 *Game) 玩家資料(號碼 int) Player {
 	return nil
 }
 
-// 初始設定過 是否初始設定過
 func (遊戲 *Game) 初始設定過() bool {
 	遊戲.讀寫鎖.Lock()
 	設定了 := len(遊戲.玩家們) > 0
@@ -334,9 +338,8 @@ func (遊戲 *Game) 初始設定過() bool {
 	return 設定了
 }
 
-// 初始設定 初始設定
 func (遊戲 *Game) 初始設定(
-	選擇角色 map[string]int,
+	選擇角色 map[RULE]int,
 ) {
 	遊戲.讀寫鎖.Lock()
 
@@ -391,7 +394,6 @@ func (遊戲 *Game) 殺玩家(殺法 KILL, 被殺玩家 Player) {
 	遊戲.夜晚淘汰者[殺法] = 被殺玩家
 }
 
-// 顯示可選位子 顯示可選位子
 func (遊戲 *Game) 顯示可選位子() []int {
 	可選位子 := []int{}
 	for i := range 遊戲.玩家們 {
