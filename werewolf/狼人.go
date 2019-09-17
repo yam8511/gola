@@ -51,31 +51,24 @@ func (我 *Wolf) 能力() {
 	}
 
 	for {
-		err := 我.連線.WriteJSON(map[string]interface{}{
+		我.旁白有話給玩家(map[string]interface{}{
 			"event": "請問你要殺誰？",
 			"玩家":    可殺的玩家號碼,
 		})
-		if err != nil {
-			我.遊戲.移除連線(我.連線)
-		}
 
 		訊息 := <-我.傳話筒
 		log.Print(string(訊息))
 
 		玩家號碼 := 0
-		err = json.Unmarshal(訊息, &玩家號碼)
+		err := json.Unmarshal(訊息, &玩家號碼)
 		if err != nil {
 			continue
 		}
 
-		if 玩家號碼 != 0 {
-			for i := range 我.遊戲.玩家們 {
-				玩家 := 我.遊戲.玩家們[i]
-				if 玩家.號碼() == 玩家號碼 {
-					我.遊戲.殺玩家(狼殺, 玩家)
-					return
-				}
-			}
+		玩家 := 我.遊戲.玩家資料(玩家號碼)
+		if 玩家 != nil {
+			我.遊戲.殺玩家(狼殺, 玩家)
+			return
 		}
 	}
 }

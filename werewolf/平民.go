@@ -1,6 +1,7 @@
 package werewolf
 
 import (
+	"log"
 	"strconv"
 	"sync"
 
@@ -137,4 +138,20 @@ func (我 *Human) 已經被選擇() bool {
 	被選擇 := 我.連線 != nil
 	我.讀寫鎖.Unlock()
 	return 被選擇
+}
+func (我 *Human) 發言() {
+	if 我.連線 != nil {
+		log.Println(我.號碼(), "開始發言")
+		<-我.傳話筒
+	}
+}
+
+func (我 *Human) 旁白有話給玩家(v interface{}) {
+	if 我.連線 != nil {
+		err := 我.連線.WriteJSON(v)
+		if err != nil {
+			我.遊戲.移除連線(我.連線)
+			我.連線 = nil
+		}
+	}
 }
