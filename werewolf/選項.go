@@ -9,6 +9,10 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 		return NewWolf(遊戲, 號碼)
 	case 騎士:
 		return NewKnight(遊戲, 號碼)
+	case 預言家:
+		return NewProphesier(遊戲, 號碼)
+	case 獵人:
+		return NewHunter(遊戲, 號碼)
 	}
 
 	return nil
