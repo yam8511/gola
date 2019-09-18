@@ -1,5 +1,5 @@
 # Build Stage
-FROM golang:1.11-alpine AS builder
+FROM golang:1.13-alpine AS builder
 
 # 安裝基本工具
 # RUN apk update && apk upgrade
@@ -14,10 +14,8 @@ RUN go build -o gola
 
 
 # Final Stage
-FROM alpine
+FROM golang:1.13-alpine
 
-ARG APP_ENV=docker
-COPY --from=builder /usr/local/go/lib /usr/local/go/lib
 COPY --from=builder /go/src/gola/gola /app/gola
 COPY ./config /app/config
 COPY ./public /app/public
@@ -30,10 +28,16 @@ RUN adduser -D -u 1000 zuolar \
     && chown -R zuolar:zuolar ./storage
 
 # 宣告環境變數
-ENV GIN_MODE=debug APP_ENV=docker TZ=Asia/Taipei
+ENV APP_ENV=
+ENV APP_SITE=
+ENV APP_ROOT=/app
+ENV TZ=Asia/Taipei
+
+ARG ENTER=server
+ENV ENTER=${ENTER}
 
 # 啟動服務
-ENTRYPOINT [ "./gola" ]
+CMD [ "sh", "-c", "./gola $ENTER" ]
 
 # 切換使用者
 USER zuolar

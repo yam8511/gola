@@ -2,44 +2,13 @@ version: '3'
 
 services:
 
-    # 編譯檔案
-    build:
-        image: golang:1.11
-        command: go build -o gola
-        working_dir: /go/src/gola
-        volumes:
-            - .:/go/src/gola
-            - gopath:/go
-        environment:
-            - GO111MODULE=on
-
-    # 開發容器
-    web-dev:
-        image: golang:1.11
-        command: ./gola server
-        working_dir: /app
-        restart: on-failure
-        ports:
-            - "${PORT}:8000"
-        environment:
-            - GIN_MODE=debug
-            - APP_ENV=docker
-            - PORT=8000
-        volumes:
-            - .:/app
-        depends_on:
-            - build
-            - db
-
-    # 編譯映像檔案
-    build-image:
-        build: .
-        image: 127.0.0.1:5000/gola/web_${APP_ENV}
-
     # 網站服務
     web:
-        build: .
-        image: 127.0.0.1:5000/gola/web_${APP_ENV}
+        build:
+            context: .
+            args:
+                - ENTER=server
+        image: registry.heroku.com/golar/web:latest
         command: server
         restart: always
         ports:
@@ -47,6 +16,7 @@ services:
         environment:
             - GIN_MODE=debug
             - APP_ENV=${APP_ENV}
+            - APP_SITE=${APP_SITE}
             - PORT=8000
         volumes:
             - storage_app:/app/storage/app

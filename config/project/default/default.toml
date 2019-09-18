@@ -3,6 +3,7 @@ env = "local"
 ip = "127.0.0.1"
 host = "localhost:8000"
 port = ":8000"
+auto_port = true
 secure = false
 debug = true
 site = "default"
