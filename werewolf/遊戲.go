@@ -117,10 +117,8 @@ func (遊戲 *Game) 開始() {
 		Action: 遊戲結束,
 		Data:   遊戲結果,
 	})
-	遊戲.讀寫鎖.Lock()
-	遊戲.階段 = 準備階段
-	遊戲.讀寫鎖.Unlock()
 
+	遊戲.重置()
 	return
 
 }
@@ -344,6 +342,21 @@ func (遊戲 *Game) 玩家資料(號碼 int) Player {
 		}
 	}
 	return nil
+}
+
+func (遊戲 *Game) 重置() {
+	遊戲.讀寫鎖.Lock()
+	for i := range 遊戲.玩家們 {
+		玩家 := 遊戲.玩家們[i]
+		連線 := 玩家.連線()
+		if 連線 != nil {
+			連線.Close()
+		}
+	}
+	遊戲.玩家們 = nil
+	遊戲.階段 = 準備階段
+	遊戲.房主號碼 = 0
+	遊戲.讀寫鎖.Unlock()
 }
 
 func (遊戲 *Game) 初始設定過() bool {
