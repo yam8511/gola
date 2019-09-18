@@ -70,3 +70,7 @@ func (我 *Hunter) 能力() {
 		}
 	}
 }
+
+func (我 *Hunter) 需要夜晚行動() bool {
+	return false
+}

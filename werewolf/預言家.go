@@ -78,3 +78,7 @@ func (我 *Prophesier) 能力() {
 
 	}
 }
+
+func (我 *Prophesier) 需要夜晚行動() bool {
+	return true
+}
