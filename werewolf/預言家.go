@@ -62,22 +62,19 @@ func (我 *Prophesier) 能力() {
 			continue
 		}
 
-		if 玩家號碼 != 0 {
-			for i := range 我.遊戲.玩家們 {
-				玩家 := 我.遊戲.玩家們[i]
-				if 玩家.號碼() == 玩家號碼 {
-					var s = "是『好人』"
+		玩家 := 我.遊戲.玩家資料(玩家號碼)
+		if 玩家.號碼() == 玩家號碼 {
+			var s = "是『好人』"
 
-					if 玩家.種族() == "狼職" {
-						s = "是『壞人』"
-					}
-					我.連線.WriteJSON(
-						strconv.Itoa(玩家號碼) + "號玩家" + s,
-					)
-					time.Sleep(3 * time.Second)
-					return
-				}
+			if 玩家.種族() == 狼職 {
+				s = "是『壞人』"
 			}
+			我.連線.WriteJSON(
+				strconv.Itoa(玩家號碼) + "號玩家" + s,
+			)
+			time.Sleep(3 * time.Second)
+			return
 		}
+
 	}
 }
