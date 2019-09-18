@@ -42,7 +42,6 @@
                 no: '',
                 leader: false,
                 ws: null,
-                speech: null,
             },
             methods: {
                 joinGame() {
@@ -50,7 +49,6 @@
                     const ws = new WebSocket(this.wsURL + '?token=' + this.token)
                     this.ws = ws
                     ws.onmessage = this.receiveGame
-                    this.speech = new  window.SpeechSynthesisUtterance()
                 },
                 sendGame() {
                     this.ws.send(this.input)
@@ -58,8 +56,12 @@
                 receiveGame(e) {
                     const tmp = JSON.parse(e.data)
                     this.output = tmp.sound
-                    this.speech.text = tmp.sound
-                    window.speechSynthesis.speak(this.speech)
+                    if (tmp.display !== '') {
+                        this.output = tmp.display
+                    }
+                    const speech = new window.SpeechSynthesisUtterance()
+                    speech.text = tmp.sound
+                    window.speechSynthesis.speak(speech)
 
                     switch (tmp.action) {
                         case 'role_setup':
