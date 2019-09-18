@@ -25,6 +25,16 @@ func (我 *Hunter) 職業() RULE {
 	return 獵人
 }
 
+func (我 *Hunter) 需要夜晚行動() bool {
+	return false
+}
+
+func (我 *Hunter) 出局(killed KILL) {
+	if killed != 毒殺 {
+		我.能力()
+	}
+}
+
 func (我 *Hunter) 能力() {
 
 	我.遊戲.旁白("獵人玩家已死亡，請在臨走前開最後一槍...請選擇！！！")
@@ -58,8 +68,4 @@ func (我 *Hunter) 能力() {
 			}
 		}
 	}
-}
-
-func (我 *Hunter) 需要夜晚行動() bool {
-	return false
 }

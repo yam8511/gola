@@ -26,6 +26,10 @@ func (我 *Prophesier) 職業() RULE {
 	return 預言家
 }
 
+func (我 *Prophesier) 需要夜晚行動() bool {
+	return true
+}
+
 func (我 *Prophesier) 能力() {
 
 	可查看的玩家號碼 := []int{}
@@ -63,8 +67,4 @@ func (我 *Prophesier) 能力() {
 			return
 		}
 	}
-}
-
-func (我 *Prophesier) 需要夜晚行動() bool {
-	return true
 }
