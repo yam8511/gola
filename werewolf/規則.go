@@ -3,9 +3,10 @@ package werewolf
 import "github.com/gorilla/websocket"
 
 type 傳輸資料 struct {
-	Sound  string      `json:"sound"`
-	Action 動作          `json:"action"`
-	Data   interface{} `json:"data"`
+	Sound   string      `json:"sound"`
+	Display string      `json:"display"`
+	Action  動作          `json:"action"`
+	Data    interface{} `json:"data"`
 }
 
 type 動作 string
