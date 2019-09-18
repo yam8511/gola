@@ -432,7 +432,7 @@ func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 台詞 傳�
 }
 
 func (遊戲 *Game) 等一下() {
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Millisecond * 3000)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
