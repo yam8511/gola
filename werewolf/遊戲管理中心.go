@@ -42,21 +42,22 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 			switch string(msg) {
 			case "4":
 				rules = map[RULE]int{
-					平民: 2,
-					狼人: 1,
-					騎士: 1,
+					平民:  2,
+					狼人:  1,
+					預言家: 1,
 				}
 			case "5":
 				rules = map[RULE]int{
-					平民: 3,
-					狼人: 1,
-					騎士: 1,
+					平民:  3,
+					狼人:  1,
+					預言家: 1,
 				}
 			case "6":
 				rules = map[RULE]int{
-					平民: 2,
-					狼人: 2,
-					騎士: 2,
+					平民:  2,
+					狼人:  2,
+					預言家: 1,
+					騎士:  1,
 				}
 			default:
 				err = json.Unmarshal(msg, &rules)

@@ -35,7 +35,7 @@ func (我 *Wolf) 能力() {
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
-	if 我.連線 == nil {
+	if 我.連線() == nil {
 		rand.Seed(time.Now().UTC().UnixNano())
 		rd := rand.Int()
 		玩家號碼 := 可殺的玩家號碼[rd%len(可殺的玩家號碼)]

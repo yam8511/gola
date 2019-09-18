@@ -2,7 +2,6 @@ package werewolf
 
 import (
 	"encoding/json"
-	"log"
 )
 
 // NewHunter 建立新Hunter
@@ -37,35 +36,25 @@ func (我 *Hunter) 能力() {
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
-	if 我.連線 == nil {
+	if 我.連線() == nil {
 		return
 	}
 
 	for {
-		err := 我.連線.WriteJSON(map[string]interface{}{
-			"event": "請問你要獵殺誰？",
-			"玩家":    可殺的玩家號碼,
-		})
-		if err != nil {
-			我.遊戲.移除連線(我.連線)
-		}
-
+		我.遊戲.旁白("請問你要獵殺誰？", 選擇玩家, 可殺的玩家號碼)
 		訊息 := <-我.傳話筒
-		log.Print(string(訊息))
 
 		玩家號碼 := 0
-		err = json.Unmarshal(訊息, &玩家號碼)
+		err := json.Unmarshal(訊息, &玩家號碼)
 		if err != nil {
 			continue
 		}
 
 		if 玩家號碼 != 0 {
-			for i := range 我.遊戲.玩家們 {
-				玩家 := 我.遊戲.玩家們[i]
-				if 玩家.號碼() == 玩家號碼 {
-					我.遊戲.殺玩家(獵殺, 玩家)
-					return
-				}
+			玩家 := 我.遊戲.玩家資料(玩家號碼)
+			if 玩家 != nil {
+				我.遊戲.殺玩家(獵殺, 玩家)
+				return
 			}
 		}
 	}

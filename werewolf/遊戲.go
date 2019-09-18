@@ -12,10 +12,9 @@ import (
 
 // Game sera找明俊玩遊戲
 type Game struct {
-	房主    *websocket.Conn
+	房主號碼  int
 	讀寫鎖   sync.RWMutex
 	玩家們   []Player
-	連線池   []*websocket.Conn
 	階段    階段
 	通訊    chan int
 	夜晚淘汰者 map[KILL]Player
@@ -34,8 +33,6 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		return
 	}
 
-	遊戲.儲存連線(連線)
-
 	var 玩家 Player
 
 	// 選角色
@@ -50,7 +47,6 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 
 		_, msg, err := 連線.ReadMessage()
 		if err != nil {
-			遊戲.移除連線(連線)
 			return
 		}
 
@@ -63,20 +59,14 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		}
 	}
 
-	遊戲.讀寫鎖.RLock()
-	是房主 := 連線 == 遊戲.房主
-	遊戲.讀寫鎖.RUnlock()
-	連線.WriteJSON(傳輸資料{
-		Sound:  "你的角色",
-		Action: 拿到角色,
-		Data: map[string]interface{}{
-			"位子": 玩家.號碼(),
-			"職業": 玩家.職業(),
-			"種族": 玩家.種族(),
-			"房主": 是房主,
-		},
-	})
+	遊戲.加入玩家(玩家)
 
+	遊戲.旁白有話對連線說(連線, "你的角色", 拿到角色, map[string]interface{}{
+		"位子": 玩家.號碼(),
+		"職業": 玩家.職業(),
+		"種族": 玩家.種族(),
+		"房主": 遊戲.是房主(玩家),
+	})
 	玩家.加入(連線)
 }
 
@@ -191,7 +181,7 @@ func (遊戲 *Game) 大家開始發言() {
 
 	存活玩家們 := 遊戲.存活玩家們()
 	for i := range 存活玩家們 {
-		玩家 := 遊戲.玩家們[i]
+		玩家 := 存活玩家們[i]
 		遊戲.旁白(strconv.Itoa(玩家.號碼()) + "號玩家開始發言")
 		中斷發話 := 玩家.發言()
 		遊戲結果 := 遊戲.判斷勝負()
@@ -356,15 +346,63 @@ func (遊戲 *Game) 旁白(聲音 string, 資料 ...interface{}) {
 		}
 	}
 
-	for i := range 遊戲.連線池 {
-		連線 := 遊戲.連線池[i]
-		err := 連線.WriteJSON(台詞)
-		if err != nil {
-			遊戲.移除連線(連線)
+	for i := range 遊戲.玩家們 {
+		玩家 := 遊戲.玩家們[i]
+		連線 := 玩家.連線()
+		if 連線 != nil {
+			err := 連線.WriteJSON(台詞)
+			if err != nil {
+				玩家.退出()
+			}
 		}
 	}
 
-	time.Sleep(time.Second * 3)
+	遊戲.等一下()
+}
+
+func (遊戲 *Game) 旁白有話對單個玩家說(玩家 Player, 聲音 string, 資料 ...interface{}) {
+
+	連線 := 玩家.連線()
+	if 連線 != nil {
+		err := 遊戲.旁白有話對連線說(連線, 聲音, 資料)
+		if err != nil {
+			玩家.退出()
+		}
+	}
+
+	遊戲.等一下()
+}
+
+func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 聲音 string, 資料 ...interface{}) error {
+	台詞 := 傳輸資料{
+		Sound: 聲音,
+	}
+
+	if len(資料) > 0 {
+		action, ok := 資料[0].(動作)
+		if ok {
+			台詞.Action = action
+			if len(資料) > 1 {
+				台詞.Data = 資料[1]
+			}
+		} else {
+			台詞.Data = 資料[0]
+		}
+	}
+
+	if 連線 != nil {
+		err := 連線.WriteJSON(台詞)
+		if err != nil {
+			return err
+		}
+	}
+
+	遊戲.等一下()
+	return nil
+}
+
+func (遊戲 *Game) 等一下() {
+	time.Sleep(time.Millisecond * 3)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
@@ -407,35 +445,37 @@ func (遊戲 *Game) 顯示可選位子() []int {
 	return 可選位子
 }
 
-func (遊戲 *Game) 儲存連線(連線 *websocket.Conn) {
+func (遊戲 *Game) 加入玩家(玩家 Player) {
 	遊戲.讀寫鎖.Lock()
-	if len(遊戲.連線池) == 0 {
-		遊戲.房主 = 連線
+	if 遊戲.房主號碼 == 0 {
+		遊戲.房主號碼 = 玩家.號碼()
 	}
-	遊戲.連線池 = append(遊戲.連線池, 連線)
 	遊戲.讀寫鎖.Unlock()
 }
 
-func (遊戲 *Game) 移除連線(目前連線 *websocket.Conn) {
+func (遊戲 *Game) 踢除玩家(目前玩家 Player) {
 	遊戲.讀寫鎖.Lock()
-	for i := range 遊戲.連線池 {
-		if 遊戲.連線池[i] == 目前連線 {
-			遊戲.連線池 = append(遊戲.連線池[:i], 遊戲.連線池[i+1:]...)
-		}
-	}
-
-	if 目前連線 == 遊戲.房主 {
-		if len(遊戲.連線池) > 0 {
-			遊戲.房主 = 遊戲.連線池[0]
+	if 目前玩家.號碼() == 遊戲.房主號碼 {
+		if len(遊戲.玩家們) > 0 {
+			for i := range 遊戲.玩家們 {
+				玩家 := 遊戲.玩家們[i]
+				if 玩家.已經被選擇() {
+					遊戲.房主號碼 = 玩家.號碼()
+					break
+				}
+				遊戲.房主號碼 = 0
+			}
 		} else {
-			遊戲.房主 = nil
+			遊戲.房主號碼 = 0
 		}
 	}
 	遊戲.讀寫鎖.Unlock()
 }
 
-func (遊戲 *Game) 是房主(連線 *websocket.Conn) bool {
-	是 := 遊戲.房主 == 連線
+func (遊戲 *Game) 是房主(玩家 Player) bool {
+	遊戲.讀寫鎖.Lock()
+	是 := 遊戲.房主號碼 == 玩家.號碼()
+	遊戲.讀寫鎖.Unlock()
 	return 是
 }
 

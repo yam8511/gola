@@ -22,7 +22,7 @@ type Human struct {
 	開眼睛中  bool
 	被投票狀態 bool
 	出局狀態  bool
-	連線    *websocket.Conn
+	conn  *websocket.Conn
 	遊戲    *Game
 	傳話筒   chan []byte
 	讀寫鎖   sync.RWMutex
@@ -41,7 +41,7 @@ func (我 *Human) 開眼睛() {
 }
 
 func (我 *Human) 投票() int {
-	if 我.連線 == nil {
+	if 我.連線() == nil {
 		return 0
 	}
 
@@ -91,7 +91,7 @@ func (我 *Human) 換位子(新位子 int) int {
 
 func (我 *Human) 加入(連線 *websocket.Conn) {
 	我.讀寫鎖.Lock()
-	我.連線 = 連線
+	我.conn = 連線
 	我.傳話筒 = make(chan []byte)
 	我.讀寫鎖.Unlock()
 
@@ -108,7 +108,8 @@ func (我 *Human) 加入(連線 *websocket.Conn) {
 		}
 
 		if 我.遊戲.目前階段() == 準備階段 {
-			if 我.遊戲.是房主(連線) {
+			if 我.遊戲.是房主(我) {
+				log.Println(string(msg))
 				if string(msg) == "start" {
 					go func() {
 						我.遊戲.開始()
@@ -123,9 +124,9 @@ func (我 *Human) 加入(連線 *websocket.Conn) {
 }
 
 func (我 *Human) 退出() {
-	我.遊戲.移除連線(我.連線)
+	我.遊戲.踢除玩家(我)
 	我.讀寫鎖.Lock()
-	我.連線 = nil
+	我.conn = nil
 	if 我.傳話筒 != nil {
 		close(我.傳話筒)
 		我.傳話筒 = nil
@@ -135,15 +136,23 @@ func (我 *Human) 退出() {
 
 func (我 *Human) 已經被選擇() bool {
 	我.讀寫鎖.Lock()
-	被選擇 := 我.連線 != nil
+	被選擇 := 我.conn != nil
 	我.讀寫鎖.Unlock()
 	return 被選擇
 }
+
 func (我 *Human) 發言() bool {
-	if 我.連線 != nil {
+	if 我.連線() != nil {
 		log.Println(我.號碼(), "開始發言")
 		<-我.傳話筒
 	}
 
 	return false
+}
+
+func (我 *Human) 連線() *websocket.Conn {
+	我.讀寫鎖.Lock()
+	conn := 我.conn
+	我.讀寫鎖.Unlock()
+	return conn
 }

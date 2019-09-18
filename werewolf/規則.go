@@ -89,6 +89,7 @@ type Player interface {
 	換位子(int) int
 	已經被選擇() bool
 	發言() bool
+	連線() *websocket.Conn
 }
 
 // Skiller 有能力的人
