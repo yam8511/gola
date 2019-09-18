@@ -19,6 +19,7 @@ type Game struct {
 	通訊    chan int
 	夜晚淘汰者 map[KILL]Player
 	勝負    遊戲結果
+	輪數    int
 }
 
 func (遊戲 *Game) 加入(連線 *websocket.Conn) {
@@ -41,7 +42,7 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		pos := 遊戲.顯示可選位子()
 		連線.WriteJSON(傳輸資料{
 			Sound:  "請選擇號碼",
-			Action: 選號碼,
+			Action: 選擇玩家,
 			Data:   pos,
 		})
 
@@ -81,12 +82,12 @@ func (遊戲 *Game) 開始() {
 	遊戲.讀寫鎖.Unlock()
 
 	夜晚 := true
-	輪數 := 0
+	遊戲.輪數 = 0
 
 	var 遊戲結果 遊戲結果
 	for {
-		輪數++
 		if 夜晚 {
+			遊戲.輪數++
 			遊戲.天黑請閉眼()
 		} else {
 			遊戲.天亮請睜眼()
@@ -179,13 +180,30 @@ func (遊戲 *Game) 天亮請睜眼() {
 		玩家.開眼睛()
 	}
 
-	// 公布淘汰者
-	死者名單 := []string{}
-	for 殺法 := range 遊戲.夜晚淘汰者 {
-		死者名單 = append(死者名單, strconv.Itoa(遊戲.夜晚淘汰者[殺法].號碼()))
+	if len(遊戲.夜晚淘汰者) > 0 {
+		// 公布淘汰者
+		死者名單 := []string{}
+
+		for 殺法 := range 遊戲.夜晚淘汰者 {
+			死者名單 = append(死者名單, strconv.Itoa(遊戲.夜晚淘汰者[殺法].號碼()))
+		}
+		遊戲.旁白(傳輸資料{Sound: "昨晚 " + strings.Join(死者名單, ",") + " 淘汰!"})
+
+		if 遊戲.輪數 == 1 {
+			for 殺法 := range 遊戲.夜晚淘汰者 {
+				死者 := 遊戲.夜晚淘汰者[殺法]
+				遊戲.旁白(傳輸資料{
+					Sound:  strconv.Itoa(死者.號碼()) + "號玩家發表遺言",
+					Action: 等待回應,
+				})
+				死者.發表遺言()
+			}
+		}
+
+		遊戲.玩家出局()
+	} else {
+		遊戲.旁白(傳輸資料{Sound: "昨晚平安夜"})
 	}
-	遊戲.旁白(傳輸資料{Sound: "昨晚 " + strings.Join(死者名單, ",") + " 淘汰!"})
-	遊戲.玩家出局()
 }
 
 func (遊戲 *Game) 大家開始發言() {
@@ -214,7 +232,7 @@ func (遊戲 *Game) 全員請投票() {
 
 	遊戲.旁白(傳輸資料{
 		Sound:  "請投票",
-		Action: 投票,
+		Action: 選擇玩家,
 		Data:   可投票玩家號碼,
 	})
 
@@ -256,7 +274,7 @@ func (遊戲 *Game) 全員請投票() {
 	if 有平票出現 {
 		遊戲.旁白(傳輸資料{
 			Sound:  "請投票",
-			Action: 投票,
+			Action: 選擇玩家,
 			Data:   平票號碼,
 		})
 
@@ -304,8 +322,12 @@ func (遊戲 *Game) 全員請投票() {
 		if 票數 == 最高票數 {
 			玩家 := 遊戲.玩家資料(玩家號碼)
 			if 玩家 != nil {
-				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(玩家號碼) + " 淘汰!"})
 				遊戲.殺玩家(票殺, 玩家)
+				遊戲.旁白(傳輸資料{
+					Sound:  strconv.Itoa(玩家號碼) + " 淘汰! 請發表遺言",
+					Action: 等待回應,
+				})
+				玩家.發表遺言()
 			}
 			return
 		}
@@ -397,7 +419,7 @@ func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 台詞 傳�
 }
 
 func (遊戲 *Game) 等一下() {
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Millisecond * 500)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {

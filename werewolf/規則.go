@@ -13,15 +13,14 @@ type 動作 string
 
 const (
 	角色設定   = 動作("role_setup")
-	新序號    = 動作("new_token")
-	選號碼    = 動作("select_number")
+	選擇號碼   = 動作("select_number")
 	拿到角色   = 動作("take_rule")
 	遊戲已開始  = 動作("game_is_running")
 	遊戲結束   = 動作("game_over")
 	天黑請閉眼  = 動作("all_close_eyes")
 	天亮請睜眼  = 動作("all_open_eyes")
 	選擇玩家   = 動作("select_player")
-	投票     = 動作("vote")
+	等待回應   = 動作("waiting")
 	顯示投票結果 = 動作("vote_result")
 )
 
@@ -91,6 +90,7 @@ type Player interface {
 	已經被選擇() bool
 	發言() bool
 	連線() *websocket.Conn
+	發表遺言()
 }
 
 // Skiller 有能力的人

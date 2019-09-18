@@ -66,15 +66,25 @@
                     switch (tmp.action) {
                         case 'role_setup':
                             // 角色設定
-                            this.list = tmp.data
+                            this.no = ''
+                            break;
+                        case 'select_number':
+                            // 角色設定
+                            this.no = ''
                             break;
                         case 'new_token':
                             // 新遊戲房
-                            this.list = tmp.data
+                            this.no = ''
+                        case 'take_rule':
+                            this.no = tmp.data['位子'] + '號' + tmp.data['職業']
+                            if (tmp.data['房主']) {
+                                this.leader = true;
+                            }
+                            break;
                         default:
-                            this.list = tmp.data
                             break;
                     }
+                    this.list = tmp.data
                     console.log(e)
                 }
             },
@@ -85,10 +95,10 @@
                     }
 
                     if (this.leader) {
-                        return `我是${no}號, 也是房主`
+                        return `我是${this.no}, 也是房主`
                     }
 
-                    return `我是${no}號`
+                    return `我是${this.no}`
                 },
                 wsURL() {
                     let url = window.location.host + '/wf/game'

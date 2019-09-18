@@ -1,7 +1,6 @@
 package werewolf
 
 import (
-	"log"
 	"strconv"
 	"sync"
 
@@ -109,7 +108,6 @@ func (我 *Human) 加入(連線 *websocket.Conn) {
 
 		if 我.遊戲.目前階段() == 準備階段 {
 			if 我.遊戲.是房主(我) {
-				log.Println(string(msg))
 				if string(msg) == "start" {
 					go func() {
 						我.遊戲.開始()
@@ -143,7 +141,6 @@ func (我 *Human) 已經被選擇() bool {
 
 func (我 *Human) 發言() bool {
 	if 我.連線() != nil {
-		log.Println(我.號碼(), "開始發言")
 		<-我.傳話筒
 	}
 
@@ -155,4 +152,11 @@ func (我 *Human) 連線() *websocket.Conn {
 	conn := 我.conn
 	我.讀寫鎖.Unlock()
 	return conn
+}
+
+func (我 *Human) 發表遺言() {
+	if 我.conn != nil {
+		<-我.傳話筒
+	}
+	return
 }

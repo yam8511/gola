@@ -80,7 +80,7 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 	if 新進入 {
 		連線.WriteJSON(傳輸資料{
 			Sound:  "可分享序號一起玩",
-			Action: 新序號,
+			Action: 等待回應,
 			Data:   編號,
 		})
 
