@@ -2,7 +2,6 @@ package werewolf
 
 import (
 	"encoding/json"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -51,7 +50,6 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 
 		_, msg, err := 連線.ReadMessage()
 		if err != nil {
-			log.Print("選位子錯誤 => ", err)
 			遊戲.移除連線(連線)
 			return
 		}
@@ -204,10 +202,9 @@ func (遊戲 *Game) 大家開始發言() {
 	for i := range 存活玩家們 {
 		玩家 := 遊戲.玩家們[i]
 		遊戲.旁白(strconv.Itoa(玩家.號碼()) + "號玩家開始發言")
-		玩家.發言()
-
+		中斷發話 := 玩家.發言()
 		遊戲結果 := 遊戲.判斷勝負()
-		if 遊戲結果 != 進行中 {
+		if 中斷發話 || 遊戲結果 != 進行中 {
 			break
 		}
 	}
@@ -376,7 +373,7 @@ func (遊戲 *Game) 旁白(聲音 string, 資料 ...interface{}) {
 		}
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
@@ -478,11 +475,11 @@ func (遊戲 *Game) 判斷勝負() 遊戲結果 {
 		玩家 := 遊戲.夜晚淘汰者[殺法]
 		switch 玩家.種族() {
 		case 人質:
-			平民人數++
+			平民人數--
 		case 神職:
-			神職人數++
+			神職人數--
 		case 狼職:
-			狼職人數++
+			狼職人數--
 		}
 	}
 

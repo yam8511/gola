@@ -2,7 +2,6 @@ package werewolf
 
 import (
 	"encoding/json"
-	"log"
 	"strconv"
 )
 
@@ -17,6 +16,7 @@ func NewKnight(遊戲 *Game, 位子 int) *Knight {
 // Knight 玩家
 type Knight struct {
 	*Human
+	抓到狼 bool
 }
 
 func (我 *Knight) 種族() GROUP {
@@ -26,12 +26,16 @@ func (我 *Knight) 種族() GROUP {
 func (我 *Knight) 職業() RULE {
 	return 騎士
 }
-func (我 *Knight) 發言() {
-	log.Println(我.號碼(), " 騎士 開始發言")
+func (我 *Knight) 發言() bool {
 	訊息 := <-我.傳話筒
 	if string(訊息) == "skill" {
 		我.能力()
+		if 我.抓到狼 {
+			return true
+		}
 	}
+
+	return false
 }
 
 func (我 *Knight) 能力() {
@@ -46,7 +50,6 @@ func (我 *Knight) 能力() {
 		我.遊戲.旁白("請問你要騎誰？", 選擇玩家, 可指定的玩家號碼)
 
 		訊息 := <-我.傳話筒
-		log.Print(string(訊息))
 
 		玩家號碼 := 0
 		err := json.Unmarshal(訊息, &玩家號碼)
@@ -61,6 +64,7 @@ func (我 *Knight) 能力() {
 				台詞 := strconv.Itoa(玩家.號碼()) + "是狼人！"
 				我.遊戲.旁白(台詞)
 				我.遊戲.殺玩家(騎殺, 玩家)
+				我.抓到狼 = true
 			} else {
 				台詞 := strconv.Itoa(玩家.號碼()) + "不是狼人！ 騎士以死謝罪"
 				我.遊戲.旁白(台詞)

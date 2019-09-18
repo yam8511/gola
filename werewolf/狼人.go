@@ -2,7 +2,6 @@ package werewolf
 
 import (
 	"encoding/json"
-	"log"
 	"math/rand"
 	"time"
 )
@@ -54,7 +53,6 @@ func (我 *Wolf) 能力() {
 		我.遊戲.旁白("請問你要殺誰？", 選擇玩家, 可殺的玩家號碼)
 
 		訊息 := <-我.傳話筒
-		log.Print(string(訊息))
 
 		玩家號碼 := 0
 		err := json.Unmarshal(訊息, &玩家號碼)

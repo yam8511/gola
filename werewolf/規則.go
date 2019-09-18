@@ -88,7 +88,7 @@ type Player interface {
 	職業() RULE
 	換位子(int) int
 	已經被選擇() bool
-	發言()
+	發言() bool
 }
 
 // Skiller 有能力的人

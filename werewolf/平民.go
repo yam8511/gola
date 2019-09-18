@@ -139,9 +139,11 @@ func (我 *Human) 已經被選擇() bool {
 	我.讀寫鎖.Unlock()
 	return 被選擇
 }
-func (我 *Human) 發言() {
+func (我 *Human) 發言() bool {
 	if 我.連線 != nil {
 		log.Println(我.號碼(), "開始發言")
 		<-我.傳話筒
 	}
+
+	return false
 }
