@@ -3,6 +3,7 @@ package werewolf
 import (
 	"encoding/json"
 	"log"
+	"strconv"
 )
 
 // NewKnight 建立新Knight
@@ -42,10 +43,7 @@ func (我 *Knight) 能力() {
 	}
 
 	for {
-		我.旁白有話給玩家(map[string]interface{}{
-			"event": "請問你要騎誰？",
-			"玩家":    可指定的玩家號碼,
-		})
+		我.遊戲.旁白("請問你要騎誰？", 選擇玩家, 可指定的玩家號碼)
 
 		訊息 := <-我.傳話筒
 		log.Print(string(訊息))
@@ -60,17 +58,13 @@ func (我 *Knight) 能力() {
 		if 玩家 != nil {
 			我.遊戲.殺玩家(騎殺, 玩家)
 			if 玩家.種族() == 狼職 {
-				我.遊戲.旁白(map[string]interface{}{
-					"no":    玩家.號碼(),
-					"event": "是狼人！",
-				})
-				玩家.出局(騎殺)
+				台詞 := strconv.Itoa(玩家.號碼()) + "是狼人！"
+				我.遊戲.旁白(台詞)
+				我.遊戲.殺玩家(騎殺, 玩家)
 			} else {
-				我.遊戲.旁白(map[string]interface{}{
-					"no":    玩家.號碼(),
-					"event": "不是狼人！ 以死謝罪",
-				})
-				我.出局(騎殺)
+				台詞 := strconv.Itoa(玩家.號碼()) + "不是狼人！ 騎士以死謝罪"
+				我.遊戲.旁白(台詞)
+				我.遊戲.殺玩家(騎殺, 我)
 			}
 			return
 		}

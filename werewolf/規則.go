@@ -11,16 +11,17 @@ type 傳輸資料 struct {
 type 動作 string
 
 const (
-	角色設定  = 動作("role_setup")
-	新序號   = 動作("new_token")
-	選號碼   = 動作("select_number")
-	拿到角色  = 動作("take_rule")
-	遊戲已開始 = 動作("game_is_running")
-	閉眼    = 動作("close_eyes")
-	睜眼    = 動作("open_eyes")
-	投票    = 動作("vote")
-	狼咬    = 動作("bite")
-	騎人    = 動作("ride")
+	角色設定   = 動作("role_setup")
+	新序號    = 動作("new_token")
+	選號碼    = 動作("select_number")
+	拿到角色   = 動作("take_rule")
+	遊戲已開始  = 動作("game_is_running")
+	遊戲結束   = 動作("game_over")
+	天黑請閉眼  = 動作("all_close_eyes")
+	天亮請睜眼  = 動作("all_open_eyes")
+	選擇玩家   = 動作("select_player")
+	投票     = 動作("vote")
+	顯示投票結果 = 動作("vote_result")
 )
 
 type 階段 int
