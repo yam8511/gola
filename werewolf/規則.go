@@ -15,6 +15,7 @@ const (
 	角色設定   = 動作("role_setup")
 	選擇號碼   = 動作("select_number")
 	拿到角色   = 動作("take_rule")
+	更換房主   = 動作("change_room_master")
 	遊戲已開始  = 動作("game_is_running")
 	遊戲結束   = 動作("game_over")
 	天黑請閉眼  = 動作("all_close_eyes")

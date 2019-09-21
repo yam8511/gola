@@ -1,6 +1,7 @@
 package werewolf
 
 import (
+	"log"
 	"strconv"
 	"sync"
 
@@ -122,7 +123,7 @@ func (我 *Human) 加入(連線 *websocket.Conn) {
 }
 
 func (我 *Human) 退出() {
-	我.遊戲.踢除玩家(我)
+	log.Println(我.位子, "斷線了")
 	我.讀寫鎖.Lock()
 	我.conn = nil
 	if 我.傳話筒 != nil {
@@ -130,6 +131,7 @@ func (我 *Human) 退出() {
 		我.傳話筒 = nil
 	}
 	我.讀寫鎖.Unlock()
+	我.遊戲.踢除玩家(我)
 }
 
 func (我 *Human) 已經被選擇() bool {
