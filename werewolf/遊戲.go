@@ -494,6 +494,9 @@ func (遊戲 *Game) 踢除玩家(目前玩家 Player) {
 				遊戲.旁白有話對單個玩家說(玩家, 傳輸資料{
 					Sound:  "你是房主",
 					Action: 更換房主,
+					Data: map[string]bool{
+						"遊戲開始": 遊戲.階段 == 開始階段,
+					},
 				})
 				break
 			}
