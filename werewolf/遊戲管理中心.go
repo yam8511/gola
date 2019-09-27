@@ -30,7 +30,11 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 				"combine": []string{"4", "5", "6"},
 			},
 		}
-		連線.WriteJSON(ruleOptionData)
+
+		err := 連線.WriteJSON(ruleOptionData)
+		if err != nil {
+			return
+		}
 
 		rules := map[RULE]int{}
 		for {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -31,7 +30,8 @@ func GetAppSite() string {
 func GetAppRoot() string {
 	var root string
 	if os.Getenv("APP_ROOT") == "" {
-		execRoot, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		execRoot, err := os.Getwd()
+		// execRoot, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
 			WriteLog("WARNING", fmt.Sprintf("🎃  GetAppRoot 取根目錄失敗 (%v) 🎃", err))
 		}

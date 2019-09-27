@@ -25,7 +25,7 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 }
 
 // PickSkiller 取出職能者
-func PickSkiller(玩家們 []Player) (狼人玩家們, 神職玩家們 []Skiller) {
+func PickSkiller(玩家們 map[string]Player) (狼人玩家們, 神職玩家們 []Skiller) {
 	狼人玩家們 = []Skiller{}
 	神職玩家們 = []Skiller{}
 

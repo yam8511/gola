@@ -2,11 +2,13 @@ package werewolf
 
 import (
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,32 +16,76 @@ import (
 type Game struct {
 	房主號碼  int
 	讀寫鎖   sync.RWMutex
-	玩家們   []Player
-	階段    階段
-	通訊    chan int
+	玩家們   map[string]Player
 	夜晚淘汰者 map[KILL]Player
+	階段    階段
 	勝負    遊戲結果
 	輪數    int
 }
 
 func (遊戲 *Game) 加入(連線 *websocket.Conn) {
-	遊戲.讀寫鎖.RLock()
-	遊戲已經開始 := 遊戲.階段 == 開始階段
-	遊戲.讀寫鎖.RUnlock()
-	if 遊戲已經開始 {
-		連線.WriteJSON(傳輸資料{
-			Sound:  "遊戲已經開始",
+	進入遊戲 := func(uid string, 玩家 Player) {
+		遊戲.加入玩家(玩家)
+
+		遊戲.旁白有話對單個玩家說(玩家, 傳輸資料{
+			Sound:  "你的角色",
+			Action: 拿到角色,
+			Data: map[string]interface{}{
+				"位子": 玩家.號碼(),
+				"職業": 玩家.職業(),
+				"種族": 玩家.種族(),
+				"房主": 遊戲.是房主(玩家),
+				"編號": uid,
+			}},
+		)
+
+		玩家.等待中()
+	}
+
+	if 遊戲.目前階段() == 開始階段 {
+		err := 遊戲.旁白有話對連線說(連線, 傳輸資料{
+			Sound:  "遊戲已經開始，請輸入玩家編號",
 			Action: 遊戲已開始,
 		})
-		return
+
+		if err != nil {
+			return
+		}
+
+		for 遊戲.目前階段() == 開始階段 {
+			mt, msg, err := 連線.ReadMessage()
+			if err != nil {
+				return
+			}
+
+			if mt == websocket.TextMessage {
+				v := 傳輸資料{}
+				err = json.Unmarshal(msg, &v)
+				if err == nil {
+					uid := v.Reply
+					玩家, 存在 := 遊戲.玩家資料ByUID(uid)
+					if 存在 && 玩家.加入(連線) {
+						進入遊戲(uid, 玩家)
+						return
+					}
+				}
+
+			}
+		}
 	}
 
 	var 玩家 Player
+	var 存在 bool
+	var uid string
 
 	// 選角色
 	var 選擇位子 int
 	for {
 		pos := 遊戲.顯示可選位子()
+		if len(pos) == 0 {
+			return
+		}
+
 		連線.WriteJSON(傳輸資料{
 			Sound:  "請選擇號碼",
 			Action: 選擇號碼,
@@ -48,31 +94,22 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 
 		_, msg, err := 連線.ReadMessage()
 		if err != nil {
+			if len(遊戲.顯示可選位子()) == len(遊戲.玩家們) {
+				遊戲.重置()
+			}
 			return
 		}
 
 		err = json.Unmarshal(msg, &選擇位子)
 		if err == nil {
-			玩家 = 遊戲.玩家們[選擇位子-1]
-			if !玩家.已經被選擇() {
+			玩家, uid, 存在 = 遊戲.玩家資料WithUID(選擇位子)
+			if 存在 && 玩家.加入(連線) {
 				break
 			}
 		}
 	}
 
-	遊戲.加入玩家(玩家)
-
-	遊戲.旁白有話對連線說(連線, 傳輸資料{
-		Sound:  "你的角色",
-		Action: 拿到角色,
-		Data: map[string]interface{}{
-			"位子": 玩家.號碼(),
-			"職業": 玩家.職業(),
-			"種族": 玩家.種族(),
-			"房主": 遊戲.是房主(玩家),
-		}},
-	)
-	玩家.加入(連線)
+	進入遊戲(uid, 玩家)
 }
 
 func (遊戲 *Game) 開始() {
@@ -318,8 +355,8 @@ func (遊戲 *Game) 全員請投票() {
 
 	for 玩家號碼, 票數 := range 可投票玩家號碼 {
 		if 票數 == 最高票數 {
-			玩家 := 遊戲.玩家資料(玩家號碼)
-			if 玩家 != nil {
+			玩家, 存在 := 遊戲.玩家資料(玩家號碼)
+			if 存在 {
 				遊戲.殺玩家(票殺, 玩家)
 				遊戲.旁白(傳輸資料{
 					Sound:  strconv.Itoa(玩家號碼) + " 淘汰! 請發表遺言",
@@ -334,14 +371,40 @@ func (遊戲 *Game) 全員請投票() {
 	遊戲.玩家出局()
 }
 
-func (遊戲 *Game) 玩家資料(號碼 int) Player {
-	for i := range 遊戲.玩家們 {
-		玩家 := 遊戲.玩家們[i]
+func (遊戲 *Game) 玩家資料(號碼 int) (玩家 Player, 存在 bool) {
+	遊戲.讀寫鎖.RLock()
+	defer 遊戲.讀寫鎖.RUnlock()
+	for id := range 遊戲.玩家們 {
+		玩家 = 遊戲.玩家們[id]
 		if 玩家.號碼() == 號碼 {
-			return 玩家
+			存在 = true
+			break
 		}
 	}
-	return nil
+
+	return
+}
+
+func (遊戲 *Game) 玩家資料WithUID(號碼 int) (玩家 Player, uid string, 存在 bool) {
+	遊戲.讀寫鎖.RLock()
+	defer 遊戲.讀寫鎖.RUnlock()
+	for id := range 遊戲.玩家們 {
+		玩家 = 遊戲.玩家們[id]
+		if 玩家.號碼() == 號碼 {
+			uid = id
+			存在 = true
+			break
+		}
+	}
+
+	return
+}
+
+func (遊戲 *Game) 玩家資料ByUID(uid string) (玩家 Player, 存在 bool) {
+	遊戲.讀寫鎖.RLock()
+	玩家, 存在 = 遊戲.玩家們[uid]
+	遊戲.讀寫鎖.RUnlock()
+	return
 }
 
 func (遊戲 *Game) 重置() {
@@ -353,7 +416,7 @@ func (遊戲 *Game) 重置() {
 			連線.Close()
 		}
 	}
-	遊戲.玩家們 = nil
+	遊戲.玩家們 = map[string]Player{}
 	遊戲.階段 = 準備階段
 	遊戲.房主號碼 = 0
 	遊戲.讀寫鎖.Unlock()
@@ -374,16 +437,16 @@ func (遊戲 *Game) 初始設定(
 	隨機可選角色 := []RULE{}
 	for 角色, 數量 := range 選擇角色 {
 		for i := 0; i < 數量; i++ {
-			隨機可選角色 = append(隨機可選角色, RULE(角色))
+			隨機可選角色 = append(隨機可選角色, 角色)
 		}
 	}
 	隨機可選角色 = 亂數洗牌(隨機可選角色)
 
-	玩家們 := []Player{}
+	玩家們 := map[string]Player{}
 	for i := range 隨機可選角色 {
 		新玩家 := NewPlayer(隨機可選角色[i], 遊戲, i+1)
 		if 新玩家 != nil {
-			玩家們 = append(玩家們, 新玩家)
+			玩家們[uuid.New().String()] = 新玩家
 		}
 	}
 	遊戲.玩家們 = 玩家們
@@ -466,12 +529,16 @@ func (遊戲 *Game) 玩家出局() {
 func (遊戲 *Game) 顯示可選位子() []int {
 	可選位子 := []int{}
 
+	遊戲.讀寫鎖.Lock()
 	for i := range 遊戲.玩家們 {
 		還沒被選擇 := !遊戲.玩家們[i].已經被選擇()
 		if 還沒被選擇 {
 			可選位子 = append(可選位子, 遊戲.玩家們[i].號碼())
 		}
 	}
+	遊戲.讀寫鎖.Unlock()
+
+	sort.Ints(可選位子)
 	return 可選位子
 }
 

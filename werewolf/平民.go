@@ -1,7 +1,6 @@
 package werewolf
 
 import (
-	"log"
 	"strconv"
 	"sync"
 
@@ -89,21 +88,38 @@ func (我 *Human) 換位子(新位子 int) int {
 	return 舊的位子
 }
 
-func (我 *Human) 加入(連線 *websocket.Conn) {
+func (我 *Human) 加入(連線 *websocket.Conn) (加入成功 bool) {
 	我.讀寫鎖.Lock()
+	defer 我.讀寫鎖.Unlock()
+
+	if 我.conn != nil {
+		return
+	}
+
 	我.conn = 連線
 	我.傳話筒 = make(chan []byte)
+	加入成功 = true
+
+	return
+}
+
+func (我 *Human) 等待中() {
+	我.讀寫鎖.Lock()
+	if 我.conn == nil {
+		我.讀寫鎖.Unlock()
+		return
+	}
 	我.讀寫鎖.Unlock()
 
 	for {
-		msgT, msg, err := 連線.ReadMessage()
+		msgT, msg, err := 我.conn.ReadMessage()
 		if err != nil {
 			我.退出()
 			return
 		}
 
 		if msgT == websocket.PingMessage {
-			連線.WriteMessage(websocket.PongMessage, []byte("pong"))
+			我.conn.WriteMessage(websocket.PongMessage, []byte("pong"))
 			continue
 		}
 
@@ -123,7 +139,6 @@ func (我 *Human) 加入(連線 *websocket.Conn) {
 }
 
 func (我 *Human) 退出() {
-	log.Println(我.位子, "斷線了")
 	我.讀寫鎖.Lock()
 	我.conn = nil
 	if 我.傳話筒 != nil {

@@ -7,6 +7,7 @@ type 傳輸資料 struct {
 	Display string      `json:"display"`
 	Action  動作          `json:"action"`
 	Data    interface{} `json:"data"`
+	Reply   string      `json:"reply"`
 }
 
 type 動作 string
@@ -77,7 +78,8 @@ const (
 
 // Player 玩家
 type Player interface {
-	加入(*websocket.Conn)
+	加入(*websocket.Conn) (加入成功 bool)
+	等待中()
 	退出()
 	號碼() int
 	閉眼睛()
