@@ -1,6 +1,8 @@
 package werewolf
 
 import (
+	"encoding/json"
+	"runtime"
 	"strconv"
 	"sync"
 
@@ -124,10 +126,13 @@ func (我 *Human) 等待中() {
 
 		if 我.遊戲.目前階段() == 準備階段 {
 			if 我.遊戲.是房主(我) {
-				if so.Reply == "start" {
-					go func() {
-						我.遊戲.開始()
-					}()
+				回傳資料 := 傳輸資料{}
+				err = json.Unmarshal([]byte(so.Reply), &回傳資料)
+				if err == nil && 回傳資料.Action == 更換房主 {
+					if 回傳資料.Reply == "start" {
+						go 我.遊戲.開始()
+						runtime.Gosched()
+					}
 				}
 			}
 			continue
