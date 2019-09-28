@@ -35,7 +35,7 @@ func (我 *Hunter) 出局(killed KILL) {
 	}
 }
 
-func (我 *Hunter) 能力() {
+func (我 *Hunter) 能力() (_ Player) {
 
 	我.遊戲.旁白(傳輸資料{
 		Sound: "獵人玩家已死亡，請在臨走前開最後一槍...請選擇！！！",

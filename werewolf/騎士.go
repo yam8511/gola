@@ -52,7 +52,7 @@ func (我 *Knight) 發言() bool {
 	return false
 }
 
-func (我 *Knight) 能力() {
+func (我 *Knight) 能力() (_ Player) {
 	可指定的玩家號碼 := []int{}
 	目前存活玩家們 := 我.遊戲.存活玩家們()
 	for i := range 目前存活玩家們 {
@@ -93,7 +93,7 @@ func (我 *Knight) 能力() {
 				我.遊戲.旁白(傳輸資料{Sound: 台詞})
 				我.遊戲.殺玩家(騎殺, 我)
 			}
-			return
+			return 玩家
 		}
 	}
 }

@@ -37,6 +37,7 @@
             data: {
                 token: '',
                 input: '',
+                action: '',
                 output: '',
                 list: '',
                 no: '',
@@ -51,7 +52,10 @@
                     ws.onmessage = this.receiveGame
                 },
                 sendGame() {
-                    this.ws.send(this.input)
+                    this.ws.send(JSON.stringify({
+                        'action': this.action,
+                        'reply': `${this.input}`,
+                    }))
                 },
                 receiveGame(e) {
                     const tmp = JSON.parse(e.data)
@@ -66,22 +70,27 @@
                     switch (tmp.action) {
                         case 'role_setup':
                             // 角色設定
+                            this.action = tmp.action
                             this.no = ''
                             break;
                         case 'select_number':
                             // 角色設定
+                            this.action = tmp.action
                             this.no = ''
                             break;
                         case 'new_token':
                             // 新遊戲房
+                            this.action = tmp.action
                             this.no = ''
                         case 'take_rule':
+                            this.action = tmp.action
                             this.no = tmp.data['位子'] + '號' + tmp.data['職業']
                             if (tmp.data['房主']) {
                                 this.leader = true;
                             }
                             break;
                         default:
+                            this.action = tmp.action
                             break;
                     }
                     this.list = tmp.data

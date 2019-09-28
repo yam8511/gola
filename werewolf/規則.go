@@ -102,6 +102,6 @@ type Player interface {
 // Skiller 有能力的人
 type Skiller interface {
 	Player
-	能力()
+	能力() (用來表示狼人咬誰 Player)
 	需要夜晚行動() bool
 }
