@@ -23,7 +23,7 @@ type Human struct {
 	出局狀態  bool
 	conn  *websocket.Conn
 	遊戲    *Game
-	傳話筒   chan []byte
+	傳話筒   chan 傳輸資料
 	讀寫鎖   sync.RWMutex
 }
 
@@ -45,13 +45,17 @@ func (我 *Human) 投票() int {
 	}
 
 	var 投票號碼 int
-	var err error
 	for {
-		msg := <-我.傳話筒
-		投票號碼, err = strconv.Atoi(string(msg))
+		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		if err != nil {
+			return 0
+		}
+
+		投票號碼, err = strconv.Atoi(so.Reply)
 		if err != nil {
 			continue
 		}
+
 		break
 	}
 	return 投票號碼
@@ -97,7 +101,7 @@ func (我 *Human) 加入(連線 *websocket.Conn) (加入成功 bool) {
 	}
 
 	我.conn = 連線
-	我.傳話筒 = make(chan []byte)
+	我.傳話筒 = make(chan 傳輸資料)
 	加入成功 = true
 
 	return
@@ -112,20 +116,15 @@ func (我 *Human) 等待中() {
 	我.讀寫鎖.Unlock()
 
 	for {
-		msgT, msg, err := 我.conn.ReadMessage()
+		so, err := waitSocketBack(我.conn, 無)
 		if err != nil {
 			我.退出()
 			return
 		}
 
-		if msgT == websocket.PingMessage {
-			我.conn.WriteMessage(websocket.PongMessage, []byte("pong"))
-			continue
-		}
-
 		if 我.遊戲.目前階段() == 準備階段 {
 			if 我.遊戲.是房主(我) {
-				if string(msg) == "start" {
+				if so.Reply == "start" {
 					go func() {
 						我.遊戲.開始()
 					}()
@@ -134,7 +133,7 @@ func (我 *Human) 等待中() {
 			continue
 		}
 
-		我.傳話筒 <- msg
+		我.傳話筒 <- so
 	}
 }
 
@@ -157,10 +156,11 @@ func (我 *Human) 已經被選擇() bool {
 }
 
 func (我 *Human) 發言() bool {
-	if 我.連線() != nil {
-		<-我.傳話筒
-	}
-
+	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+		Display: "請發言",
+		Action:  等待回應,
+	})
+	waitChannelBack(我.傳話筒, 等待回應)
 	return false
 }
 
@@ -172,8 +172,10 @@ func (我 *Human) 連線() *websocket.Conn {
 }
 
 func (我 *Human) 發表遺言() {
-	if 我.conn != nil {
-		<-我.傳話筒
-	}
+	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+		Display: "請發言",
+		Action:  等待回應,
+	})
+	waitChannelBack(我.傳話筒, 等待回應)
 	return
 }

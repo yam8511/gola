@@ -40,21 +40,21 @@ func (我 *Prophesier) 能力() {
 		可查看的玩家號碼 = append(可查看的玩家號碼, 玩家.號碼())
 	}
 
-	for {
-		我.遊戲.旁白(傳輸資料{
-			Sound:  "請問你要查誰？",
-			Action: 選擇玩家,
-			Data:   可查看的玩家號碼,
-		})
+	我.遊戲.旁白(傳輸資料{
+		Sound:  "請問你要查誰？",
+		Action: 選擇玩家,
+		Data:   可查看的玩家號碼,
+	})
 
-		if 我.連線() == nil {
+	for {
+
+		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		if err != nil {
 			return
 		}
 
-		訊息 := <-我.傳話筒
-
 		玩家號碼 := 0
-		err := json.Unmarshal(訊息, &玩家號碼)
+		err = json.Unmarshal([]byte(so.Reply), &玩家號碼)
 		if err != nil {
 			continue
 		}
@@ -69,8 +69,10 @@ func (我 *Prophesier) 能力() {
 
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 				Display: strconv.Itoa(玩家號碼) + s,
+				Action:  等待回應,
 			})
-			<-我.傳話筒
+
+			waitChannelBack(我.傳話筒, 等待回應)
 			return
 		}
 	}

@@ -53,23 +53,16 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		}
 
 		for 遊戲.目前階段() == 開始階段 {
-			mt, msg, err := 連線.ReadMessage()
+			so, err := waitSocketBack(連線, 遊戲已開始)
 			if err != nil {
 				return
 			}
 
-			if mt == websocket.TextMessage {
-				v := 傳輸資料{}
-				err = json.Unmarshal(msg, &v)
-				if err == nil {
-					uid := v.Reply
-					玩家, 存在 := 遊戲.玩家資料ByUID(uid)
-					if 存在 && 玩家.加入(連線) {
-						進入遊戲(uid, 玩家)
-						return
-					}
-				}
-
+			uid := so.Reply
+			玩家, 存在 := 遊戲.玩家資料ByUID(uid)
+			if 存在 && 玩家.加入(連線) {
+				進入遊戲(uid, 玩家)
+				return
 			}
 		}
 	}
@@ -92,15 +85,12 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 			Data:   pos,
 		})
 
-		_, msg, err := 連線.ReadMessage()
+		so, err := waitSocketBack(連線, 選擇號碼)
 		if err != nil {
-			if len(遊戲.顯示可選位子()) == len(遊戲.玩家們) {
-				遊戲.重置()
-			}
 			return
 		}
 
-		err = json.Unmarshal(msg, &選擇位子)
+		err = json.Unmarshal([]byte(so.Reply), &選擇位子)
 		if err == nil {
 			玩家, uid, 存在 = 遊戲.玩家資料WithUID(選擇位子)
 			if 存在 && 玩家.加入(連線) {

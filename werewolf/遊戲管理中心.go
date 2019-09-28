@@ -2,7 +2,6 @@ package werewolf
 
 import (
 	"encoding/json"
-	"log"
 	"sync"
 
 	"github.com/google/uuid"
@@ -38,12 +37,12 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 
 		rules := map[RULE]int{}
 		for {
-			_, msg, err := 連線.ReadMessage()
+			so, err := waitSocketBack(連線, 角色設定)
 			if err != nil {
 				return
 			}
 
-			switch string(msg) {
+			switch string(so.Reply) {
 			case "4":
 				rules = map[RULE]int{
 					平民:  2,
@@ -64,9 +63,12 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 					騎士:  1,
 				}
 			default:
-				err = json.Unmarshal(msg, &rules)
+				err = json.Unmarshal([]byte(so.Reply), &rules)
 				if err != nil {
-					連線.WriteJSON(ruleOptionData)
+					err = 連線.WriteJSON(ruleOptionData)
+					if err != nil {
+						return
+					}
 					continue
 				}
 			}
@@ -89,14 +91,14 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 		})
 
 		for {
-			_, _, err := 連線.ReadMessage()
+			_, err := waitSocketBack(連線, 等待回應)
 			if err != nil {
-				log.Print("等待開始錯誤 => ", err)
 				return
 			}
 
 			break
 		}
+
 	}
 
 	遊戲.加入(連線)

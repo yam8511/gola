@@ -1,9 +1,13 @@
 package werewolf
 
 import (
+	"encoding/json"
+	"errors"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // NewPlayer 產生新角色
@@ -67,4 +71,82 @@ func 亂數洗牌(職業牌 []RULE) []RULE {
 	})
 	log.Println("職業牌", 職業牌)
 	return 職業牌
+}
+
+// waitSocketBack 等待Socket回傳
+func waitSocketBack(連線 *websocket.Conn, 對應動作 動作) (回傳資料 傳輸資料, err error) {
+	var msg []byte
+	var msgT int
+
+	for {
+		msgT, msg, err = 連線.ReadMessage()
+		if err != nil {
+			return
+		}
+
+		// 如果是Ping，回傳Pong
+		if msgT == websocket.PingMessage {
+			連線.WriteMessage(websocket.PongMessage, []byte("pong"))
+			continue
+		}
+
+		// 如果沒有對應動作，直接把資料傳給傳話筒用
+		if 對應動作 == 無 {
+			回傳資料.Action = 給傳話筒
+			回傳資料.Reply = string(msg)
+			return
+		}
+
+		err = json.Unmarshal(msg, &回傳資料)
+		if err != nil {
+			continue
+		}
+
+		if 回傳資料.Action != 對應動作 {
+			continue
+		}
+
+		break
+	}
+
+	return
+}
+
+// waitChannelBack 等待Channel回傳
+func waitChannelBack(傳話筒 chan 傳輸資料, 對應動作 動作) (回傳資料 傳輸資料, err error) {
+	if 傳話筒 == nil {
+		err = errors.New("玩家已經斷線")
+		return
+	}
+
+	for {
+		電報 := <-傳話筒
+
+		if 電報.Action == 無 {
+			err = errors.New("玩家已經斷線")
+			return
+		}
+
+		if 對應動作 == 無 {
+			回傳資料 = 電報
+			return
+		}
+
+		if 電報.Action != 給傳話筒 {
+			continue
+		}
+
+		err = json.Unmarshal([]byte(電報.Reply), &回傳資料)
+		if err != nil {
+			continue
+		}
+
+		if 回傳資料.Action != 對應動作 {
+			continue
+		}
+
+		break
+	}
+
+	return
 }

@@ -13,17 +13,20 @@ type 傳輸資料 struct {
 type 動作 string
 
 const (
-	角色設定   = 動作("role_setup")
-	選擇號碼   = 動作("select_number")
-	拿到角色   = 動作("take_rule")
-	更換房主   = 動作("change_room_master")
-	遊戲已開始  = 動作("game_is_running")
-	遊戲結束   = 動作("game_over")
-	天黑請閉眼  = 動作("all_close_eyes")
-	天亮請睜眼  = 動作("all_open_eyes")
-	選擇玩家   = 動作("select_player")
-	等待回應   = 動作("waiting")
-	顯示投票結果 = 動作("vote_result")
+	無       = 動作("")
+	給傳話筒    = 動作("for_channel")
+	角色設定    = 動作("role_setup")
+	選擇號碼    = 動作("select_number")
+	拿到角色    = 動作("take_rule")
+	更換房主    = 動作("change_room_master")
+	遊戲已開始   = 動作("game_is_running")
+	遊戲結束    = 動作("game_over")
+	天黑請閉眼   = 動作("all_close_eyes")
+	天亮請睜眼   = 動作("all_open_eyes")
+	選擇玩家    = 動作("select_player")
+	等待回應    = 動作("waiting")
+	通知玩家有技能 = 動作("notify_skill")
+	顯示投票結果  = 動作("vote_result")
 )
 
 type 階段 int
@@ -91,7 +94,7 @@ type Player interface {
 	職業() RULE
 	換位子(int) int
 	已經被選擇() bool
-	發言() bool
+	發言() (進入黑夜 bool)
 	連線() *websocket.Conn
 	發表遺言()
 }

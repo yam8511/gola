@@ -48,30 +48,29 @@ func (我 *Hunter) 能力() {
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
-	if 我.連線() == nil {
-		return
-	}
+	我.遊戲.旁白(傳輸資料{
+		Sound:  "請問你要獵殺誰？",
+		Action: 選擇玩家,
+		Data:   可殺的玩家號碼,
+	})
 
 	for {
-		我.遊戲.旁白(傳輸資料{
-			Sound:  "請問你要獵殺誰？",
-			Action: 選擇玩家,
-			Data:   可殺的玩家號碼,
-		})
-		訊息 := <-我.傳話筒
+
+		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		if err != nil {
+			return
+		}
 
 		玩家號碼 := 0
-		err := json.Unmarshal(訊息, &玩家號碼)
+		err = json.Unmarshal([]byte(so.Reply), &玩家號碼)
 		if err != nil {
 			continue
 		}
 
-		if 玩家號碼 != 0 {
-			玩家, 存在 := 我.遊戲.玩家資料(玩家號碼)
-			if 存在 {
-				我.遊戲.殺玩家(獵殺, 玩家)
-				return
-			}
+		玩家, 存在 := 我.遊戲.玩家資料(玩家號碼)
+		if 存在 {
+			我.遊戲.殺玩家(獵殺, 玩家)
+			return
 		}
 	}
 }
