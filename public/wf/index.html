@@ -234,9 +234,9 @@
                         this.output = tmp.display
                     }
 
-                    // const speech = new window.SpeechSynthesisUtterance()
-                    // speech.text = tmp.sound
-                    // window.speechSynthesis.speak(speech)
+                    const speech = new window.SpeechSynthesisUtterance()
+                    speech.text = tmp.sound
+                    window.speechSynthesis.speak(speech)
 
                     this.showRules = false
                     this.showNumber = false
