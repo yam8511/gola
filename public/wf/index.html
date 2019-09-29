@@ -101,6 +101,16 @@
                     </button>
                 </div>
 
+                <!-- 等待確認 -->
+                <div v-if="hasSkill">
+                    <button class="waves-effect waves-light btn" @click="skill(0)">
+                        <i class="material-icons close"></i>不啟動
+                    </button>
+                    <button class="waves-effect waves-light btn" @click="skill(1)">
+                        <i class="material-icons check"></i>啟動
+                    </button>
+                </div>
+
                 <!-- 房主按鈕 -->
                 <div v-if="leader && !gameStart">
                     <button class="waves-effect waves-light btn" @click="sendGame">
@@ -143,6 +153,8 @@
                 gameOver: false,
                 needEnterSession: false,
                 isWaiting: false,
+                hasSkill: false,
+                skillOption: '',
             },
             methods: {
                 joinGame() {
@@ -198,6 +210,14 @@
                     this.input = n + ''
                     this.sendGame()
                 },
+                skill(v) {
+                    if (v == 1) {
+                        this.input = this.skillOption
+                    } else {
+                        this.input = ''
+                    }
+                    this.sendGame()
+                },
                 resetInfo() {
                     this.leader = false
                     this.no = ''
@@ -214,14 +234,15 @@
                         this.output = tmp.display
                     }
 
-                    const speech = new window.SpeechSynthesisUtterance()
-                    speech.text = tmp.sound
-                    window.speechSynthesis.speak(speech)
+                    // const speech = new window.SpeechSynthesisUtterance()
+                    // speech.text = tmp.sound
+                    // window.speechSynthesis.speak(speech)
 
                     this.showRules = false
                     this.showNumber = false
                     this.needEnterSession = false
                     this.isWaiting = false
+                    this.hasSkill = false
                     this.action = tmp.action
 
                     switch (tmp.action) {
@@ -275,6 +296,10 @@
                             break
                         case 'waiting':
                             this.isWaiting = true
+                            break
+                        case 'notify_skill':
+                            this.hasSkill = true
+                            this.skillOption = tmp.data
                             break
                         case 'game_over':
                             this.output = tmp.data
