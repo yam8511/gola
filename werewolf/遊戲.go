@@ -2,6 +2,7 @@ package werewolf
 
 import (
 	"encoding/json"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -86,6 +87,9 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 
 		so, err := waitSocketBack(連線, 選擇號碼)
 		if err != nil {
+			if 遊戲.房主號碼 == 0 {
+				遊戲.重置()
+			}
 			return
 		}
 
@@ -170,36 +174,47 @@ func (遊戲 *Game) 天黑請閉眼() {
 	}
 
 	// 狼人請殺人
-	遊戲.旁白(傳輸資料{Sound: "狼人請殺人"})
-	狼人們咬殺的對象 := map[Player]bool{}
-	for i := range 狼人玩家們 {
-		狼人 := 狼人玩家們[i]
-		被咬玩家 := 狼人.能力()
-		狼人們咬殺的對象[被咬玩家] = 狼人.已經被選擇()
-	}
-
-	// 確認是否有玩家狼
-	狼咬數 := map[Player]int{}
-	var 狼咬最多的玩家, 玩家狼咬最多的玩家 Player
-
-	for 玩家, 是玩家咬的 := range 狼人們咬殺的對象 {
-
-		狼咬數[玩家]++
-		if 狼咬數[玩家] > 狼咬數[狼咬最多的玩家] {
-			狼咬最多的玩家 = 玩家
+	if len(狼人玩家們) > 0 {
+		遊戲.旁白(傳輸資料{Sound: "狼人請殺人"})
+		狼人們咬殺的對象 := map[Player]bool{}
+		wg := sync.WaitGroup{}
+		for i := range 狼人玩家們 {
+			wg.Add(1)
+			go func(i int) {
+				狼人 := 狼人玩家們[i]
+				被咬玩家 := 狼人.能力()
+				遊戲.讀寫鎖.Lock()
+				狼人們咬殺的對象[被咬玩家] = 狼人.已經被選擇()
+				遊戲.讀寫鎖.Unlock()
+				wg.Done()
+			}(i)
+			runtime.Gosched()
 		}
+		wg.Wait()
 
-		if 是玩家咬的 {
-			if 狼咬數[玩家] > 狼咬數[玩家狼咬最多的玩家] {
-				玩家狼咬最多的玩家 = 玩家
+		// 確認是否有玩家狼
+		狼咬數 := map[Player]int{}
+		var 狼咬最多的玩家, 玩家狼咬最多的玩家 Player
+
+		for 玩家, 是玩家咬的 := range 狼人們咬殺的對象 {
+
+			狼咬數[玩家]++
+			if 狼咬數[玩家] > 狼咬數[狼咬最多的玩家] {
+				狼咬最多的玩家 = 玩家
+			}
+
+			if 是玩家咬的 {
+				if 狼咬數[玩家] > 狼咬數[玩家狼咬最多的玩家] {
+					玩家狼咬最多的玩家 = 玩家
+				}
 			}
 		}
-	}
 
-	if 玩家狼咬最多的玩家 != nil {
-		遊戲.殺玩家(狼殺, 玩家狼咬最多的玩家)
-	} else {
-		遊戲.殺玩家(狼殺, 狼咬最多的玩家)
+		if 玩家狼咬最多的玩家 != nil {
+			遊戲.殺玩家(狼殺, 玩家狼咬最多的玩家)
+		} else {
+			遊戲.殺玩家(狼殺, 狼咬最多的玩家)
+		}
 	}
 
 	// 狼人請閉眼
@@ -242,10 +257,7 @@ func (遊戲 *Game) 天亮請睜眼() {
 		if 遊戲.輪數 == 1 {
 			for 殺法 := range 遊戲.夜晚淘汰者 {
 				死者 := 遊戲.夜晚淘汰者[殺法]
-				遊戲.旁白(傳輸資料{
-					Sound:  strconv.Itoa(死者.號碼()) + "號玩家發表遺言",
-					Action: 等待回應,
-				})
+				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(死者.號碼()) + "號玩家發表遺言"})
 				死者.發表遺言()
 			}
 		}
@@ -368,10 +380,7 @@ func (遊戲 *Game) 全員請投票() {
 			玩家, 存在 := 遊戲.玩家資料(玩家號碼)
 			if 存在 {
 				遊戲.殺玩家(票殺, 玩家)
-				遊戲.旁白(傳輸資料{
-					Sound:  strconv.Itoa(玩家號碼) + " 淘汰! 請發表遺言",
-					Action: 等待回應,
-				})
+				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(玩家號碼) + " 淘汰! 請發表遺言"})
 				玩家.發表遺言()
 			}
 			break
@@ -505,7 +514,7 @@ func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 台詞 傳�
 }
 
 func (遊戲 *Game) 等一下() {
-	time.Sleep(time.Millisecond * 2000)
+	time.Sleep(time.Millisecond * 1000)
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
@@ -525,10 +534,12 @@ func (遊戲 *Game) 存活玩家們() []Player {
 }
 
 func (遊戲 *Game) 殺玩家(殺法 KILL, 被殺玩家 Player) {
+	遊戲.讀寫鎖.Lock()
 	if 遊戲.夜晚淘汰者 == nil {
 		遊戲.夜晚淘汰者 = map[KILL]Player{}
 	}
 	遊戲.夜晚淘汰者[殺法] = 被殺玩家
+	遊戲.讀寫鎖.Unlock()
 
 	遊戲.判斷勝負()
 }

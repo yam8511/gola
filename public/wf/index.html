@@ -7,27 +7,114 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>小小狼人殺</title>
 
-    <style>
-        /* * {
-            padding: 0%;
-            margin: 0%;
-        } */
-    </style>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
 
 <body>
-    <div id="app">
-        <h1>歡迎狼人殺 🤪</h1>
-        <input v-model="token" placeholder="輸入Token..." />
-        <button @click="joinGame()">加入遊戲</button>
-        <hr>
-        <textarea v-model="input" placeholder="輸入遊戲指令..."></textarea>
-        <button @click="sendGame()">輸入訊息</button>
-        <hr>
-        <div>{{ output }}</div>
-        <hr>
-        <div>{{ list }}</div>
-        <div>{{ player }}</div>
+    <div id="app" class="container">
+        <div class="row">
+            <div class="col s12">
+                <h4>歡迎狼人殺 🤪</h4>
+            </div>
+
+            <div class="col s12">
+                <!-- 顯示輸出 -->
+                <div v-if="output !== ''">
+                    <p>{{ output }}</p>
+                </div>
+
+                <div v-if="gameOver">
+                    <button class="waves-effect waves-light btn" @click="finishGame">
+                        <i class="material-icons check"></i>遊戲結束
+                    </button>
+                </div>
+
+            </div>
+
+            <div v-if="ws === null && !gameOver" class="input-field col s12">
+                <input id="token" class="validate" type="text" v-model="token" />
+                <label for="token">輸入Token...</label>
+
+                <button class="waves-effect waves-light btn cyan darken-1" @click="joinGame()">加入遊戲</button>
+            </div>
+
+            <div v-else class="col s12">
+                <!-- 顯示session輸入 -->
+                <div v-if="needEnterSession" class="input-field">
+                    <input id="session" class="validate" type="text" v-model="session" />
+                    <label for="session">輸入Session...</label>
+
+                    <button class="waves-effect waves-light btn cyan darken-1" @click="joinGame()">加入遊戲</button>
+                </div>
+
+                <!-- 顯示角色設定 -->
+                <div v-if="showRules">
+                    <label for="combine">
+                        <input type="radio" id="combine" value="combine" v-model="setRuleType">
+                        <span>快速組合</span>
+                    </label>
+
+                    <label for="rule">
+                        <input type="radio" id="rule" value="rule" v-model="setRuleType">
+                        <span>自訂角色</span>
+                    </label>
+
+                    <div v-if="setRuleType === 'combine'">
+                        <hr />
+                        <label v-for="n in combine">
+                            <input name="combine-value" type="radio" :value="n" v-model="selectedRule" />
+                            <span>{{ n }}</span>
+                        </label>
+                    </div>
+                    <div v-else>
+                        <label v-for="c,r in rules">
+                            <span>{{ r }}</span>
+                            <input :id="r" type="number" min="0" @change="changeRule" />
+                        </label>
+                    </div>
+
+                    <br />
+
+                    <button class="waves-effect waves-light btn-small" @click="sendGame()">setup</button>
+                </div>
+
+                <!-- 顯示選擇號碼 -->
+                <div v-if="showNumber">
+                    <hr>
+
+                    <div class="row">
+                        <div v-for="n in numbers" :class="'col s' + parseInt(12 / numbers.length)">
+                            <a class="btn-floating btn pulse" @click="selectNumber(n)">{{ n }}</a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 等待確認 -->
+                <div v-if="isWaiting">
+                    <button class="waves-effect waves-light btn" @click="sendGame">
+                        <i class="material-icons check"></i>確認
+                    </button>
+                </div>
+
+                <!-- 房主按鈕 -->
+                <div v-if="leader && !gameStart">
+                    <button class="waves-effect waves-light btn" @click="sendGame">
+                        <i class="material-icons send"></i>遊戲開始
+                    </button>
+                </div>
+
+                <!-- 顯示玩家資訊 -->
+                <div v-if="no !== ''">
+                    <hr />
+                    <div>{{ player }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
@@ -36,6 +123,7 @@
             el: '#app',
             data: {
                 token: '',
+                session: '',
                 input: '',
                 action: '',
                 output: '',
@@ -43,13 +131,44 @@
                 no: '',
                 leader: false,
                 ws: null,
+                showNumber: false,
+                numbers: [],
+                selectedNumber: 0,
+                showRules: false,
+                combine: [],
+                rules: {},
+                selectedRule: '',
+                setRuleType: 'combine',
+                gameStart: false,
+                gameOver: false,
+                needEnterSession: false,
+                isWaiting: false,
             },
             methods: {
                 joinGame() {
+
+                    if (this.ws !== null) {
+                        if (this.needEnterSession) {
+                            console.log('session => ', this.session)
+                            this.input = this.session
+                            this.sendGame()
+                            return
+                        }
+
+                        return
+                    }
+
                     console.log('token => ', this.token)
                     const ws = new WebSocket(this.wsURL + '?token=' + this.token)
                     this.ws = ws
                     ws.onmessage = this.receiveGame
+                    ws.onclose = this.closedGame
+                },
+                closedGame() {
+                    this.ws = null
+                    if (this.gameStart) {
+                        this.output = '遊戲已經關閉'
+                    }
                 },
                 sendGame() {
                     this.ws.send(JSON.stringify({
@@ -57,44 +176,133 @@
                         'reply': `${this.input}`,
                     }))
                 },
+                changeRule(e) {
+                    const rule = e.target.id
+                    const n = parseInt(e.target.value)
+                    console.log(`${rule} x ${n}`)
+                    if (n === 0) {
+                        this.selectedRule[rule] = undefined
+                    } else {
+                        this.selectedRule[rule] = n
+                    }
+                    this.input = JSON.stringify(this.selectedRule)
+                    console.log('rules ==>', this.input)
+                },
+                selectNumber(n) {
+                    if (this.selectedNumber !== 0) {
+                        return
+                    }
+
+                    this.selectedNumber = n
+                    this.numbers = [this.selectedNumber]
+                    this.input = n + ''
+                    this.sendGame()
+                },
+                resetInfo() {
+                    this.leader = false
+                    this.no = ''
+                    this.session = ''
+                },
+                finishGame() {
+                    this.gameOver = false
+                    this.output = ''
+                },
                 receiveGame(e) {
                     const tmp = JSON.parse(e.data)
                     this.output = tmp.sound
                     if (tmp.display !== '') {
                         this.output = tmp.display
                     }
+
                     const speech = new window.SpeechSynthesisUtterance()
                     speech.text = tmp.sound
                     window.speechSynthesis.speak(speech)
 
+                    this.showRules = false
+                    this.showNumber = false
+                    this.needEnterSession = false
+                    this.isWaiting = false
+                    this.action = tmp.action
+
                     switch (tmp.action) {
                         case 'role_setup':
+                            this.resetInfo()
                             // 角色設定
-                            this.action = tmp.action
-                            this.no = ''
-                            break;
-                        case 'select_number':
-                            // 角色設定
-                            this.action = tmp.action
-                            this.no = ''
-                            break;
-                        case 'new_token':
-                            // 新遊戲房
-                            this.action = tmp.action
-                            this.no = ''
-                        case 'take_rule':
-                            this.action = tmp.action
-                            this.no = tmp.data['位子'] + '號' + tmp.data['職業']
-                            if (tmp.data['房主']) {
-                                this.leader = true;
+                            this.showRules = true
+                            this.combine = tmp.data.combine
+                            if (this.combine.length > 0) {
+                                this.setRuleType = 'combine'
+                                this.selectedRule = this.combine[0]
+                                this.input = this.selectedRule
+                            } else {
+                                this.setRuleType = 'rule'
+                                this.input = {}
                             }
-                            break;
+                            this.rules = tmp.data.rule
+                            this.gameOver = false
+                            break
+                        case 'select_number':
+                            this.resetInfo()
+                            // 選擇號碼
+                            this.showNumber = true
+                            this.numbers = tmp.data
+                            console.log('number =>', this.numbers)
+                            break
+                        case 'take_rule':
+                            this.session = tmp.data['編號']
+                            this.no = `${tmp.data['位子']}號${tmp.data['職業']}`
+                            this.output = '等待遊戲開始...'
+                            break
+                        case 'change_room_master':
+                            this.leader = true
+                            this.gameStart = tmp.data['遊戲開始']
+                            this.input = 'start'
+                            break
+                        case 'select_player':
+                            // 選擇號碼
+                            this.selectedNumber = 0
+                            this.showNumber = true
+                            this.numbers = tmp.data
+                            console.log('number =>', this.numbers)
+                            break
+                        case 'game_is_running':
+                            this.output = '遊戲已經開始，想重新進入遊戲，請輸入session'
+                            this.gameStart = true
+                            this.needEnterSession = true
+                            break
+                        case 'all_close_eyes':
+                            this.gameStart = true
+                            break
+                        case 'waiting':
+                            this.isWaiting = true
+                            break
+                        case 'game_over':
+                            this.output = tmp.data
+                            this.gameStart = false
+                            this.gameOver = true
+                            this.resetInfo()
+                            break
                         default:
-                            this.action = tmp.action
-                            break;
+                            break
                     }
-                    this.list = tmp.data
-                    console.log(e)
+                }
+            },
+            watch: {
+                setRuleType(v) {
+                    if (v === 'combine') {
+                        if (this.combine.length > 0) {
+                            this.selectedRule = this.combine[0]
+                        } else {
+                            this.selectedRule = ''
+                        }
+                    } else {
+                        this.selectedRule = {}
+                    }
+                },
+                selectedRule(v) {
+                    if (this.setRuleType == 'combine') {
+                        this.input = v
+                    }
                 }
             },
             computed: {
@@ -104,10 +312,10 @@
                     }
 
                     if (this.leader) {
-                        return `我是${this.no}, 也是房主`
+                        return `我是${this.no}, 也是房主, 編號: ${this.session}`
                     }
 
-                    return `我是${this.no}`
+                    return `我是${this.no}, 編號: ${this.session}`
                 },
                 wsURL() {
                     let url = window.location.host + '/wf/game'
