@@ -42,6 +42,10 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 				return
 			}
 
+			if 遊戲.初始設定過() {
+				break
+			}
+
 			switch string(so.Reply) {
 			case "4":
 				rules = map[RULE]int{
@@ -111,7 +115,6 @@ var 遊戲管理中心 = struct {
 }{}
 
 func 建立新遊戲(編號 string) *Game {
-	// http://www.87g.com/lrs/59119.html
 	遊戲管理中心.Do(func() {
 		遊戲管理中心.讀寫鎖 = &sync.RWMutex{}
 		遊戲管理中心.遊戲群 = map[string]*Game{}

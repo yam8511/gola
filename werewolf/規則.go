@@ -27,6 +27,7 @@ const (
 	等待回應    = 動作("waiting")
 	通知玩家有技能 = 動作("notify_skill")
 	顯示投票結果  = 動作("vote_result")
+	玩家淘汰    = 動作("player_out")
 )
 
 type 階段 int
@@ -58,6 +59,7 @@ const (
 type RULE string
 
 const (
+	// http://www.87g.com/lrs/59119.html
 	平民  = RULE("平民")
 	預言家 = RULE("預言家")
 	女巫  = RULE("女巫")
