@@ -23,6 +23,8 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 		return NewProphesier(遊戲, 號碼)
 	case 獵人:
 		return NewHunter(遊戲, 號碼)
+	case 女巫:
+		return NewWitch(遊戲, 號碼)
 	}
 
 	return nil
@@ -44,6 +46,8 @@ func PickSkiller(玩家們 map[string]Player) (狼人玩家們, 神職玩家們 
 			神職玩家們 = append(神職玩家們, 玩家.(*Prophesier))
 		case 獵人:
 			神職玩家們 = append(神職玩家們, 玩家.(*Hunter))
+		case 女巫:
+			神職玩家們 = append(神職玩家們, 玩家.(*Witch))
 		}
 	}
 
@@ -58,7 +62,7 @@ func RuleOptions() map[RULE]GROUP {
 		獵人:  神職,
 		騎士:  神職,
 		狼人:  狼職,
-		// 女巫:  神職,
+		女巫:  神職,
 		// 狼王:  狼職,
 		// 雪狼:  狼職,
 	}

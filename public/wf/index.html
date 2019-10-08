@@ -96,12 +96,12 @@
 
                 <!-- 等待確認 -->
                 <div v-if="isWaiting">
-                    <button class="waves-effect waves-light btn" @click="sendGame">
-                        <i class="material-icons check"></i>確認
+                    <button  v-for="v,k in waitingOptions" class="waves-effect waves-light btn" @click="selectOptions(v)">
+                        <i class="material-icons check"></i>{{ k }}
                     </button>
                 </div>
 
-                <!-- 等待確認 -->
+                <!-- 等待技能 -->
                 <div v-if="hasSkill">
                     <button class="waves-effect waves-light btn" @click="skill(0)">
                         <i class="material-icons close"></i>不啟動
@@ -153,6 +153,7 @@
                 gameOver: false,
                 needEnterSession: false,
                 isWaiting: false,
+                waitingOptions: {},
                 hasSkill: false,
                 skillOption: '',
             },
@@ -161,7 +162,6 @@
 
                     if (this.ws !== null) {
                         if (this.needEnterSession) {
-                            console.log('session => ', this.session)
                             this.input = this.session
                             this.sendGame()
                             return
@@ -170,7 +170,6 @@
                         return
                     }
 
-                    console.log('token => ', this.token)
                     const ws = new WebSocket(this.wsURL + '?token=' + this.token)
                     this.ws = ws
                     ws.onmessage = this.receiveGame
@@ -198,7 +197,6 @@
                         this.selectedRule[rule] = n
                     }
                     this.input = JSON.stringify(this.selectedRule)
-                    console.log('rules ==>', this.input)
                 },
                 selectNumber(n) {
                     if (this.selectedNumber !== 0) {
@@ -216,6 +214,10 @@
                     } else {
                         this.input = ''
                     }
+                    this.sendGame()
+                },
+                selectOptions(v) {
+                    this.input = v
                     this.sendGame()
                 },
                 resetInfo() {
@@ -242,6 +244,7 @@
                     this.showNumber = false
                     this.needEnterSession = false
                     this.isWaiting = false
+                    this.waitingOptions = {'確認':''}
                     this.hasSkill = false
                     this.action = tmp.action
 
@@ -267,7 +270,6 @@
                             // 選擇號碼
                             this.showNumber = true
                             this.numbers = tmp.data
-                            console.log('number =>', this.numbers)
                             break
                         case 'take_rule':
                             this.session = tmp.data['編號']
@@ -284,7 +286,6 @@
                             this.selectedNumber = 0
                             this.showNumber = true
                             this.numbers = tmp.data
-                            console.log('number =>', this.numbers)
                             break
                         case 'game_is_running':
                             this.output = '遊戲已經開始，想重新進入遊戲，請輸入session'
@@ -296,6 +297,12 @@
                             break
                         case 'waiting':
                             this.isWaiting = true
+                            if (tmp.data!==null && Object.keys(tmp.data).length > 0) {
+                                this.waitingOptions = {}
+                                for (const key in tmp.data) {
+                                    this.waitingOptions[key] = tmp.data[key]
+                                }
+                            }
                             break
                         case 'notify_skill':
                             this.hasSkill = true
