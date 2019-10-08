@@ -18,6 +18,8 @@
 
 <body>
     <div id="app" class="container">
+        <a class="btn-floating btn-large waves-effect waves-light red"><i class="material-icons">add</i></a>
+
         <div class="row">
             <div class="col s12">
                 <h4>歡迎狼人殺 🤪</h4>
@@ -274,8 +276,8 @@
                         this.output = tmp.display
                     }
 
-                    const speech = new window.SpeechSynthesisUtterance()
-                    speech.text = tmp.sound
+                    const speech = new window.SpeechSynthesisUtterance(tmp.sound)
+                    speech.lang = 'zh-TW'
                     window.speechSynthesis.speak(speech)
 
                     this.showRules = false
