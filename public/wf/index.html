@@ -298,8 +298,23 @@
                     }
 
                     const tmp = JSON.parse(e.data)
-                    const lastOutput = this.output
-                    const lastAction = this.action
+
+                    if (tmp.action === 'refresh_online') {
+                        this.online = tmp.data
+                        return
+                    }
+
+                    if (tmp.action === 'change_room_master') {
+                        this.leader = true
+                        this.gameStart = tmp.data['遊戲開始']
+                        if (!this.gameStart) {
+                            this.action = 'change_room_master'
+                            this.input = 'start'
+                        }
+                        return
+                    }
+
+
                     this.output = tmp.sound
                     if (tmp.display !== '') {
                         this.output = tmp.display
@@ -345,13 +360,6 @@
                             this.player = tmp.data['職業']
                             this.output = '等待遊戲開始...'
                             break
-                        case 'change_room_master':
-                            this.leader = true
-                            this.gameStart = tmp.data['遊戲開始']
-                            if (!this.gameStart) {
-                                this.input = 'start'
-                            }
-                            break
                         case 'select_player':
                             // 選擇號碼
                             this.selectedNumber = 0
@@ -394,11 +402,6 @@
                         case 'player_out':
                             this.isOut = true
                             break
-                        case 'refresh_online':
-                            this.online = tmp.data
-                            this.output = lastOutput
-                            this.action = lastAction
-                            break
                         default:
                             break
                     }
@@ -439,49 +442,51 @@
             },
             mounted() {
                 console.log('Ws URL', this.wsURL)
-                this.synth = window.speechSynthesis
-                console.log('synth => ', this.synth)
-                setTimeout(() => {
-                    let voices = this.synth.getVoices()
-                    voices = voices.
-                        filter((e) => e.lang.indexOf('zh-') > -1 || e.lang === 'en-US').
-                        map((e) => {
-                            let words = e.name.split(' ')
-                            let text = words[words.length - 1]
-                            if (words.length == 1) {
-                                words = e.name.split(' ')
-                                text = words[words.length - 1]
-                                words = text.split('（')
-                                text = words[0]
-                            }
-                            if (e.lang === 'zh-TW') {
-                                this.voice = e
-                            }
-                            return {
-                                text: text,
-                                lang: e.lang,
-                                voice: e,
-                            }
-                        })
-
-                    this.voices = {}
-                    for (const i in voices) {
-                        const voice = voices[i]
-                        this.voices[voice.lang] = voice
-                    }
-
-                    console.log('this.voice => ', this.voice)
-                    console.log('this.voices => ', this.voices)
-
+                if ('speechSynthesis' in window) {
+                    this.synth = window.speechSynthesis
+                    console.log('synth => ', this.synth)
                     setTimeout(() => {
-                        const elems = document.querySelectorAll('.fixed-action-btn');
-                        let instance = M.FloatingActionButton.init(elems, {
-                            hoverEnabled: false,
-                        });
+                        let voices = this.synth.getVoices()
+                        voices = voices.
+                            filter((e) => e.lang.indexOf('zh-') > -1 || e.lang === 'en-US').
+                            map((e) => {
+                                let words = e.name.split(' ')
+                                let text = words[words.length - 1]
+                                if (words.length == 1) {
+                                    words = e.name.split(' ')
+                                    text = words[words.length - 1]
+                                    words = text.split('（')
+                                    text = words[0]
+                                }
+                                if (e.lang === 'zh-TW') {
+                                    this.voice = e
+                                }
+                                return {
+                                    text: text,
+                                    lang: e.lang,
+                                    voice: e,
+                                }
+                            })
+
+                        this.voices = {}
+                        for (const i in voices) {
+                            const voice = voices[i]
+                            this.voices[voice.lang] = voice
+                        }
+
                         console.log('this.voice => ', this.voice)
                         console.log('this.voices => ', this.voices)
+
+                        setTimeout(() => {
+                            const elems = document.querySelectorAll('.fixed-action-btn');
+                            let instance = M.FloatingActionButton.init(elems, {
+                                hoverEnabled: false,
+                            });
+                            console.log('this.voice => ', this.voice)
+                            console.log('this.voices => ', this.voices)
+                        }, 1)
                     }, 1)
-                }, 1)
+                }
             }
         })
     </script>
