@@ -10,6 +10,8 @@
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
@@ -96,19 +98,20 @@
 
                 <!-- 等待確認 -->
                 <div v-if="isWaiting">
-                    <button  v-for="v,k in waitingOptions" class="waves-effect waves-light btn" @click="selectOptions(v)">
+                    <button v-for="v,k in waitingOptions" class="waves-effect waves-light btn"
+                        @click="selectOptions(v)">
                         <i class="material-icons check"></i>{{ k }}
                     </button>
                 </div>
 
-                <!-- 等待技能 -->
-                <div v-if="hasSkill">
-                    <button class="waves-effect waves-light btn" @click="skill(0)">
-                        <i class="material-icons close"></i>不啟動
-                    </button>
-                    <button class="waves-effect waves-light btn" @click="skill(1)">
-                        <i class="material-icons check"></i>啟動
-                    </button>
+                <!-- 顯示結果 -->
+                <div v-if="showVote">
+                    <hr />
+                    <ul class="collection">
+                        <li v-for="v,k in voteResult" class="collection-item">
+                            {{ k }} <i class="material-icons Small">restaurant_menu</i> {{ v }}
+                        </li>
+                    </ul>
                 </div>
 
                 <!-- 房主按鈕 -->
@@ -154,8 +157,11 @@
                 needEnterSession: false,
                 isWaiting: false,
                 waitingOptions: {},
-                hasSkill: false,
-                skillOption: '',
+                showVote: false,
+                voteResult: {
+                    1: '氣票',
+                    2: '3',
+                },
             },
             methods: {
                 joinGame() {
@@ -208,14 +214,6 @@
                     this.input = n + ''
                     this.sendGame()
                 },
-                skill(v) {
-                    if (v == 1) {
-                        this.input = this.skillOption
-                    } else {
-                        this.input = ''
-                    }
-                    this.sendGame()
-                },
                 selectOptions(v) {
                     this.input = v
                     this.sendGame()
@@ -244,7 +242,7 @@
                     this.showNumber = false
                     this.needEnterSession = false
                     this.isWaiting = false
-                    this.waitingOptions = {'確認':''}
+                    this.waitingOptions = { '確認': '' }
                     this.hasSkill = false
                     this.action = tmp.action
 
@@ -297,22 +295,24 @@
                             break
                         case 'waiting':
                             this.isWaiting = true
-                            if (tmp.data!==null && Object.keys(tmp.data).length > 0) {
+                            if (tmp.data !== null && Object.keys(tmp.data).length > 0) {
                                 this.waitingOptions = {}
                                 for (const key in tmp.data) {
                                     this.waitingOptions[key] = tmp.data[key]
                                 }
                             }
                             break
-                        case 'notify_skill':
-                            this.hasSkill = true
-                            this.skillOption = tmp.data
-                            break
                         case 'game_over':
                             this.output = tmp.data
                             this.gameStart = false
                             this.gameOver = true
+                            this.showVote = false
+                            this.voteResult = {}
                             this.resetInfo()
+                            break
+                        case 'vote_result':
+                            this.showVote = true
+                            this.voteResult = tmp.data
                             break
                         default:
                             break

@@ -30,17 +30,20 @@ func (我 *Knight) 職業() RULE {
 }
 func (我 *Knight) 發言() bool {
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
-		Display: "您有技能可以發動",
-		Action:  通知玩家有技能,
-		Data:    "skill",
+		Display: "您有技能可以發動, 要發動嗎?",
+		Action:  等待回應,
+		Data: map[string]string{
+			"發動": "yes",
+			"不要": "no",
+		},
 	})
 
-	so, err := waitChannelBack(我.傳話筒, 通知玩家有技能)
+	so, err := waitChannelBack(我.傳話筒, 等待回應)
 	if err != nil {
 		return false
 	}
 
-	if so.Reply == "skill" {
+	if so.Reply == "yes" {
 		我.遊戲.旁白(傳輸資料{Sound: "騎士發動技能，請問你要查驗的對象是？"})
 
 		我.能力()

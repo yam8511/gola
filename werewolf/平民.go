@@ -48,7 +48,7 @@ func (我 *Human) 投票() int {
 
 	var 投票號碼 int
 	for {
-		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		so, err := waitChannelBack(我.傳話筒, 等待回應)
 		if err != nil {
 			return 0
 		}
