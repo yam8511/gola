@@ -30,27 +30,27 @@
                 </div>
 
                 <div v-if="gameOver">
-                    <button class="waves-effect waves-light btn" @click="finishGame">
-                        <i class="material-icons check"></i>遊戲結束
+                    <button class="waves-effect waves-light btn" @mousedown="finishGame">
+                        <i class="material-icons small">check</i>遊戲結束
                     </button>
                 </div>
 
             </div>
 
             <div v-if="ws === null && !gameOver" class="input-field col s12">
-                <input id="token" class="validate" type="text" v-model="token" />
+                <input id="token" class="validate" type="text" v-model="token" :autofocus="this.token !== ''" />
                 <label for="token">輸入Token...</label>
 
-                <button class="waves-effect waves-light btn cyan darken-1" @click="joinGame()">加入遊戲</button>
+                <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
             </div>
 
             <div v-else class="col s12">
                 <!-- 顯示session輸入 -->
                 <div v-if="needEnterSession" class="input-field">
                     <input id="session" class="validate" type="text" v-model="session" />
-                    <label for="session">輸入Session...</label>
+                    <label for="session">輸入號碼...</label>
 
-                    <button class="waves-effect waves-light btn cyan darken-1" @click="joinGame()">加入遊戲</button>
+                    <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
                 </div>
 
                 <!-- 顯示角色設定 -->
@@ -75,13 +75,13 @@
                     <div v-else>
                         <label v-for="c,r in rules">
                             <span>{{ r }}</span>
-                            <input :id="r" type="number" min="0" @change="changeRule" />
+                            <input :id="r" type="number" min="0" @change="changeRule" @keyup="changeRule" />
                         </label>
                     </div>
 
                     <br />
 
-                    <button class="waves-effect waves-light btn-small" @click="sendGame()">setup</button>
+                    <button class="waves-effect waves-light btn-small" @mousedown="sendGame()">setup</button>
                 </div>
 
                 <!-- 顯示選擇號碼 -->
@@ -90,18 +90,17 @@
 
                     <div class="row">
                         <div v-for="n in numbers" :class="'col s' + parseInt(12 / numbers.length)">
-                            <a class="btn-floating btn pulse" @click="selectNumber(n)">{{ n }}</a>
+                            <a class="btn-floating btn pulse" @mousedown="selectNumber(n)">{{ n }}</a>
                         </div>
                     </div>
                 </div>
 
 
                 <!-- 等待確認 -->
-                <div v-if="isWaiting">
-                    <button v-for="v,k in waitingOptions" class="waves-effect waves-light btn"
-                        @click="selectOptions(v)">
-                        <i class="material-icons check"></i>{{ k }}
-                    </button>
+                <div v-if="isWaiting" class="row">
+                    <div v-for="v,k in waitingOptions" :class="'col s' + optionsCol">
+                        <a class="btn-floating btn pulse" @mousedown="selectOptions(k, v)">{{ k }}</a>
+                    </div>
                 </div>
 
                 <!-- 顯示結果 -->
@@ -109,22 +108,54 @@
                     <hr />
                     <ul class="collection">
                         <li v-for="v,k in voteResult" class="collection-item">
-                            {{ k }} <i class="material-icons Small">restaurant_menu</i> {{ v }}
+                            {{ k }} <i class="material-icons small">restaurant_menu</i> {{ v }}
                         </li>
                     </ul>
                 </div>
 
                 <!-- 房主按鈕 -->
                 <div v-if="leader && !gameStart">
-                    <button class="waves-effect waves-light btn" @click="sendGame">
-                        <i class="material-icons send"></i>遊戲開始
+                    <button class="waves-effect waves-light btn" @mousedown="sendGame">
+                        <i class="material-icons">send</i>遊戲開始
                     </button>
                 </div>
 
                 <!-- 顯示玩家資訊 -->
                 <div v-if="no !== ''">
                     <hr />
-                    <div>{{ player }}</div>
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <i class="material-icons small deep-purple-text text-darken-2">casino</i> 號碼
+                            <span class="deep-purple-text text-darken-2">#{{ no }}</span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small teal-text text-darken-2">account_box</i> 角色
+                            <span class="teal-text text-darken-2">#{{ player }}</span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small red-text text-darken-3">airline_seat_flat</i> 淘汰
+                            <i v-if="isOut"
+                                class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                            <i v-else class="material-icons small red-text text-lighten-2">cancel</i>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small light-blue-text text-darken-4">person_add</i> 房主
+                            <i v-if="leader"
+                                class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                            <i v-else class="material-icons small red-text text-lighten-2">cancel</i>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small orange-text text-darken-2">fingerprint</i> Token:
+                            <span class="orange-text text-darken-2">{{ token }}</span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small brown-text text-darken-4">people</i> 人數
+                            <span v-for="on in online">
+                                <i v-if="on" class="material-icons small brown-text text-darken-4">person</i>
+                                <i v-else class="material-icons small brown-text text-darken-4">person_outline</i>
+                            </span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -142,6 +173,7 @@
                 output: '',
                 list: '',
                 no: '',
+                player: '',
                 leader: false,
                 ws: null,
                 showNumber: false,
@@ -158,10 +190,9 @@
                 isWaiting: false,
                 waitingOptions: {},
                 showVote: false,
-                voteResult: {
-                    1: '氣票',
-                    2: '3',
-                },
+                voteResult: {},
+                isOut: false,
+                online: [],
             },
             methods: {
                 joinGame() {
@@ -183,6 +214,7 @@
                 },
                 closedGame() {
                     this.ws = null
+                    this.resetInfo()
                     if (this.gameStart) {
                         this.output = '遊戲已經關閉'
                     }
@@ -196,13 +228,13 @@
                 changeRule(e) {
                     const rule = e.target.id
                     const n = parseInt(e.target.value)
-                    console.log(`${rule} x ${n}`)
-                    if (n === 0) {
-                        this.selectedRule[rule] = undefined
+                    if (n === 0 || n === null) {
+                        this.selectedRule[rule] = 0
                     } else {
                         this.selectedRule[rule] = n
                     }
                     this.input = JSON.stringify(this.selectedRule)
+                    console.log('rule', this.input)
                 },
                 selectNumber(n) {
                     if (this.selectedNumber !== 0) {
@@ -214,13 +246,16 @@
                     this.input = n + ''
                     this.sendGame()
                 },
-                selectOptions(v) {
+                selectOptions(k, v) {
+                    this.waitingOptions = {}
+                    this.waitingOptions[k] = v
                     this.input = v
                     this.sendGame()
                 },
                 resetInfo() {
                     this.leader = false
                     this.no = ''
+                    this.player = ''
                     this.session = ''
                 },
                 finishGame() {
@@ -228,7 +263,12 @@
                     this.output = ''
                 },
                 receiveGame(e) {
+                    if (e.data === 'ping') {
+                        return
+                    }
+
                     const tmp = JSON.parse(e.data)
+                    const lastOutput = this.output
                     this.output = tmp.sound
                     if (tmp.display !== '') {
                         this.output = tmp.display
@@ -266,18 +306,22 @@
                         case 'select_number':
                             this.resetInfo()
                             // 選擇號碼
+                            this.selectedNumber = 0
                             this.showNumber = true
                             this.numbers = tmp.data
                             break
                         case 'take_rule':
                             this.session = tmp.data['編號']
-                            this.no = `${tmp.data['位子']}號${tmp.data['職業']}`
+                            this.no = tmp.data['位子']
+                            this.player = tmp.data['職業']
                             this.output = '等待遊戲開始...'
                             break
                         case 'change_room_master':
                             this.leader = true
                             this.gameStart = tmp.data['遊戲開始']
-                            this.input = 'start'
+                            if (!this.gameStart) {
+                                this.input = 'start'
+                            }
                             break
                         case 'select_player':
                             // 選擇號碼
@@ -286,7 +330,6 @@
                             this.numbers = tmp.data
                             break
                         case 'game_is_running':
-                            this.output = '遊戲已經開始，想重新進入遊戲，請輸入session'
                             this.gameStart = true
                             this.needEnterSession = true
                             break
@@ -302,10 +345,15 @@
                                 }
                             }
                             break
+                        case 'take_token':
+                            this.isWaiting = true
+                            this.token = tmp.data
+                            break
                         case 'game_over':
                             this.output = tmp.data
                             this.gameStart = false
                             this.gameOver = true
+                            this.isOut = false
                             this.showVote = false
                             this.voteResult = {}
                             this.resetInfo()
@@ -313,6 +361,13 @@
                         case 'vote_result':
                             this.showVote = true
                             this.voteResult = tmp.data
+                            break
+                        case 'player_out':
+                            this.isOut = true
+                            break
+                        case 'refresh_online':
+                            this.online = tmp.data
+                            this.output = lastOutput
                             break
                         default:
                             break
@@ -338,16 +393,9 @@
                 }
             },
             computed: {
-                player() {
-                    if (this.no === '') {
-                        return ''
-                    }
-
-                    if (this.leader) {
-                        return `我是${this.no}, 也是房主, 編號: ${this.session}`
-                    }
-
-                    return `我是${this.no}, 編號: ${this.session}`
+                optionsCol() {
+                    const optionLen = parseInt(12 / Object.keys(this.waitingOptions).length)
+                    return optionLen > 12 ? 1 : optionLen
                 },
                 wsURL() {
                     let url = window.location.host + '/wf/game'

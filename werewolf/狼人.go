@@ -28,10 +28,17 @@ func (我 *Wolf) 職業() RULE {
 }
 
 func (我 *Wolf) 能力() (_ Player) {
+	if 我.出局了() {
+		return
+	}
+
 	可殺的玩家號碼 := []int{}
 	目前存活玩家們 := 我.遊戲.存活玩家們()
 	for i := range 目前存活玩家們 {
 		玩家 := 目前存活玩家們[i]
+		if 我.遊戲.上一晚狼殺玩家號碼 == 玩家.號碼() {
+			continue
+		}
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
@@ -39,7 +46,7 @@ func (我 *Wolf) 能力() (_ Player) {
 		Display: "請問你要殺誰？",
 		Action:  選擇玩家,
 		Data:    可殺的玩家號碼,
-	})
+	}, 0)
 
 	for {
 

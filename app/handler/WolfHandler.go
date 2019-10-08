@@ -4,6 +4,7 @@ import (
 	"gola/werewolf"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -28,6 +29,16 @@ func JoinGame(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		for range ticker.C {
+			err := conn.WriteMessage(websocket.TextMessage, []byte("ping"))
+			if err != nil {
+				return
+			}
+		}
+	}()
 
 	werewolf.EnterGame(conn, token)
 }

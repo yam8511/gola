@@ -1,7 +1,9 @@
 package werewolf
 
 import (
+	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -90,13 +92,14 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 
 	if 新進入 {
 		連線.WriteJSON(傳輸資料{
-			Sound:  "可分享序號一起玩",
-			Action: 等待回應,
-			Data:   編號,
+			Sound:   "可分享序號一起玩",
+			Display: "可分享序號一起玩: " + 編號,
+			Action:  拿到Token,
+			Data:    編號,
 		})
 
 		for {
-			_, err := waitSocketBack(連線, 等待回應)
+			_, err := waitSocketBack(連線, 拿到Token)
 			if err != nil {
 				return
 			}
@@ -131,7 +134,7 @@ func 建立新遊戲(編號 string) *Game {
 
 // 新遊戲 建立新的一場遊戲
 func 新遊戲() (string, *Game) {
-	編號 := uuid.New().String()
+	編號 := fmt.Sprintf("%x", md5.Sum([]byte(uuid.New().String())))
 	遊戲 := 建立新遊戲(編號)
 	return 編號, 遊戲
 }

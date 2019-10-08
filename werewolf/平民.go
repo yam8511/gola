@@ -164,7 +164,7 @@ func (我 *Human) 發言() bool {
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		Display: "請發言",
 		Action:  等待回應,
-	})
+	}, 100)
 	waitChannelBack(我.傳話筒, 等待回應)
 	return false
 }
@@ -180,7 +180,7 @@ func (我 *Human) 發表遺言() {
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		Display: "請發言",
 		Action:  等待回應,
-	})
+	}, 100)
 	waitChannelBack(我.傳話筒, 等待回應)
 	return
 }

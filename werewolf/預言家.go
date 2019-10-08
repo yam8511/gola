@@ -32,13 +32,20 @@ func (我 *Prophesier) 需要夜晚行動() bool {
 
 func (我 *Prophesier) 能力() (_ Player) {
 
-	我.遊戲.旁白(傳輸資料{Sound: "請問你要查驗的對象是？"})
+	我.遊戲.旁白(傳輸資料{Sound: "請問你要查驗的對象是？"}, 3000)
+
+	if 我.出局了() {
+		return
+	}
 
 	可查看的玩家號碼 := []int{}
 
 	目前存活玩家們 := 我.遊戲.存活玩家們()
 	for i := range 目前存活玩家們 {
 		玩家 := 目前存活玩家們[i]
+		if 我.號碼() == 玩家.號碼() {
+			continue
+		}
 		可查看的玩家號碼 = append(可查看的玩家號碼, 玩家.號碼())
 	}
 
@@ -46,7 +53,7 @@ func (我 *Prophesier) 能力() (_ Player) {
 		Display: "請問你要查驗的對象是？",
 		Action:  選擇玩家,
 		Data:    可查看的玩家號碼,
-	})
+	}, 0)
 
 	for {
 
@@ -72,7 +79,7 @@ func (我 *Prophesier) 能力() (_ Player) {
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 				Display: strconv.Itoa(玩家號碼) + s,
 				Action:  等待回應,
-			})
+			}, 0)
 
 			waitChannelBack(我.傳話筒, 等待回應)
 			return
