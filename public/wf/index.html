@@ -284,6 +284,14 @@
                         M.toast({ html: `改成 ${v.voice.name} 發音` })
                     }, 1)
                 },
+                speak(sound) {
+                    if (this.voice === null) {
+                        return
+                    }
+                    const speech = new window.SpeechSynthesisUtterance(sound)
+                    speech.voice = this.voice
+                    window.speechSynthesis.speak(speech)
+                },
                 receiveGame(e) {
                     if (e.data === 'ping') {
                         return
@@ -291,15 +299,13 @@
 
                     const tmp = JSON.parse(e.data)
                     const lastOutput = this.output
+                    const lastAction = this.action
                     this.output = tmp.sound
                     if (tmp.display !== '') {
                         this.output = tmp.display
                     }
 
-                    const speech = new window.SpeechSynthesisUtterance(tmp.sound)
-                    console.log('vocie', this.voice)
-                    speech.voice = this.voice
-                    window.speechSynthesis.speak(speech)
+                    this.speak(tmp.sound)
 
                     this.showRules = false
                     this.showNumber = false
@@ -391,6 +397,7 @@
                         case 'refresh_online':
                             this.online = tmp.data
                             this.output = lastOutput
+                            this.action = lastAction
                             break
                         default:
                             break
