@@ -18,7 +18,17 @@
 
 <body>
     <div id="app" class="container">
-        <a class="btn-floating btn-large waves-effect waves-light red"><i class="material-icons">add</i></a>
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large teal">
+                <i class="large material-icons">translate</i>
+            </a>
+            <ul>
+                <li v-for="v in voices">
+                    <a v-if="v.lang === voice.lang" class="btn-floating purple lighten-2 btn-large">{{ v.text }}</a>
+                    <a v-else class="btn-floating teal lighten-2 btn-large" @mousedown="changeLang(v)">{{ v.text }}</a>
+                </li>
+            </ul>
+        </div>
 
         <div class="row">
             <div class="col s12">
@@ -168,6 +178,9 @@
         var vm = new Vue({
             el: '#app',
             data: {
+                synth: null,
+                voices: [],
+                voice: null,
                 token: '',
                 session: '',
                 input: '',
@@ -264,6 +277,13 @@
                     this.gameOver = false
                     this.output = ''
                 },
+                changeLang(v) {
+                    this.voice = v.voice
+                    M.Toast.dismissAll();
+                    setTimeout(() => {
+                        M.toast({ html: `改成 ${v.voice.name} 發音` })
+                    }, 1)
+                },
                 receiveGame(e) {
                     if (e.data === 'ping') {
                         return
@@ -277,7 +297,8 @@
                     }
 
                     const speech = new window.SpeechSynthesisUtterance(tmp.sound)
-                    speech.lang = 'zh-TW'
+                    console.log('vocie', this.voice)
+                    speech.voice = this.voice
                     window.speechSynthesis.speak(speech)
 
                     this.showRules = false
@@ -411,6 +432,49 @@
             },
             mounted() {
                 console.log('Ws URL', this.wsURL)
+                this.synth = window.speechSynthesis
+                console.log('synth => ', this.synth)
+                setTimeout(() => {
+                    let voices = this.synth.getVoices()
+                    voices = voices.
+                        filter((e) => e.lang.indexOf('zh-') > -1 || e.lang === 'en-US').
+                        map((e) => {
+                            let words = e.name.split(' ')
+                            let text = words[words.length - 1]
+                            if (words.length == 1) {
+                                words = e.name.split(' ')
+                                text = words[words.length - 1]
+                                words = text.split('（')
+                                text = words[0]
+                            }
+                            if (e.lang === 'zh-TW') {
+                                this.voice = e
+                            }
+                            return {
+                                text: text,
+                                lang: e.lang,
+                                voice: e,
+                            }
+                        })
+
+                    this.voices = {}
+                    for (const i in voices) {
+                        const voice = voices[i]
+                        this.voices[voice.lang] = voice
+                    }
+
+                    console.log('this.voice => ', this.voice)
+                    console.log('this.voices => ', this.voices)
+
+                    setTimeout(() => {
+                        const elems = document.querySelectorAll('.fixed-action-btn');
+                        let instance = M.FloatingActionButton.init(elems, {
+                            hoverEnabled: false,
+                        });
+                        console.log('this.voice => ', this.voice)
+                        console.log('this.voices => ', this.voices)
+                    }, 1)
+                }, 1)
             }
         })
     </script>
