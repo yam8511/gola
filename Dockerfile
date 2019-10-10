@@ -1,24 +1,22 @@
 # Build Stage
-FROM golang:1.11-alpine AS builder
+FROM golang:1.13-alpine AS builder
 
 # 安裝基本工具
 # RUN apk update && apk upgrade
 # RUN apk add --no-cache bash git openssh gcc g++
 
 # 複製原始碼
-COPY . /go/src/gola
-WORKDIR /go/src/gola
+COPY . /app
+WORKDIR /app
 
 # 進行編譯
-RUN go build -o gola
+RUN go build -mod vendor -o gola
 
 
 # Final Stage
-FROM alpine
+FROM golang:1.13-alpine
 
-ARG APP_ENV=docker
-COPY --from=builder /usr/local/go/lib /usr/local/go/lib
-COPY --from=builder /go/src/gola/gola /app/gola
+COPY --from=builder /app/gola /app/gola
 COPY ./config /app/config
 COPY ./public /app/public
 COPY ./storage /app/storage
