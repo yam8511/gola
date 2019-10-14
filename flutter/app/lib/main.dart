@@ -30,7 +30,7 @@ class LaunchPage extends StatefulWidget {
 
 class _LaunchPageState extends State<LaunchPage> {
   goPage() {
-    Navigator.pushNamed(context, "home");
+    Navigator.pushReplacementNamed(context, "home");
   }
 
   autoGoPage() async {
@@ -127,6 +127,7 @@ class _HomePageState extends State<HomePage> {
               Padding(
                 padding: EdgeInsets.all(50.0),
               ),
+              Divider(),
               Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: 16.0,
@@ -165,43 +166,12 @@ class _HomePageState extends State<HomePage> {
                   }
                 },
               ),
-              Column(
-                children: <Widget>[
-                  Slider(
-                    activeColor: Colors.pink,
-                    min: 0.0,
-                    max: 10.0,
-                    onChanged: (newRating) {
-                      setState(() {
-                        _sliderValue = newRating.toInt();
-                        print(_sliderValue);
-                      });
-                    },
-                    value: _sliderValue.toDouble(),
-                  ),
-                ],
-              ),Text(_sliderValue.toString(),)
-              
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class TriangleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(size.width, 0.0);
-    path.lineTo(size.width / 2, size.height);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(TriangleClipper oldClipper) => false;
 }
 
 class SettingPage extends StatefulWidget {
@@ -212,6 +182,22 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   TextEditingController _token_input = new TextEditingController();
 
+  var mapPlayerSelect = {
+    "Human" : 0,
+    "Wolf" : 0,
+    "Knight" : 0,
+    "Prophesier" : 0,
+    "Hunter" : 0,
+    "Witch" : 0,
+    };
+  
+  int _sliderHuman = 0;
+  int _sliderWolf = 0;
+  int _sliderKnight = 0;
+  int _sliderProphesier = 0;
+  int _sliderHunter = 0;
+  int _sliderWitch = 0;
+
   IOWebSocketChannel _websocket_channel;
 
   String host = "127.0.0.1";
@@ -219,6 +205,8 @@ class _SettingPageState extends State<SettingPage> {
   String gamename = "/wf/game";
   String ws = "ws://";
   String wss = "wss://";
+
+  String _selectNum = "";
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +227,9 @@ class _SettingPageState extends State<SettingPage> {
           child: Column(
             children: <Widget>[
               Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: 16.0,
                   horizontal: 32.0,
@@ -251,7 +242,7 @@ class _SettingPageState extends State<SettingPage> {
                         color: Colors.orange,
                       ),
                     ),
-                    labelText: "建立房間",
+                    labelText: "房間號碼",
                     hintText: "number",
                     labelStyle: TextStyle(color: Colors.orange),
                     icon: Icon(
@@ -262,6 +253,256 @@ class _SettingPageState extends State<SettingPage> {
                   keyboardType: TextInputType.number,
                 ),
               ),
+              Divider(height: 30.0),
+              Row(children: <Widget>[
+                Flexible(
+                  child: RadioListTile<String>(
+                    value: "自定義",
+                    title: Text("自定義"),
+                    groupValue: _selectNum,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectNum = value;
+                        print(mapPlayerSelect);
+                      });
+                    },
+                  ),
+                ),
+              ]),
+              Row(
+                children: <Widget>[
+                  Flexible(
+                    child: RadioListTile<String>(
+                      value: "4人",
+                      title: Text("4人"),
+                      groupValue: _selectNum,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectNum = value;
+                          mapPlayerSelect["Human"]=2;
+                          mapPlayerSelect["Wolf"]=1;
+                          mapPlayerSelect["Prophesier"]=1;
+                          _sliderHuman=2;
+                          _sliderWolf=1;
+                          _sliderProphesier=1;
+                        });
+                      },
+                    ),
+                  ),
+                  Flexible(
+                    child: RadioListTile<String>(
+                      value: "5人",
+                      title: Text("5人"),
+                      groupValue: _selectNum,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectNum = value;
+                          mapPlayerSelect["Human"]=2;
+                          mapPlayerSelect["Wolf"]=1;
+                          mapPlayerSelect["Prophesier"]=1;
+                          mapPlayerSelect["Witch"]=1;
+                          _sliderHuman=2;
+                          _sliderWolf=1;
+                          _sliderProphesier=1;
+                          _sliderWitch=1;
+                        });
+                      },
+                    ),
+                  ),
+                  Flexible(
+                    child: RadioListTile<String>(
+                      value: "6人",
+                      title: Text("6人"),
+                      groupValue: _selectNum,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectNum = value;
+                          mapPlayerSelect["Human"]=2;
+                          mapPlayerSelect["Wolf"]=2;
+                          mapPlayerSelect["Prophesier"]=1;
+                          mapPlayerSelect["Witch"]=1;
+                          _sliderHuman=2;
+                          _sliderWolf=2;
+                          _sliderProphesier=1;
+                          _sliderWitch=1;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Divider(height: 30.0),
+              SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderHuman = newRating.toInt();
+                                mapPlayerSelect["Human"] = _sliderHuman;
+                                _selectNum = "自定義";
+                              });
+                            },
+                            value: _sliderHuman.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("平民"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderHuman"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderWolf = newRating.toInt();
+                                mapPlayerSelect["Wolf"] = _sliderWolf;
+                              });
+                            },
+                            value: _sliderWolf.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("狼人"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderWolf"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderKnight = newRating.toInt();
+                                mapPlayerSelect["Knight"] = _sliderKnight;
+                              });
+                            },
+                            value: _sliderKnight.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("騎士"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderKnight"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderProphesier = newRating.toInt();
+                                mapPlayerSelect["Prophesier"] = _sliderProphesier;
+                              });
+                            },
+                            value: _sliderProphesier.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("預言家"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderProphesier"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderHunter = newRating.toInt();
+                                mapPlayerSelect["Hunter"] = _sliderHunter;
+                              });
+                            },
+                            value: _sliderHunter.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("獵人"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderHunter"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      
+                      children: <Widget>[
+                        Expanded(
+                          child: Slider(
+                            activeColor: Colors.pink,
+                            min: 0.0,
+                            max: 10.0,
+                            onChanged: (newRating) {
+                              setState(() {
+                                _sliderWitch = newRating.toInt();
+                                mapPlayerSelect["Witch"] = _sliderWitch;
+                              });
+                            },
+                            value: _sliderWitch.toDouble(),
+                          ),
+                          flex: 7,
+                        ),
+                        Expanded(
+                          child: Text("女巫"),
+                          flex: 1,
+                        ),
+                        Expanded(
+                          child: Text("$_sliderWitch"),
+                          flex: 1,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Divider(height: 50.0),
               RaisedButton(
                 padding: EdgeInsets.all(10.0),
                 color: Colors.orange,
@@ -271,9 +512,8 @@ class _SettingPageState extends State<SettingPage> {
                     borderRadius: BorderRadius.circular(5.0)),
                 onPressed: () {
                   // int token = int.parse(_token_input.text);
-                  _websocket_channel = new IOWebSocketChannel.connect(
-                      ws + host + gamename + "?token=" + _token_input.text);
-
+                  // _websocket_channel = new IOWebSocketChannel.connect(
+                  //     ws + host + gamename + "?token=" + _token_input.text);
                   // _websocket_channel.sink.add(token);
                   Navigator.pushNamed(context, "game");
                 },
@@ -305,6 +545,13 @@ class _GamePageState extends State<GamePage> {
   String gamename = "wf/game";
   String ws = "ws://";
   String wss = "wss://";
+
+  @override
+  void initState() {
+    super.initState();
+    _phone_speak("遊戲開始");
+  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -399,54 +646,7 @@ class _GamePageState extends State<GamePage> {
   }
 }
 
-////////////////////////////////
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
+// _phone_speak 手機說話
 void _phone_speak(String sound) {
   TtsHelper.instance.setLanguageAndSpeak(sound, "zh");
 }
