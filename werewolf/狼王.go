@@ -5,39 +5,39 @@ import (
 	"strconv"
 )
 
-// NewHunter 建立新Hunter
-func NewHunter(遊戲 *Game, 位子 int) *Hunter {
+// NewWolfKing 建立新WolfKing
+func NewWolfKing(遊戲 *Game, 位子 int) *WolfKing {
 	human := NewHuman(遊戲, 位子)
-	return &Hunter{
+	return &WolfKing{
 		Human: human,
 	}
 }
 
-// Hunter 玩家
-type Hunter struct {
+// WolfKing 狼王
+type WolfKing struct {
 	*Human
 }
 
-func (我 *Hunter) 種族() GROUP {
-	return 神職
+func (我 *WolfKing) 種族() GROUP {
+	return 狼職
 }
 
-func (我 *Hunter) 職業() RULE {
-	return 獵人
+func (我 *WolfKing) 職業() RULE {
+	return 狼王
 }
 
-func (我 *Hunter) 需要夜晚行動() bool {
+func (我 *WolfKing) 需要夜晚行動() bool {
 	return false
 }
 
-func (我 *Hunter) 出局(殺法 KILL) {
+func (我 *WolfKing) 出局(殺法 KILL) {
 	我.Human.出局(殺法)
 	if 殺法 != 毒殺 {
 		我.能力()
 	}
 }
 
-func (我 *Hunter) 能力() (_ Player) {
+func (我 *WolfKing) 能力() (_ Player) {
 
 	我.遊戲.旁白(傳輸資料{Sound: "啟動角色技能，請問你要帶走誰？"}, 2000)
 

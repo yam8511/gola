@@ -2,6 +2,7 @@ package werewolf
 
 import (
 	"encoding/json"
+	"errors"
 	"runtime"
 	"sort"
 	"strconv"
@@ -9,22 +10,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	datastruct "gola/app/common/data_struct"
 )
 
-// Game sera找明俊玩遊戲
+// Game 狼人殺遊戲
 type Game struct {
 	房主號碼      int
 	讀寫鎖       sync.RWMutex
 	玩家們       map[string]Player
-	夜晚淘汰者     map[KILL]Player
+	淘汰者       []淘汰者
+	時間        時間
 	階段        階段
 	勝負        遊戲結果
 	輪數        int
 	上一晚狼殺玩家號碼 int
+	有神職       bool
+	有人質       bool
 }
 
-func (遊戲 *Game) 加入(連線 *websocket.Conn) {
+func (遊戲 *Game) 加入(連線 *datastruct.WebSocketConn) {
 	進入遊戲 := func(uid string, 玩家 Player) {
 		遊戲.旁白有話對單個玩家說(玩家, 傳輸資料{
 			Sound:  "你的角色",
@@ -53,7 +57,7 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 		}
 
 		for 遊戲.目前階段() == 開始階段 {
-			so, err := waitSocketBack(連線, 遊戲已開始)
+			so, err := waitSocketBack(連線.Conn, 遊戲已開始)
 			if err != nil {
 				return
 			}
@@ -79,13 +83,20 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 			return
 		}
 
-		連線.WriteJSON(傳輸資料{
+		closed := 連線.Write(傳輸資料{
 			Sound:  "請選擇號碼",
 			Action: 選擇號碼,
 			Data:   pos,
 		})
 
-		so, err := waitSocketBack(連線, 選擇號碼)
+		if closed {
+			if 遊戲.房主號碼 == 0 {
+				遊戲.重置()
+			}
+			return
+		}
+
+		so, err := waitSocketBack(連線.Conn, 選擇號碼)
 		if err != nil {
 			if 遊戲.房主號碼 == 0 {
 				遊戲.重置()
@@ -121,13 +132,13 @@ func (遊戲 *Game) 開始() {
 			遊戲.天黑請閉眼()
 		} else {
 			遊戲.天亮請睜眼()
-			遊戲結果 = 遊戲.判斷勝負()
+			遊戲結果 = 遊戲.判斷勝負(false)
 			if 遊戲結果 != 進行中 {
 				break
 			}
 
 			遊戲.大家開始發言()
-			遊戲結果 = 遊戲.判斷勝負()
+			遊戲結果 = 遊戲.判斷勝負(false)
 			if 遊戲結果 != 進行中 {
 				break
 			}
@@ -135,7 +146,7 @@ func (遊戲 *Game) 開始() {
 			遊戲.全員請投票()
 		}
 
-		遊戲結果 = 遊戲.判斷勝負()
+		遊戲結果 = 遊戲.判斷勝負(false)
 		if 遊戲結果 != 進行中 {
 			break
 		}
@@ -147,12 +158,25 @@ func (遊戲 *Game) 開始() {
 		Action: 遊戲結束,
 		Data:   遊戲結果,
 	}, 0)
+	runtime.Gosched()
+
+	wg := sync.WaitGroup{}
+	for _, 玩家 := range 遊戲.玩家們 {
+		wg.Add(1)
+		go func(玩家 Player) {
+			玩家.離開遊戲()
+			wg.Done()
+		}(玩家)
+		runtime.Gosched()
+	}
+	wg.Wait()
 
 	遊戲.重置()
 	return
 }
 
 func (遊戲 *Game) 天黑請閉眼() {
+	遊戲.時間 = 黑夜
 	遊戲.旁白(傳輸資料{
 		Sound:  "天黑請閉眼",
 		Action: 天黑請閉眼,
@@ -241,6 +265,7 @@ func (遊戲 *Game) 天黑請閉眼() {
 }
 
 func (遊戲 *Game) 天亮請睜眼() {
+	遊戲.時間 = 白天
 	遊戲.旁白(傳輸資料{Sound: "天亮請睜眼", Action: 天亮請睜眼}, 3000)
 
 	for i := range 遊戲.玩家們 {
@@ -248,20 +273,25 @@ func (遊戲 *Game) 天亮請睜眼() {
 		玩家.開眼睛()
 	}
 
-	if len(遊戲.夜晚淘汰者) > 0 {
+	if len(遊戲.淘汰者) > 0 {
 		// 公布淘汰者
-		死者名單 := []string{}
 
-		for 殺法 := range 遊戲.夜晚淘汰者 {
-			死者名單 = append(死者名單, strconv.Itoa(遊戲.夜晚淘汰者[殺法].號碼()))
+		sort.Slice(遊戲.淘汰者, func(i, j int) bool {
+			return 遊戲.淘汰者[i].玩家.號碼() < 遊戲.淘汰者[j].玩家.號碼()
+		})
+
+		var 死者名單號碼 []string
+		for i := range 遊戲.淘汰者 {
+			死者名單號碼 = append(死者名單號碼, strconv.Itoa(遊戲.淘汰者[i].玩家.號碼()))
 		}
-		遊戲.旁白(傳輸資料{Sound: "昨晚 " + strings.Join(死者名單, ",") + " 淘汰!"}, 3000)
+
+		遊戲.旁白(傳輸資料{Sound: "昨晚 " + strings.Join(死者名單號碼, ",") + " 淘汰!"}, 3000)
 
 		if 遊戲.輪數 == 1 {
-			for 殺法 := range 遊戲.夜晚淘汰者 {
-				死者 := 遊戲.夜晚淘汰者[殺法]
-				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(死者.號碼()) + "號玩家發表遺言"}, 2000)
-				死者.發表遺言()
+			for i := range 遊戲.淘汰者 {
+				死者 := 遊戲.淘汰者[i]
+				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(死者.玩家.號碼()) + "號玩家發表遺言"}, 2000)
+				死者.玩家.發表遺言()
 			}
 		}
 
@@ -278,7 +308,7 @@ func (遊戲 *Game) 大家開始發言() {
 		玩家 := 存活玩家們[i]
 		遊戲.旁白(傳輸資料{Sound: strconv.Itoa(玩家.號碼()) + "號玩家開始發言"}, 2000)
 		中斷發話 := 玩家.發言()
-		遊戲結果 := 遊戲.判斷勝負()
+		遊戲結果 := 遊戲.判斷勝負(false)
 		if 中斷發話 || 遊戲結果 != 進行中 {
 			break
 		}
@@ -288,7 +318,7 @@ func (遊戲 *Game) 大家開始發言() {
 }
 
 func (遊戲 *Game) 全員請投票() {
-	voteFlow := func(
+	投票流程 := func(
 		還沒出局的玩家們 []Player,
 		可投票玩家號碼 []int,
 		投票結果 map[int]int,
@@ -359,7 +389,7 @@ func (遊戲 *Game) 全員請投票() {
 		投票結果[玩家號碼] = 0
 	}
 
-	最高票數, 投票統計結果, 平票號碼 := voteFlow(
+	最高票數, 投票統計結果, 平票號碼 := 投票流程(
 		還沒出局的玩家們,
 		可投票玩家號碼,
 		投票結果,
@@ -374,7 +404,7 @@ func (遊戲 *Game) 全員請投票() {
 			平票玩家號碼 = append(平票玩家號碼, 被投人)
 		}
 
-		最高票數, 投票統計結果, 平票號碼 = voteFlow(
+		最高票數, 投票統計結果, 平票號碼 = 投票流程(
 			還沒出局的玩家們,
 			平票玩家號碼,
 			投票結果,
@@ -448,12 +478,14 @@ func (遊戲 *Game) 重置() {
 		}
 	}
 	遊戲.玩家們 = map[string]Player{}
-	遊戲.夜晚淘汰者 = map[KILL]Player{}
+	遊戲.淘汰者 = []淘汰者{}
 	遊戲.階段 = 準備階段
 	遊戲.房主號碼 = 0
 	遊戲.勝負 = ""
 	遊戲.輪數 = 0
 	遊戲.上一晚狼殺玩家號碼 = 0
+	遊戲.有神職 = false
+	遊戲.有人質 = false
 	遊戲.讀寫鎖.Unlock()
 }
 
@@ -482,6 +514,12 @@ func (遊戲 *Game) 初始設定(
 		新玩家 := NewPlayer(隨機可選角色[i], 遊戲, i+1)
 		if 新玩家 != nil {
 			玩家們[strconv.Itoa(i+1)] = 新玩家
+			switch 新玩家.種族() {
+			case 神職:
+				遊戲.有神職 = true
+			case 人質:
+				遊戲.有人質 = true
+			}
 		}
 	}
 	遊戲.玩家們 = 玩家們
@@ -494,8 +532,8 @@ func (遊戲 *Game) 旁白(台詞 傳輸資料, 豪秒數 int) {
 		玩家 := 遊戲.玩家們[i]
 		連線 := 玩家.連線()
 		if 連線 != nil {
-			err := 連線.WriteJSON(台詞)
-			if err != nil {
+			closed := 連線.Write(台詞)
+			if closed {
 				玩家.退出()
 			}
 		}
@@ -511,11 +549,11 @@ func (遊戲 *Game) 旁白有話對單個玩家說(玩家 Player, 台詞 傳輸�
 	}
 }
 
-func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 台詞 傳輸資料, 豪秒數 int) error {
+func (遊戲 *Game) 旁白有話對連線說(連線 *datastruct.WebSocketConn, 台詞 傳輸資料, 豪秒數 int) error {
 	if 連線 != nil {
-		err := 連線.WriteJSON(台詞)
-		if err != nil {
-			return err
+		closed := 連線.Write(台詞)
+		if closed {
+			return errors.New("WebSocket連線斷線了")
 		}
 	}
 
@@ -530,45 +568,69 @@ func (遊戲 *Game) 等一下(豪秒數 int) {
 }
 
 func (遊戲 *Game) 存活玩家們() []Player {
-	還沒出局的玩家 := []Player{}
+	玩家們 := []Player{}
 	for i := range 遊戲.玩家們 {
 		玩家 := 遊戲.玩家們[i]
 		if !玩家.出局了() {
-			還沒出局的玩家 = append(還沒出局的玩家, 玩家)
+			玩家們 = append(玩家們, 玩家)
 		}
 	}
 
-	sort.Slice(還沒出局的玩家, func(i, j int) bool {
-		return 還沒出局的玩家[i].號碼() < 還沒出局的玩家[j].號碼()
+	sort.Slice(玩家們, func(i, j int) bool {
+		return 玩家們[i].號碼() < 玩家們[j].號碼()
 	})
 
-	return 還沒出局的玩家
+	return 玩家們
 }
 
 func (遊戲 *Game) 殺玩家(殺法 KILL, 被殺玩家 Player) {
-	遊戲.讀寫鎖.Lock()
-	if 遊戲.夜晚淘汰者 == nil {
-		遊戲.夜晚淘汰者 = map[KILL]Player{}
+	if 遊戲.淘汰者 == nil {
+		遊戲.淘汰者 = []淘汰者{}
 	}
-	遊戲.夜晚淘汰者[殺法] = 被殺玩家
+
+	遊戲.讀寫鎖.Lock()
+	遊戲.淘汰者 = append(遊戲.淘汰者, 淘汰者{
+		殺法: 殺法,
+		玩家: 被殺玩家,
+	})
 	遊戲.讀寫鎖.Unlock()
 
-	遊戲.判斷勝負()
+	遊戲.判斷勝負(false)
+}
+
+func (遊戲 *Game) 救玩家(殺法 KILL) {
+	剩餘淘汰者 := make([]淘汰者, len(遊戲.淘汰者))
+	copy(剩餘淘汰者, 遊戲.淘汰者)
+	for i, 死者 := range 遊戲.淘汰者 {
+		if 死者.殺法 == 殺法 {
+			剩餘淘汰者 = append(剩餘淘汰者[:i], 剩餘淘汰者[i+1:]...)
+		}
+	}
+	遊戲.淘汰者 = 剩餘淘汰者
+
+	遊戲.判斷勝負(true)
+}
+
+func (遊戲 *Game) 尋找淘汰者(殺法 KILL) Player {
+	for _, 死者 := range 遊戲.淘汰者 {
+		if 死者.殺法 == 殺法 {
+			return 死者.玩家
+		}
+	}
+
+	return nil
 }
 
 func (遊戲 *Game) 玩家出局() {
-	for 殺法, 玩家 := range 遊戲.夜晚淘汰者 {
-		玩家.出局(殺法)
-	}
-
-	for _, 玩家 := range 遊戲.夜晚淘汰者 {
-		遊戲.旁白有話對單個玩家說(玩家, 傳輸資料{
+	for _, 死者 := range 遊戲.淘汰者 {
+		死者.玩家.出局(死者.殺法)
+		遊戲.旁白有話對單個玩家說(死者.玩家, 傳輸資料{
 			Display: "你已經淘汰，進入觀戰模式",
 			Action:  玩家淘汰,
 		}, 0)
 	}
 
-	遊戲.夜晚淘汰者 = map[KILL]Player{}
+	遊戲.淘汰者 = []淘汰者{}
 }
 
 func (遊戲 *Game) 顯示可選位子() []int {
@@ -675,8 +737,8 @@ func (遊戲 *Game) 是房主(玩家 Player) bool {
 	return 是
 }
 
-func (遊戲 *Game) 判斷勝負() 遊戲結果 {
-	if 遊戲.勝負 != 進行中 {
+func (遊戲 *Game) 判斷勝負(有救人 bool) 遊戲結果 {
+	if 遊戲.勝負 != 進行中 && !有救人 {
 		return 遊戲.勝負
 	}
 
@@ -699,8 +761,8 @@ func (遊戲 *Game) 判斷勝負() 遊戲結果 {
 		}
 	}
 
-	for 殺法 := range 遊戲.夜晚淘汰者 {
-		玩家 := 遊戲.夜晚淘汰者[殺法]
+	for i := range 遊戲.淘汰者 {
+		玩家 := 遊戲.淘汰者[i].玩家
 		switch 玩家.種族() {
 		case 人質:
 			平民人數--
@@ -726,12 +788,12 @@ func (遊戲 *Game) 判斷勝負() 遊戲結果 {
 		return 人勝
 	}
 
-	if 平民人數 == 0 {
+	if 平民人數 == 0 && 遊戲.有人質 {
 		遊戲.勝負 = 狼勝
 		return 狼勝
 	}
 
-	if 神職人數 == 0 {
+	if 神職人數 == 0 && 遊戲.有神職 {
 		遊戲.勝負 = 狼勝
 		return 狼勝
 	}

@@ -230,6 +230,7 @@
                 closedGame() {
                     this.ws = null
                     this.resetInfo()
+                    this.showVote = false
                     if (this.gameStart) {
                         this.output = '遊戲已經關閉'
                     }
@@ -276,6 +277,7 @@
                 finishGame() {
                     this.gameOver = false
                     this.output = ''
+                    this.sendGame()
                 },
                 changeLang(v) {
                     this.voice = v.voice

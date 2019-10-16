@@ -1,6 +1,13 @@
 package werewolf
 
-import "github.com/gorilla/websocket"
+import (
+	datastruct "gola/app/common/data_struct"
+)
+
+type 淘汰者 struct {
+	殺法 KILL
+	玩家 Player
+}
 
 type 傳輸資料 struct {
 	Sound   string      `json:"sound"`
@@ -47,6 +54,13 @@ const (
 	狼勝  = 遊戲結果("狼勝")
 )
 
+type 時間 string
+
+const (
+	白天 = 時間("白天")
+	黑夜 = 時間("黑夜")
+)
+
 // GROUP 種族
 type GROUP string
 
@@ -84,7 +98,7 @@ const (
 
 // Player 玩家
 type Player interface {
-	加入(*websocket.Conn) (加入成功 bool)
+	加入(*datastruct.WebSocketConn) (加入成功 bool)
 	等待中()
 	退出()
 	號碼() int
@@ -98,8 +112,9 @@ type Player interface {
 	換位子(int) int
 	已經被選擇() bool
 	發言() (進入黑夜 bool)
-	連線() *websocket.Conn
+	連線() *datastruct.WebSocketConn
 	發表遺言()
+	離開遊戲()
 }
 
 // Skiller 有能力的人

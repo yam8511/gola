@@ -18,7 +18,6 @@ func NewKnight(遊戲 *Game, 位子 int) *Knight {
 // Knight 玩家
 type Knight struct {
 	*Human
-	抓到狼 bool
 }
 
 func (我 *Knight) 種族() GROUP {
@@ -46,8 +45,8 @@ func (我 *Knight) 發言() bool {
 	if so.Reply == "yes" {
 		我.遊戲.旁白(傳輸資料{Sound: "騎士發動技能，請問你要查驗的對象是？"}, 0)
 
-		我.能力()
-		if 我.抓到狼 {
+		玩家 := 我.能力()
+		if 玩家.種族() == 狼職 {
 			return true
 		}
 	}
@@ -91,13 +90,12 @@ func (我 *Knight) 能力() (_ Player) {
 		if 存在 {
 			我.遊戲.殺玩家(騎殺, 玩家)
 			if 玩家.種族() == 狼職 {
-				台詞 := strconv.Itoa(玩家.號碼()) + "是狼人！"
-				我.遊戲.旁白(傳輸資料{Sound: 台詞}, 1000)
+				台詞 := strconv.Itoa(玩家.號碼()) + "號是狼人！"
+				我.遊戲.旁白(傳輸資料{Sound: 台詞}, 3000)
 				我.遊戲.殺玩家(騎殺, 玩家)
-				我.抓到狼 = true
 			} else {
-				台詞 := strconv.Itoa(玩家.號碼()) + "不是狼人！ 騎士以死謝罪"
-				我.遊戲.旁白(傳輸資料{Sound: 台詞}, 1000)
+				台詞 := strconv.Itoa(玩家.號碼()) + "號不是狼人！ 騎士以死謝罪"
+				我.遊戲.旁白(傳輸資料{Sound: 台詞}, 3000)
 				我.遊戲.殺玩家(騎殺, 我)
 			}
 			return 玩家

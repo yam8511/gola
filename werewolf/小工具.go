@@ -25,6 +25,8 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 		return NewHunter(遊戲, 號碼)
 	case 女巫:
 		return NewWitch(遊戲, 號碼)
+	case 狼王:
+		return NewWolfKing(遊戲, 號碼)
 	}
 
 	return nil
@@ -40,6 +42,8 @@ func PickSkiller(玩家們 map[string]Player) (狼人玩家們, 神職玩家們 
 		switch 玩家.職業() {
 		case 狼人:
 			狼人玩家們 = append(狼人玩家們, 玩家.(*Wolf))
+		case 狼王:
+			狼人玩家們 = append(狼人玩家們, 玩家.(*WolfKing))
 		case 騎士:
 			神職玩家們 = append(神職玩家們, 玩家.(*Knight))
 		case 預言家:
@@ -63,7 +67,7 @@ func RuleOptions() map[RULE]GROUP {
 		騎士:  神職,
 		狼人:  狼職,
 		女巫:  神職,
-		// 狼王:  狼職,
+		狼王:  狼職,
 		// 雪狼:  狼職,
 	}
 }
@@ -80,18 +84,11 @@ func 亂數洗牌(職業牌 []RULE) []RULE {
 // waitSocketBack 等待Socket回傳
 func waitSocketBack(連線 *websocket.Conn, 對應動作 動作) (回傳資料 傳輸資料, err error) {
 	var msg []byte
-	var msgT int
 
 	for {
-		msgT, msg, err = 連線.ReadMessage()
+		_, msg, err = 連線.ReadMessage()
 		if err != nil {
 			return
-		}
-
-		// 如果是Ping，回傳Pong
-		if msgT == websocket.PingMessage {
-			連線.WriteMessage(websocket.PongMessage, []byte("pong"))
-			continue
 		}
 
 		// 如果沒有對應動作，直接把資料傳給傳話筒用
