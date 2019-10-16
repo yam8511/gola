@@ -145,10 +145,11 @@
                             <span class="teal-text text-darken-2">#{{ player }}</span>
                         </li>
                         <li class="collection-item">
-                            <i class="material-icons small red-text text-darken-3">airline_seat_flat</i> 淘汰
+                            <i class="material-icons small red-text text-darken-3">airline_seat_flat</i> 存活
                             <i v-if="isOut"
+                                class="material-icons small red-text text-lighten-2">cancel</i>
+                            <i v-else
                                 class="material-icons small light-green-text text-lighten-2">check_circle</i>
-                            <i v-else class="material-icons small red-text text-lighten-2">cancel</i>
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small light-blue-text text-darken-4">person_add</i> 房主
