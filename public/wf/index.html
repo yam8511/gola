@@ -147,7 +147,7 @@
                             <span class="teal-text text-darken-2">#{{ player }}</span>
                         </li>
                         <li class="collection-item">
-                            <i class="material-icons small red-text text-darken-3">airline_seat_flat</i> 存活
+                            <i class="material-icons small red-text text-darken-3">favorite</i> 存活
                             <i v-if="isOut"
                                 class="material-icons small red-text text-lighten-2">cancel</i>
                             <i v-else
@@ -164,10 +164,10 @@
                             <span class="orange-text text-darken-2">{{ token }}</span>
                         </li>
                         <li class="collection-item">
-                            <i class="material-icons small brown-text text-darken-4">people</i> 人數
+                            <i class="material-icons small cyan-text text-darken-2">people</i> 人數
                             <span v-for="on in online">
-                                <i v-if="on" class="material-icons small brown-text text-darken-4">person</i>
-                                <i v-else class="material-icons small brown-text text-darken-4">person_outline</i>
+                                <i v-if="on" class="material-icons small brown-text text-darken-2">person</i>
+                                <i v-else class="material-icons small brown-text text-darken-2">person_outline</i>
                             </span>
                         </li>
                     </ul>

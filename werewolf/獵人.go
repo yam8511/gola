@@ -32,7 +32,8 @@ func (我 *Hunter) 需要夜晚行動() bool {
 
 func (我 *Hunter) 出局(殺法 KILL) {
 	我.Human.出局(殺法)
-	if 殺法 != 毒殺 {
+	我.遊戲.判斷勝負(false)
+	if 殺法 != 毒殺 && 我.遊戲.勝負 == 進行中 {
 		我.能力()
 	}
 }
@@ -74,7 +75,6 @@ func (我 *Hunter) 能力() (_ Player) {
 		if 存在 {
 			我.遊戲.旁白(傳輸資料{Sound: strconv.Itoa(玩家.號碼()) + "淘汰!"}, 3000)
 			玩家.出局(獵殺)
-			我.遊戲.判斷勝負(false)
 			return
 		}
 	}

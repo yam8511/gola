@@ -32,7 +32,8 @@ func (我 *WolfKing) 需要夜晚行動() bool {
 
 func (我 *WolfKing) 出局(殺法 KILL) {
 	我.Human.出局(殺法)
-	if 殺法 != 毒殺 {
+	我.遊戲.判斷勝負(false)
+	if 殺法 != 毒殺 && 我.遊戲.勝負 != 進行中 {
 		我.能力()
 	}
 }
