@@ -28,10 +28,6 @@ func (我 *Wolf) 職業() RULE {
 }
 
 func (我 *Wolf) 能力() (_ Player) {
-	if 我.出局了() {
-		return
-	}
-
 	可殺的玩家號碼 := []int{}
 	目前存活玩家們 := 我.遊戲.存活玩家們()
 	for i := range 目前存活玩家們 {
