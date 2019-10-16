@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	datastruct "gola/app/common/data_struct"
 	"gola/werewolf"
@@ -33,24 +32,5 @@ func JoinGame(c *gin.Context) {
 	defer conn.Close()
 
 	wsConn := datastruct.NewWebSocketConn(conn)
-
-	go func(wsConn *datastruct.WebSocketConn) {
-		ticker := time.NewTicker(time.Second * 10)
-		for {
-			select {
-			case <-ticker.C:
-				err := conn.WriteMessage(websocket.TextMessage, []byte("ping"))
-				if err != nil {
-					return
-				}
-			case data := <-wsConn.Writer:
-				err := conn.WriteJSON(data)
-				if err != nil {
-					return
-				}
-			}
-		}
-	}(wsConn)
-
 	werewolf.EnterGame(wsConn, token)
 }

@@ -79,6 +79,5 @@ func (我 *WolfKing) 能力() (_ Player) {
 		}
 	}
 
-	我.Wolf.能力()
-	return
+	return 我.Wolf.能力()
 }

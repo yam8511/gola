@@ -15,8 +15,6 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 	switch 角色 {
 	case 平民:
 		return NewHuman(遊戲, 號碼)
-	case 狼人:
-		return NewWolf(遊戲, 號碼)
 	case 騎士:
 		return NewKnight(遊戲, 號碼)
 	case 預言家:
@@ -25,11 +23,89 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 		return NewHunter(遊戲, 號碼)
 	case 女巫:
 		return NewWitch(遊戲, 號碼)
+	case 狼人:
+		return NewWolf(遊戲, 號碼)
 	case 狼王:
 		return NewWolfKing(遊戲, 號碼)
+	case 雪狼:
+		return NewSnowWolf(遊戲, 號碼)
 	}
 
 	return nil
+}
+
+func 角色選單() map[RULE]GROUP {
+	return map[RULE]GROUP{
+		平民:  人質,
+		預言家: 神職,
+		獵人:  神職,
+		騎士:  神職,
+		狼人:  狼職,
+		女巫:  神職,
+		狼王:  狼職,
+		雪狼:  狼職,
+	}
+}
+
+func 快速組合() map[string]map[RULE]int {
+	return map[string]map[RULE]int{
+		"4": map[RULE]int{
+			平民:  2,
+			狼人:  1,
+			預言家: 1,
+		},
+		"5": map[RULE]int{
+			平民:  2,
+			狼人:  1,
+			預言家: 1,
+			女巫:  1,
+		},
+		"6": map[RULE]int{
+			平民:  2,
+			狼人:  2,
+			預言家: 1,
+			女巫:  1,
+		},
+		"7": map[RULE]int{
+			平民:  2,
+			狼人:  2,
+			預言家: 1,
+			女巫:  1,
+			獵人:  1,
+		},
+		"8": map[RULE]int{
+			平民:  3,
+			狼人:  2,
+			預言家: 1,
+			女巫:  1,
+			獵人:  1,
+		},
+		"9": map[RULE]int{
+			平民:  3,
+			狼人:  3,
+			預言家: 1,
+			女巫:  1,
+			獵人:  1,
+		},
+		"10(狼王)": map[RULE]int{
+			平民:  3,
+			狼人:  2,
+			狼王:  1,
+			預言家: 1,
+			女巫:  1,
+			獵人:  1,
+			騎士:  1,
+		},
+		"10(雪狼)": map[RULE]int{
+			平民:  3,
+			狼人:  2,
+			雪狼:  1,
+			預言家: 1,
+			女巫:  1,
+			獵人:  1,
+			騎士:  1,
+		},
+	}
 }
 
 // PickSkiller 取出職能者
@@ -39,37 +115,15 @@ func PickSkiller(玩家們 map[string]Player) (狼人玩家們, 神職玩家們 
 
 	for i := range 玩家們 {
 		玩家 := 玩家們[i]
-		switch 玩家.職業() {
-		case 狼人:
-			狼人玩家們 = append(狼人玩家們, 玩家.(*Wolf))
-		case 狼王:
-			狼人玩家們 = append(狼人玩家們, 玩家.(*WolfKing))
-		case 騎士:
-			神職玩家們 = append(神職玩家們, 玩家.(*Knight))
-		case 預言家:
-			神職玩家們 = append(神職玩家們, 玩家.(*Prophesier))
-		case 獵人:
-			神職玩家們 = append(神職玩家們, 玩家.(*Hunter))
-		case 女巫:
-			神職玩家們 = append(神職玩家們, 玩家.(*Witch))
+		switch 玩家.種族() {
+		case 狼職:
+			狼人玩家們 = append(狼人玩家們, 玩家.(Skiller))
+		case 神職:
+			神職玩家們 = append(神職玩家們, 玩家.(Skiller))
 		}
 	}
 
 	return
-}
-
-// RuleOptions 角色選單
-func RuleOptions() map[RULE]GROUP {
-	return map[RULE]GROUP{
-		平民:  人質,
-		預言家: 神職,
-		獵人:  神職,
-		騎士:  神職,
-		狼人:  狼職,
-		女巫:  神職,
-		狼王:  狼職,
-		// 雪狼:  狼職,
-	}
 }
 
 func 亂數洗牌(職業牌 []RULE) []RULE {

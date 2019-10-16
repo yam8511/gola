@@ -24,12 +24,13 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 
 	// 檢查遊戲是否設定了
 	if !遊戲.初始設定過() {
+		combine := 快速組合()
 		ruleOptionData := 傳輸資料{
 			Sound:  "請輸入角色設定",
 			Action: 角色設定,
 			Data: map[string]interface{}{
-				"rule":    RuleOptions(),
-				"combine": []string{"4", "5", "6"},
+				"rule":    角色選單(),
+				"combine": combine,
 			},
 		}
 
@@ -49,28 +50,9 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 				break
 			}
 
-			switch string(so.Reply) {
-			case "4":
-				rules = map[RULE]int{
-					平民:  2,
-					狼人:  1,
-					預言家: 1,
-				}
-			case "5":
-				rules = map[RULE]int{
-					平民:  2,
-					狼人:  1,
-					預言家: 1,
-					女巫:  1,
-				}
-			case "6":
-				rules = map[RULE]int{
-					平民:  2,
-					狼人:  2,
-					預言家: 1,
-					女巫:  1,
-				}
-			default:
+			var ok bool
+			rules, ok = combine[string(so.Reply)]
+			if !ok {
 				err = json.Unmarshal([]byte(so.Reply), &rules)
 				if err != nil {
 					closed = 連線.Write(ruleOptionData)
@@ -80,7 +62,6 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 					continue
 				}
 			}
-
 			break
 		}
 

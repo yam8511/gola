@@ -2,18 +2,39 @@ package datastruct
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 // NewWebSocketConn New Socket連線
 func NewWebSocketConn(conn *websocket.Conn) *WebSocketConn {
-	return &WebSocketConn{
+	wsConn := &WebSocketConn{
 		Conn:    conn,
 		Writer:  make(chan interface{}),
 		closeCh: make(chan interface{}),
 		mx:      &sync.RWMutex{},
 	}
+
+	go func(wsConn *WebSocketConn) {
+		ticker := time.NewTicker(time.Second * 10)
+		for {
+			select {
+			case <-ticker.C:
+				err := conn.WriteMessage(websocket.TextMessage, []byte("ping"))
+				if err != nil {
+					return
+				}
+			case data := <-wsConn.Writer:
+				err := conn.WriteJSON(data)
+				if err != nil {
+					return
+				}
+			}
+		}
+	}(wsConn)
+
+	return wsConn
 }
 
 // WebSocketConn Socket連線

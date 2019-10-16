@@ -79,9 +79,11 @@
 
                     <div v-if="setRuleType === 'combine'">
                         <hr />
-                        <label v-for="n in combine">
-                            <input name="combine-value" type="radio" :value="n" v-model="selectedRule" />
-                            <span>{{ n }}</span>
+                        <label v-for="n,k in combine">
+                            <p>
+                                <input name="combine-value" type="radio" :value="k" v-model="selectedRule" />
+                                <span>{{ k }}, 角色有: {{ lookCombineDetail(n) }}</span>
+                            </p>
                         </label>
                     </div>
                     <div v-else>
@@ -287,6 +289,14 @@
                         M.toast({ html: `改成 ${v.voice.name} 發音` })
                     }, 1)
                 },
+                lookCombineDetail(rules) {
+                    let display = []
+                    for (const key in rules) {
+                        display.push(`${key} x ${rules[key]}`)
+                    }
+
+                    return display.join(' | ')
+                },
                 speak(sound) {
                     if (this.voice === null) {
                         return
@@ -339,9 +349,10 @@
                             // 角色設定
                             this.showRules = true
                             this.combine = tmp.data.combine
-                            if (this.combine.length > 0) {
+                            let combineKeys = Object.keys(this.combine)
+                            if (combineKeys.length > 0) {
                                 this.setRuleType = 'combine'
-                                this.selectedRule = this.combine[0]
+                                this.selectedRule = combineKeys[0]
                                 this.input = this.selectedRule
                             } else {
                                 this.setRuleType = 'rule'
