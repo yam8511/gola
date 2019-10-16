@@ -79,7 +79,7 @@ func (我 *Prophesier) 能力() (_ Player) {
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 				Display: strconv.Itoa(玩家號碼) + s,
 				Action:  等待回應,
-			}, 0)
+			}, random(3)*1000)
 
 			waitChannelBack(我.傳話筒, 等待回應)
 			return

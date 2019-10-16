@@ -148,10 +148,8 @@
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small red-text text-darken-3">favorite</i> 存活
-                            <i v-if="isOut"
-                                class="material-icons small red-text text-lighten-2">cancel</i>
-                            <i v-else
-                                class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                            <i v-if="isOut" class="material-icons small red-text text-lighten-2">cancel</i>
+                            <i v-else class="material-icons small light-green-text text-lighten-2">check_circle</i>
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small light-blue-text text-darken-4">person_add</i> 房主
@@ -211,6 +209,7 @@
                 voteResult: {},
                 isOut: false,
                 online: [],
+                intervalID: 0,
             },
             methods: {
                 joinGame() {
@@ -227,10 +226,14 @@
 
                     const ws = new WebSocket(this.wsURL + '?token=' + this.token)
                     this.ws = ws
+                    this.intervalID = setInterval(() => {
+                        this.ws.send('ping')
+                    }, 10000)
                     ws.onmessage = this.receiveGame
                     ws.onclose = this.closedGame
                 },
                 closedGame() {
+                    clearInterval(this.intervalID)
                     this.ws = null
                     this.resetInfo()
                     this.showVote = false
@@ -461,8 +464,18 @@
                     console.log('synth => ', this.synth)
                     setTimeout(() => {
                         let voices = this.synth.getVoices()
+                        console.log('all.voices => ', voices)
+                        const allowVoices = {
+                            'zh-TW': true,
+                            'zh-CN': true,
+                            'zh-HK': true,
+                            'zh-HK': true,
+                            'en-US': true,
+                            'ja-JP': true,
+                            'ko-KR': true,
+                        }
                         voices = voices.
-                            filter((e) => e.lang.indexOf('zh-') > -1 || e.lang === 'en-US').
+                            filter((e) => allowVoices[e.lang] ? allowVoices[e.lang] : false).
                             map((e) => {
                                 let words = e.name.split(' ')
                                 let text = words[words.length - 1]

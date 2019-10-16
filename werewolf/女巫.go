@@ -65,6 +65,8 @@ func (我 *Witch) 能力() (_ Player) {
 			我.有解藥 = false
 			有使用過藥了嗎 = true
 		}
+	} else {
+		我.遊戲.等一下(random(5) * 1000)
 	}
 
 	我.遊戲.旁白(傳輸資料{Sound: "你要使用毒藥嗎？你要毒誰呢？"}, 5000)
@@ -125,7 +127,10 @@ func (我 *Witch) 能力() (_ Player) {
 				}
 			}
 		}
+	} else {
+		我.遊戲.等一下(random(5) * 1000)
 	}
+
 	return
 }
 

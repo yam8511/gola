@@ -2,10 +2,11 @@ package werewolf
 
 import (
 	"encoding/json"
-	datastruct "gola/app/common/data_struct"
 	"runtime"
 	"strconv"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 // NewHuman 建立新玩家
@@ -22,7 +23,7 @@ type Human struct {
 	開眼睛中  bool
 	被投票狀態 bool
 	出局狀態  bool
-	conn  *datastruct.WebSocketConn
+	conn  *websocket.Conn
 	遊戲    *Game
 	傳話筒   chan 傳輸資料
 	讀寫鎖   sync.RWMutex
@@ -93,7 +94,7 @@ func (我 *Human) 換位子(新位子 int) int {
 	return 舊的位子
 }
 
-func (我 *Human) 加入(連線 *datastruct.WebSocketConn) (加入成功 bool) {
+func (我 *Human) 加入(連線 *websocket.Conn) (加入成功 bool) {
 	我.讀寫鎖.Lock()
 	defer 我.讀寫鎖.Unlock()
 
@@ -117,7 +118,7 @@ func (我 *Human) 等待中() {
 	我.讀寫鎖.Unlock()
 
 	for {
-		so, err := waitSocketBack(我.conn.Conn, 無)
+		so, err := waitSocketBack(我.conn, 無)
 		if err != nil {
 			我.退出()
 			return
@@ -168,7 +169,7 @@ func (我 *Human) 發言() bool {
 	return false
 }
 
-func (我 *Human) 連線() *datastruct.WebSocketConn {
+func (我 *Human) 連線() *websocket.Conn {
 	我.讀寫鎖.Lock()
 	conn := 我.conn
 	我.讀寫鎖.Unlock()
@@ -182,11 +183,4 @@ func (我 *Human) 發表遺言() {
 	}, 100)
 	waitChannelBack(我.傳話筒, 等待回應)
 	return
-}
-
-func (我 *Human) 離開遊戲() {
-	_, err := waitChannelBack(我.傳話筒, 遊戲結束)
-	if err == nil {
-		我.conn.Close()
-	}
 }

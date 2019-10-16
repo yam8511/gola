@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"sync"
 
-	datastruct "gola/app/common/data_struct"
-
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 // EnterGame 進入遊戲
-func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
+func EnterGame(連線 *websocket.Conn, 編號 string) {
 	var 遊戲 *Game
 	var 新進入 bool
 	if 編號 == "" {
@@ -34,14 +33,14 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 			},
 		}
 
-		closed := 連線.Write(ruleOptionData)
-		if closed {
+		err := 連線.WriteJSON(ruleOptionData)
+		if err != nil {
 			return
 		}
 
 		rules := map[RULE]int{}
 		for {
-			so, err := waitSocketBack(連線.Conn, 角色設定)
+			so, err := waitSocketBack(連線, 角色設定)
 			if err != nil {
 				return
 			}
@@ -55,8 +54,8 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 			if !ok {
 				err = json.Unmarshal([]byte(so.Reply), &rules)
 				if err != nil {
-					closed = 連線.Write(ruleOptionData)
-					if closed {
+					err = 連線.WriteJSON(ruleOptionData)
+					if err != nil {
 						return
 					}
 					continue
@@ -73,19 +72,19 @@ func EnterGame(連線 *datastruct.WebSocketConn, 編號 string) {
 	}
 
 	if 新進入 {
-		closed := 連線.Write(傳輸資料{
+		err := 連線.WriteJSON(傳輸資料{
 			Sound:   "可分享序號一起玩",
 			Display: "可分享序號一起玩: " + 編號,
 			Action:  拿到Token,
 			Data:    編號,
 		})
 
-		if closed {
+		if err != nil {
 			return
 		}
 
 		for {
-			_, err := waitSocketBack(連線.Conn, 拿到Token)
+			_, err := waitSocketBack(連線, 拿到Token)
 			if err != nil {
 				return
 			}

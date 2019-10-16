@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	datastruct "gola/app/common/data_struct"
 	"gola/werewolf"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +30,5 @@ func JoinGame(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	wsConn := datastruct.NewWebSocketConn(conn)
-	werewolf.EnterGame(wsConn, token)
+	werewolf.EnterGame(conn, token)
 }

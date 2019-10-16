@@ -127,12 +127,18 @@ func PickSkiller(玩家們 map[string]Player) (狼人玩家們, 神職玩家們 
 }
 
 func 亂數洗牌(職業牌 []RULE) []RULE {
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(職業牌), func(i, j int) {
-		職業牌[i], 職業牌[j] = 職業牌[j], 職業牌[i]
-	})
+	for i := 0; i < random(999); i++ {
+		rand.Shuffle(len(職業牌), func(i, j int) {
+			職業牌[i], 職業牌[j] = 職業牌[j], 職業牌[i]
+		})
+	}
 	log.Println("職業牌", 職業牌)
 	return 職業牌
+}
+
+func random(n int) int {
+	rand.Seed(time.Now().UnixNano() / 347000)
+	return rand.Intn(n) + 1
 }
 
 // waitSocketBack 等待Socket回傳

@@ -1,7 +1,7 @@
 package werewolf
 
 import (
-	datastruct "gola/app/common/data_struct"
+	"github.com/gorilla/websocket"
 )
 
 type 淘汰者 struct {
@@ -98,7 +98,7 @@ const (
 
 // Player 玩家
 type Player interface {
-	加入(*datastruct.WebSocketConn) (加入成功 bool)
+	加入(*websocket.Conn) (加入成功 bool)
 	等待中()
 	退出()
 	號碼() int
@@ -112,9 +112,8 @@ type Player interface {
 	換位子(int) int
 	已經被選擇() bool
 	發言() (進入黑夜 bool)
-	連線() *datastruct.WebSocketConn
+	連線() *websocket.Conn
 	發表遺言()
-	離開遊戲()
 }
 
 // Skiller 有能力的人

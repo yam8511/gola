@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	datastruct "gola/app/common/data_struct"
+	"github.com/gorilla/websocket"
 )
 
 // Game 狼人殺遊戲
@@ -28,7 +28,7 @@ type Game struct {
 	有人質       bool
 }
 
-func (遊戲 *Game) 加入(連線 *datastruct.WebSocketConn) {
+func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	進入遊戲 := func(uid string, 玩家 Player) {
 		遊戲.旁白有話對單個玩家說(玩家, 傳輸資料{
 			Sound:  "你的角色",
@@ -57,7 +57,7 @@ func (遊戲 *Game) 加入(連線 *datastruct.WebSocketConn) {
 		}
 
 		for 遊戲.目前階段() == 開始階段 {
-			so, err := waitSocketBack(連線.Conn, 遊戲已開始)
+			so, err := waitSocketBack(連線, 遊戲已開始)
 			if err != nil {
 				return
 			}
@@ -83,20 +83,20 @@ func (遊戲 *Game) 加入(連線 *datastruct.WebSocketConn) {
 			return
 		}
 
-		closed := 連線.Write(傳輸資料{
+		err := 連線.WriteJSON(傳輸資料{
 			Sound:  "請選擇號碼",
 			Action: 選擇號碼,
 			Data:   pos,
 		})
 
-		if closed {
+		if err != nil {
 			if 遊戲.房主號碼 == 0 {
 				遊戲.重置()
 			}
 			return
 		}
 
-		so, err := waitSocketBack(連線.Conn, 選擇號碼)
+		so, err := waitSocketBack(連線, 選擇號碼)
 		if err != nil {
 			if 遊戲.房主號碼 == 0 {
 				遊戲.重置()
@@ -161,17 +161,6 @@ func (遊戲 *Game) 開始() {
 		Data:   遊戲結果,
 	}, 0)
 	runtime.Gosched()
-
-	wg := sync.WaitGroup{}
-	for _, 玩家 := range 遊戲.玩家們 {
-		wg.Add(1)
-		go func(玩家 Player) {
-			玩家.離開遊戲()
-			wg.Done()
-		}(玩家)
-		runtime.Gosched()
-	}
-	wg.Wait()
 
 	遊戲.重置()
 	return
@@ -320,6 +309,7 @@ func (遊戲 *Game) 大家開始發言(玩家們 []Player) {
 		if 中斷發話 || 遊戲結果 != 進行中 {
 			break
 		}
+		遊戲.等一下(2000)
 	}
 }
 
@@ -547,8 +537,8 @@ func (遊戲 *Game) 旁白(台詞 傳輸資料, 豪秒數 int) {
 		玩家 := 遊戲.玩家們[i]
 		連線 := 玩家.連線()
 		if 連線 != nil {
-			closed := 連線.Write(台詞)
-			if closed {
+			err := 連線.WriteJSON(台詞)
+			if err != nil {
 				玩家.退出()
 			}
 		}
@@ -564,10 +554,10 @@ func (遊戲 *Game) 旁白有話對單個玩家說(玩家 Player, 台詞 傳輸�
 	}
 }
 
-func (遊戲 *Game) 旁白有話對連線說(連線 *datastruct.WebSocketConn, 台詞 傳輸資料, 豪秒數 int) error {
+func (遊戲 *Game) 旁白有話對連線說(連線 *websocket.Conn, 台詞 傳輸資料, 豪秒數 int) error {
 	if 連線 != nil {
-		closed := 連線.Write(台詞)
-		if closed {
+		err := 連線.WriteJSON(台詞)
+		if err != nil {
 			return errors.New("WebSocket連線斷線了")
 		}
 	}
