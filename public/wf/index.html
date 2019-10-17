@@ -144,7 +144,19 @@
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small teal-text text-darken-2">account_box</i> 角色
-                            <span class="teal-text text-darken-2">#{{ player }}</span>
+
+                            <span v-if="ruleVisible" class="teal-text text-darken-2">
+                                #{{ player }}
+                                <a href="#" @click="()=> (ruleVisible=false)">
+                                    <i class="material-icons small black-text text-darken-2">visibility</i>
+                                </a>
+                            </span>
+                            <span v-else class="teal-text text-darken-2">
+                                # ****
+                                <a href="#" @click="()=> (ruleVisible=true)">
+                                    <i class="material-icons small black-text text-darken-2">visibility_off</i>
+                                </a>
+                            </span>
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small red-text text-darken-3">favorite</i> 存活
@@ -162,11 +174,15 @@
                             <span class="orange-text text-darken-2">{{ token }}</span>
                         </li>
                         <li class="collection-item">
-                            <i class="material-icons small cyan-text text-darken-2">people</i> 人數
+                            <i class="material-icons small purple-text text-accent-2">people</i> 連線人數
                             <span v-for="on in online">
-                                <i v-if="on" class="material-icons small brown-text text-darken-2">person</i>
+                                <i v-if="on" class="material-icons small purple-text text-accent-2">person</i>
                                 <i v-else class="material-icons small brown-text text-darken-2">person_outline</i>
                             </span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small brown-text text-darken-2">child_care</i> 遊戲角色:
+                            <span class="brown-text text-darken-2">{{ gameRules }}</span>
                         </li>
                     </ul>
                 </div>
@@ -210,6 +226,8 @@
                 isOut: false,
                 online: [],
                 intervalID: 0,
+                ruleVisible: true,
+                setupRules: {},
             },
             methods: {
                 joinGame() {
@@ -375,6 +393,7 @@
                             this.session = tmp.data['編號']
                             this.no = tmp.data['位子']
                             this.player = tmp.data['職業']
+                            this.setupRules = tmp.data['角色設定']
                             this.output = '等待遊戲開始...'
                             break
                         case 'select_player':
@@ -443,6 +462,9 @@
                 }
             },
             computed: {
+                gameRules() {
+                    return this.lookCombineDetail(this.setupRules)
+                },
                 optionsCol() {
                     const optionLen = parseInt(12 / Object.keys(this.waitingOptions).length)
                     return optionLen > 12 ? 1 : optionLen
