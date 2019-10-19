@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,  minimum-scale=1, maximum-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>小小狼人殺</title>
 
@@ -33,6 +33,18 @@
         <div class="row">
             <div class="col s12">
                 <h4>歡迎狼人殺 🤪🐺</h4>
+                <h5>
+                    <i v-if="is_mute"
+                        style="cursor: pointer;"
+                        class="material-icons z-depth-2"
+                        @click="changeMute()"
+                    >volume_off</i>
+                    <i v-else
+                        style="cursor: pointer;"
+                        class="material-icons z-depth-2"
+                        @click="changeMute()"
+                    >volume_up</i>
+                </h5>
             </div>
 
             <div class="col s12">
@@ -148,15 +160,17 @@
 
                             <span v-if="ruleVisible" class="teal-text text-darken-2">
                                 #{{ player }}
-                                <a style="cursor: pointer;" @click="()=> (ruleVisible=false)">
-                                    <i class="material-icons small black-text text-darken-2">visibility</i>
-                                </a>
+                                <i style="cursor: pointer;"
+                                    class="material-icons small black-text text-darken-2"
+                                    @click="()=> (ruleVisible=false)"
+                                >visibility</i>
                             </span>
                             <span v-else class="teal-text text-darken-2">
                                 # ****
-                                <a style="cursor: pointer;" @click="()=> (ruleVisible=true)">
-                                    <i class="material-icons small black-text text-darken-2">visibility_off</i>
-                                </a>
+                                <i style="cursor: pointer;"
+                                    class="material-icons small black-text text-darken-2"
+                                    @click="()=> (ruleVisible=true)"
+                                >visibility_off</i>
                             </span>
                         </li>
                         <li class="collection-item">
@@ -236,6 +250,7 @@
                 intervalID: 0,
                 ruleVisible: true,
                 setupRules: {},
+                is_mute: true,
             },
             methods: {
                 joinGame() {
@@ -313,7 +328,6 @@
                 finishGame() {
                     this.gameOver = false
                     this.output = ''
-                    this.sendGame()
                 },
                 changeLang(v) {
                     this.voice = v.voice
@@ -330,8 +344,12 @@
 
                     return display.join(' | ')
                 },
+                changeMute() {
+                    this.is_mute = !this.is_mute
+                    this.speak(' ')
+                },
                 speak(sound) {
-                    if (this.voice === null) {
+                    if (sound === '' || sound === null || this.is_mute) {
                         return
                     }
                     const speech = new window.SpeechSynthesisUtterance(sound)
@@ -480,7 +498,7 @@
             },
             computed: {
                 qrcode() {
-                    this.qrcode = window.location.origin + window.location.pathname + '#' + this.token
+                    return window.location.origin + window.location.pathname + '#' + this.token
                 },
                 gameRules() {
                     return this.lookCombineDetail(this.setupRules)
