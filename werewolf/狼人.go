@@ -46,7 +46,7 @@ func (我 *Wolf) 能力() (_ Player) {
 
 	for {
 
-		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		so, err := 我.等待動作(選擇玩家)
 		if err != nil {
 			rand.Seed(time.Now().UTC().UnixNano())
 			rd := rand.Int()

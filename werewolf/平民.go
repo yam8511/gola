@@ -48,7 +48,7 @@ func (我 *Human) 投票() int {
 
 	var 投票號碼 int
 	for {
-		so, err := waitChannelBack(我.傳話筒, 等待回應)
+		so, err := 我.等待動作(等待回應)
 		if err != nil {
 			return 0
 		}
@@ -165,7 +165,7 @@ func (我 *Human) 發言() bool {
 		Display: "請發言",
 		Action:  等待回應,
 	}, 100)
-	waitChannelBack(我.傳話筒, 等待回應)
+	我.等待動作(等待回應)
 	return false
 }
 
@@ -181,6 +181,10 @@ func (我 *Human) 發表遺言() {
 		Display: "請發言",
 		Action:  等待回應,
 	}, 100)
-	waitChannelBack(我.傳話筒, 等待回應)
+	我.等待動作(等待回應)
 	return
+}
+
+func (我 *Human) 等待動作(指定動作 動作) (傳輸資料, error) {
+	return waitChannelBack(我.傳話筒, 指定動作)
 }

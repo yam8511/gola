@@ -37,7 +37,7 @@ func (我 *Knight) 發言() bool {
 		},
 	}, 100)
 
-	so, err := waitChannelBack(我.傳話筒, 等待回應)
+	so, err := 我.等待動作(等待回應)
 	if err != nil {
 		return false
 	}
@@ -74,7 +74,7 @@ func (我 *Knight) 能力() (_ Player) {
 
 	玩家號碼 := 0
 	for {
-		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		so, err := 我.等待動作(選擇玩家)
 		if err != nil {
 			rand.Seed(time.Now().UTC().UnixNano())
 			rd := rand.Int()

@@ -32,7 +32,7 @@
 
         <div class="row">
             <div class="col s12">
-                <h4>歡迎狼人殺 🤪</h4>
+                <h4>歡迎狼人殺 🤪🐺</h4>
             </div>
 
             <div class="col s12">
@@ -51,7 +51,7 @@
 
             <div v-if="ws === null && !gameOver" class="input-field col s12">
                 <input id="token" class="validate" type="text" v-model="token" :autofocus="this.token !== ''" />
-                <label for="token">輸入Token...</label>
+                <label for="token">請輸入任意英文數字加入遊戲</label>
 
                 <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
             </div>
@@ -147,13 +147,13 @@
 
                             <span v-if="ruleVisible" class="teal-text text-darken-2">
                                 #{{ player }}
-                                <a href="#" @click="()=> (ruleVisible=false)">
+                                <a style="cursor: pointer;" @click="()=> (ruleVisible=false)">
                                     <i class="material-icons small black-text text-darken-2">visibility</i>
                                 </a>
                             </span>
                             <span v-else class="teal-text text-darken-2">
                                 # ****
-                                <a href="#" @click="()=> (ruleVisible=true)">
+                                <a style="cursor: pointer;" @click="()=> (ruleVisible=true)">
                                     <i class="material-icons small black-text text-darken-2">visibility_off</i>
                                 </a>
                             </span>
@@ -184,6 +184,9 @@
                             <i class="material-icons small brown-text text-darken-2">child_care</i> 遊戲角色:
                             <span class="brown-text text-darken-2">{{ gameRules }}</span>
                         </li>
+                        <li class="collection-item" v-if="qrcode !== ''">
+                            <qrcode :value="qrcode" :options="{ width: 200 }"></qrcode>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -191,6 +194,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script src="vue-qrcode.js"></script>
+    <script>Vue.component(VueQrcode.name, VueQrcode);</script>
     <script>
         var vm = new Vue({
             el: '#app',
@@ -228,6 +233,7 @@
                 intervalID: 0,
                 ruleVisible: true,
                 setupRules: {},
+                qrcode: '',
             },
             methods: {
                 joinGame() {
@@ -395,6 +401,7 @@
                             this.player = tmp.data['職業']
                             this.setupRules = tmp.data['角色設定']
                             this.output = '等待遊戲開始...'
+                            this.qrcode = window.location.origin + window.location.pathname + '#' + this.token
                             break
                         case 'select_player':
                             // 選擇號碼
@@ -486,7 +493,7 @@
                     console.log('synth => ', this.synth)
                     setTimeout(() => {
                         let voices = this.synth.getVoices()
-                        console.log('all.voices => ', voices)
+                        // console.log('all.voices => ', voices)
                         const allowVoices = {
                             'zh-TW': true,
                             'zh-CN': true,
@@ -523,18 +530,27 @@
                             this.voices[voice.lang] = voice
                         }
 
-                        console.log('this.voice => ', this.voice)
-                        console.log('this.voices => ', this.voices)
-
                         setTimeout(() => {
                             const elems = document.querySelectorAll('.fixed-action-btn');
                             let instance = M.FloatingActionButton.init(elems, {
                                 hoverEnabled: false,
                             });
-                            console.log('this.voice => ', this.voice)
-                            console.log('this.voices => ', this.voices)
+                            // console.log('this.voice => ', this.voice)
+                            // console.log('this.voices => ', this.voices)
                         }, 500)
                     }, 500)
+
+                    if (window.location.hash !== '') {
+                        let hashes = window.location.hash.split('#', 2)
+                        if (hashes.length == 1) {
+                            this.token = hashes[0]
+                        } else if (hashes.length > 1) {
+                            this.token = hashes[1]
+                        }
+
+                        window.location.hash = ''
+                        this.joinGame()
+                    }
                 }
             }
         })

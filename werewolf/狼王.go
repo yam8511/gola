@@ -56,7 +56,7 @@ func (我 *WolfKing) 能力() (_ Player) {
 		}, 1000)
 
 		for {
-			so, err := waitChannelBack(我.傳話筒, 等待回應)
+			so, err := 我.等待動作(等待回應)
 			if err != nil {
 				return
 			}

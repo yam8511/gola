@@ -53,11 +53,16 @@ func (我 *Prophesier) 能力() (_ Player) {
 		Display: "請問你要查驗的對象是？",
 		Action:  選擇玩家,
 		Data:    可查看的玩家號碼,
-	}, 0)
+	}, 3000)
+
+	if !我.已經被選擇() {
+		我.遊戲.等一下(random(5) * 1000)
+		return
+	}
 
 	for {
 
-		so, err := waitChannelBack(我.傳話筒, 選擇玩家)
+		so, err := 我.等待動作(選擇玩家)
 		if err != nil {
 			return
 		}
@@ -79,9 +84,9 @@ func (我 *Prophesier) 能力() (_ Player) {
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 				Display: strconv.Itoa(玩家號碼) + s,
 				Action:  等待回應,
-			}, random(3)*1000)
+			}, 0)
 
-			waitChannelBack(我.傳話筒, 等待回應)
+			我.等待動作(等待回應)
 			return
 		}
 	}

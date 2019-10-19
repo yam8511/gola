@@ -58,7 +58,7 @@ func (我 *Witch) 能力() (_ Player) {
 			Data:    救的選項,
 		}, 0)
 
-		是否使用解藥, err := waitChannelBack(我.傳話筒, 等待回應)
+		是否使用解藥, err := 我.等待動作(等待回應)
 
 		if err != nil || 是否使用解藥.Reply == "yes" {
 			我.遊戲.救玩家(狼殺)
@@ -83,7 +83,7 @@ func (我 *Witch) 能力() (_ Player) {
 		}, 100)
 
 		//如果是第二晚之後被殺的是女巫，則不能使用解藥
-		是否使用毒藥, err := waitChannelBack(我.傳話筒, 等待回應)
+		是否使用毒藥, err := 我.等待動作(等待回應)
 		if err != nil {
 			return
 		}
@@ -109,7 +109,7 @@ func (我 *Witch) 能力() (_ Player) {
 			}, 100)
 
 			for {
-				被女巫毒的人, err := waitChannelBack(我.傳話筒, 選擇玩家)
+				被女巫毒的人, err := 我.等待動作(選擇玩家)
 				if err != nil {
 					return
 				}

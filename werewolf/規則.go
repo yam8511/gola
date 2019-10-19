@@ -114,6 +114,7 @@ type Player interface {
 	發言() (進入黑夜 bool)
 	連線() *websocket.Conn
 	發表遺言()
+	等待動作(動作) (傳輸資料, error)
 }
 
 // Skiller 有能力的人
