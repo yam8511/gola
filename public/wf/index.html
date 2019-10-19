@@ -51,7 +51,7 @@
 
             <div v-if="ws === null && !gameOver" class="input-field col s12">
                 <input id="token" class="validate" type="text" v-model="token" :autofocus="this.token !== ''" />
-                <label for="token">請輸入任意英文數字加入遊戲</label>
+                <label for="token">請輸入任意英文數字, 或直接加入遊戲</label>
 
                 <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
             </div>
@@ -111,6 +111,7 @@
 
 
                 <!-- 等待確認 -->
+                <qrcode v-if="shareToken" :value="qrcode" :options="{ width: 200 }"></qrcode>
                 <div v-if="isWaiting" class="row">
                     <div v-for="v,k in waitingOptions" :class="'col s' + optionsCol">
                         <a class="btn-floating btn pulse" @mousedown="selectOptions(k, v)">{{ k }}</a>
@@ -225,7 +226,9 @@
                 gameOver: false,
                 needEnterSession: false,
                 isWaiting: false,
+                shareToken: false,
                 waitingOptions: {},
+                onlyOneOption: false,
                 showVote: false,
                 voteResult: {},
                 isOut: false,
@@ -233,7 +236,6 @@
                 intervalID: 0,
                 ruleVisible: true,
                 setupRules: {},
-                qrcode: '',
             },
             methods: {
                 joinGame() {
@@ -251,7 +253,9 @@
                     const ws = new WebSocket(this.wsURL + '?token=' + this.token)
                     this.ws = ws
                     this.intervalID = setInterval(() => {
-                        this.ws.send('ping')
+                        if (this.ws !== null) {
+                            this.ws.send('ping')
+                        }
                     }, 10000)
                     ws.onmessage = this.receiveGame
                     ws.onclose = this.closedGame
@@ -294,7 +298,9 @@
                 },
                 selectOptions(k, v) {
                     this.waitingOptions = {}
-                    this.waitingOptions[k] = v
+                    if (!this.onlyOneOption) {
+                        this.waitingOptions[k] = v
+                    }
                     this.input = v
                     this.sendGame()
                 },
@@ -362,11 +368,13 @@
 
                     this.speak(tmp.sound)
 
+                    this.shareToken = false
                     this.showRules = false
                     this.showNumber = false
                     this.needEnterSession = false
                     this.isWaiting = false
                     this.waitingOptions = { '確認': '' }
+                    this.onlyOneOption = true
                     this.hasSkill = false
                     this.action = tmp.action
 
@@ -401,13 +409,13 @@
                             this.player = tmp.data['職業']
                             this.setupRules = tmp.data['角色設定']
                             this.output = '等待遊戲開始...'
-                            this.qrcode = window.location.origin + window.location.pathname + '#' + this.token
                             break
                         case 'select_player':
                             // 選擇號碼
                             this.selectedNumber = 0
                             this.showNumber = true
                             this.numbers = tmp.data
+                            this.onlyOneOption = tmp.data.length == 1
                             break
                         case 'game_is_running':
                             this.gameStart = true
@@ -419,6 +427,7 @@
                         case 'waiting':
                             this.isWaiting = true
                             if (tmp.data !== null && Object.keys(tmp.data).length > 0) {
+                                this.onlyOneOption = Object.keys(tmp.data).length == 1
                                 this.waitingOptions = {}
                                 for (const key in tmp.data) {
                                     this.waitingOptions[key] = tmp.data[key]
@@ -426,8 +435,9 @@
                             }
                             break
                         case 'take_token':
-                            this.isWaiting = true
                             this.token = tmp.data
+                            this.shareToken = true
+                            this.isWaiting = true
                             break
                         case 'game_over':
                             this.output = tmp.data
@@ -469,6 +479,9 @@
                 }
             },
             computed: {
+                qrcode() {
+                    this.qrcode = window.location.origin + window.location.pathname + '#' + this.token
+                },
                 gameRules() {
                     return this.lookCombineDetail(this.setupRules)
                 },
