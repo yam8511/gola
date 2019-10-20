@@ -497,7 +497,7 @@
             },
             computed: {
                 qrcode() {
-                    return window.location.origin + window.location.pathname + '#' + this.token
+                    return window.location.origin + window.location.pathname + '?' + this.token
                 },
                 gameRules() {
                     return this.lookCombineDetail(this.setupRules)
@@ -570,15 +570,14 @@
                         }, 500)
                     }, 500)
 
-                    if (window.location.hash !== '') {
-                        let hashes = window.location.hash.split('#', 2)
+                    if (window.location.search !== '') {
+                        let hashes = window.location.search.split('?', 2)
                         if (hashes.length == 1) {
                             this.token = hashes[0]
                         } else if (hashes.length > 1) {
                             this.token = hashes[1]
                         }
 
-                        window.location.hash = ''
                         this.joinGame()
                     }
                 }
