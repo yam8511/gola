@@ -2,6 +2,7 @@ package werewolf
 
 import (
 	"encoding/json"
+	"fmt"
 	"runtime"
 	"strconv"
 	"sync"
@@ -26,6 +27,7 @@ type Human struct {
 	conn  *websocket.Conn
 	遊戲    *Game
 	傳話筒   chan 傳輸資料
+	對外傳話筒 chan 傳輸資料
 	讀寫鎖   sync.RWMutex
 }
 
@@ -95,18 +97,17 @@ func (我 *Human) 換位子(新位子 int) int {
 }
 
 func (我 *Human) 加入(連線 *websocket.Conn) (加入成功 bool) {
-	我.讀寫鎖.Lock()
-	defer 我.讀寫鎖.Unlock()
-
-	if 我.conn != nil {
-		return
+	if 我.已經被選擇() {
+		return false
 	}
 
+	我.讀寫鎖.Lock()
 	我.conn = 連線
-	我.傳話筒 = make(chan 傳輸資料)
-	加入成功 = true
+	我.傳話筒 = make(chan 傳輸資料, 4)
+	我.對外傳話筒 = make(chan 傳輸資料, 4)
+	我.讀寫鎖.Unlock()
 
-	return
+	return true
 }
 
 func (我 *Human) 等待中() {
@@ -116,6 +117,24 @@ func (我 *Human) 等待中() {
 		return
 	}
 	我.讀寫鎖.Unlock()
+
+	go func() {
+		defer func() {
+			recover()
+		}()
+		for {
+			傳輸資料 := <-我.對外傳話筒
+			err := 我.conn.WriteJSON(傳輸資料)
+			if err != nil {
+				我.退出()
+				return
+			}
+		}
+	}()
+
+	defer func() {
+		recover()
+	}()
 
 	for {
 		so, err := waitSocketBack(我.conn, 無)
@@ -147,7 +166,9 @@ func (我 *Human) 退出() {
 	我.conn = nil
 	if 我.傳話筒 != nil {
 		close(我.傳話筒)
+		close(我.對外傳話筒)
 		我.傳話筒 = nil
+		我.對外傳話筒 = nil
 	}
 	我.讀寫鎖.Unlock()
 	我.遊戲.踢除玩家(我)
@@ -187,4 +208,17 @@ func (我 *Human) 發表遺言() {
 
 func (我 *Human) 等待動作(指定動作 動作) (傳輸資料, error) {
 	return waitChannelBack(我.傳話筒, 指定動作)
+}
+
+func (我 *Human) 傳話給玩家(資料 傳輸資料) (err error) {
+	if !我.已經被選擇() {
+		return nil
+	}
+
+	defer func() {
+		p := recover()
+		err = fmt.Errorf("傳話給玩家錯誤：%v", p)
+	}()
+	我.對外傳話筒 <- 資料
+	return
 }

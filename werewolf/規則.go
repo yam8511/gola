@@ -115,6 +115,7 @@ type Player interface {
 	連線() *websocket.Conn
 	發表遺言()
 	等待動作(動作) (傳輸資料, error)
+	傳話給玩家(傳輸資料) error
 }
 
 // Skiller 有能力的人
