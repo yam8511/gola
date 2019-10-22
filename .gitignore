@@ -1,2 +1,5 @@
-gola
+!.gitignore
+!.env
+
 vendor/
+gola

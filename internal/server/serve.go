@@ -38,7 +38,7 @@ func CreateServer(router *gin.Engine, port, host string, args ...string) *http.S
 }
 
 // SignalListenAndServe 開啟Server & 系統信號監聽
-func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
+func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup, maxConn int) {
 	defer waitFinish.Done()
 	defer func() {
 		if err := recover(); err != nil {
@@ -53,24 +53,19 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 		return
 	}
 
-	wg := make(chan int, 2)
+	dl := NewDozListner(l, maxConn)
 
 	go func() {
 		// err := http.Serve(l, server)
-		err := server.Serve(l)
+		err := server.Serve(dl)
 		bootstrap.WriteLog("WARNING", fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
-		wg <- 1
-	}()
-
-	go func() {
-		receivedSignal := <-bootstrap.GracefulDown()
-		bootstrap.WriteLog("INFO", fmt.Sprintf("🎃  接受訊號 <- %v 🎃", receivedSignal))
-		wg <- 0
 	}()
 
 	bootstrap.WriteLog("INFO", "🐳  Web Server 開始服務! "+l.Addr().String()+"🐳")
 	defer bootstrap.WriteLog("INFO", "🔥  Web Server 結束服務!🔥")
-	select {
-	case <-wg:
-	}
+
+	receivedSignal := <-bootstrap.GracefulDown()
+	bootstrap.WriteLog("INFO", fmt.Sprintf("🎃  接受訊號 <- %v 🎃", receivedSignal))
+	dl.Close()
+	dl.Wait()
 }
