@@ -65,6 +65,7 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup, maxCo
 	defer bootstrap.WriteLog("INFO", "🔥  Web Server 結束服務!🔥")
 
 	receivedSignal := <-bootstrap.GracefulDown()
+	go server.SetKeepAlivesEnabled(false)
 	bootstrap.WriteLog("INFO", fmt.Sprintf("🎃  接受訊號 <- %v 🎃", receivedSignal))
 	dl.Close()
 	dl.Wait()
