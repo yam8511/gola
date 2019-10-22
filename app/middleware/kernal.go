@@ -12,11 +12,27 @@ var globalMiddlewares = []gin.HandlerFunc{
 }
 
 // 中介層群組
-var middlewareGroups = map[string][]gin.HandlerFunc{}
+var middlewareGroups = []gin.HandlerFunc{}
 
 // 獨立的中介層
-var routeMiddleware = map[string]gin.HandlerFunc{
-	"check_google_login": checkGoogleLogin,
+var routeMiddleware = map[string]gin.HandlerFunc{}
+
+// SetupMiddlewares 設置中介層
+func SetupMiddlewares(site string) {
+	// 中介層群組
+	switch site {
+	case "admin":
+		middlewareGroups = []gin.HandlerFunc{}
+	case "member":
+		middlewareGroups = []gin.HandlerFunc{}
+	default:
+		middlewareGroups = []gin.HandlerFunc{}
+	}
+
+	// 獨立的中介層
+	routeMiddleware = map[string]gin.HandlerFunc{
+		"check_google_login": checkGoogleLogin,
+	}
 }
 
 // GlobalMiddlewares 全域中介層群組
@@ -27,18 +43,13 @@ func GlobalMiddlewares() []gin.HandlerFunc {
 	return globalMiddlewares
 }
 
-// MiddlewareGroup 取中介層群組
-func MiddlewareGroup(name string) []gin.HandlerFunc {
-	m, ok := middlewareGroups[name]
-	if !ok || m == nil {
-		bootstrap.WriteLog("WARNING", "Middleware Group doesn't exist ["+name+"]")
-		m = []gin.HandlerFunc{}
-	}
-	return m
+// GroupMiddlewares 取中介層群組
+func GroupMiddlewares(name string) []gin.HandlerFunc {
+	return middlewareGroups
 }
 
-// Middleware 取獨立的中介層
-func Middleware(name string) gin.HandlerFunc {
+// GetMiddleware 取獨立的中介層
+func GetMiddleware(name string) gin.HandlerFunc {
 	m, ok := routeMiddleware[name]
 	if !ok || m == nil {
 		m = func(c *gin.Context) {

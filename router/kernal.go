@@ -10,10 +10,15 @@ import (
 
 // RouteProvider 路由提供者
 func RouteProvider(r *gin.Engine) {
-	// 全域載入
+	Conf := bootstrap.GetAppConf()
+
+	// 設置Middleware
+	middleware.SetupMiddlewares(Conf.App.Site)
+
+	// 全域Middleware載入
 	r.Use(middleware.GlobalMiddlewares()...)
 
-	Conf := bootstrap.GetAppConf()
+	// 載入Route
 	switch Conf.App.Site {
 	case "admin":
 		// 專屬admin的route
