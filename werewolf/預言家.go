@@ -32,9 +32,10 @@ func (我 *Prophesier) 需要夜晚行動() bool {
 
 func (我 *Prophesier) 能力() (_ Player) {
 
-	我.遊戲.旁白(傳輸資料{Sound: "請問你要查驗的對象是？"}, 3000)
+	我.遊戲.旁白(傳輸資料{Sound: "請問你要查驗的對象是？"}, 1500)
 
-	if 我.出局了() {
+	if 我.出局了() || !我.已經被選擇() {
+		我.遊戲.等一下(random(3) * 2500)
 		return
 	}
 
@@ -53,12 +54,7 @@ func (我 *Prophesier) 能力() (_ Player) {
 		Display: "請問你要查驗的對象是？",
 		Action:  選擇玩家,
 		Data:    可查看的玩家號碼,
-	}, 3000)
-
-	if !我.已經被選擇() {
-		我.遊戲.等一下(random(5) * 1000)
-		return
-	}
+	}, 10)
 
 	for {
 
