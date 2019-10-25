@@ -8,6 +8,8 @@ services:
             context: .
             args:
                 - ENTER=server
+                - TG_TOKEN=${TG_TOKEN}
+                - TG_CHAT_ID=${TG_CHAT_ID}
         image: registry.heroku.com/golar/web:latest
         command: server
         restart: always

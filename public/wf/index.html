@@ -3,9 +3,26 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0,  minimum-scale=1, maximum-scale=1">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     <title>小小狼人殺</title>
+
+    <style>
+        * {
+            -moz-user-select: none;
+            /* for Firefox */
+            -webkit-user-select: none;
+            /* for Chrome */
+            user-select: none;
+        }
+
+        input, textarea {
+            -moz-user-select: initial;
+            /* for Firefox */
+            -webkit-user-select: initial;
+            /* for Chrome */
+            user-select: initial;
+        }
+    </style>
 
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -20,7 +37,20 @@
     <div id="app" class="container">
         <div class="fixed-action-btn">
             <a class="btn-floating btn-large teal">
-                <i class="large material-icons">translate</i>
+                <div v-if="initializing" class="preloader-wrapper small active">
+                    <div class="spinner-layer spinner-yellow-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+                <i v-else class="large material-icons">translate</i>
             </a>
             <ul>
                 <li v-for="v in voices">
@@ -30,20 +60,58 @@
             </ul>
         </div>
 
+        <!-- Modal Structure -->
+        <div id="modal1" class="modal bottom-sheet">
+            <div class="modal-content">
+                <div v-if="!chatDone">
+                    <div class="input-field">
+                        <i class="material-icons prefix">email</i>
+                        <input id="icon_prefix" type="text" v-model="userEmail">
+                        <label for="icon_prefix">Ｅｍａｉｌ (可能會回覆給您唷)</label>
+                    </div>
+                    <div class="input-field">
+                        <i class="material-icons prefix">chat</i>
+                        <textarea id="icon_prefix2" class="materialize-textarea" v-model="suggest"></textarea>
+                        <label for="icon_prefix2">有話要說嗎~ 歡迎指教與評價</label>
+                    </div>
+                </div>
+                <div v-else-if="chatOK">
+                    <i class="material-icons small">child_care</i> 感謝您的回饋~
+                </div>
+                <div v-else>
+                    <i class="material-icons small">nature_people</i> 通知失敗，請稍後重試。或者作者正在趕修中
+                </div>
+                <div v-if="chatting && !chatDone" class="progress">
+                    <div class="indeterminate"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a v-if="!chatDone" class="waves-effect waves-light btn"
+                    @mousedown="chat()"
+                    :disabled="chatting"
+                >
+                    <i class="material-icons left">send</i>
+                    快點給作者
+                </a>
+                <a v-else-if="chatOK" class="waves-effect waves-light btn cyan accent-1 black-text">
+                    <i class="material-icons left">done_all</i>
+                    已通知給作者
+                </a>
+                <a v-else class="waves-effect waves-light btn red accent-1 black-text">
+                    <i class="material-icons left">battery_alert</i>
+                    稍候重試
+                </a>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col s12">
                 <h4><a href="/wf">歡迎狼人殺 🐺</a></h4>
                 <h5>
-                    <i v-if="is_mute"
-                        style="cursor: pointer;"
-                        class="material-icons z-depth-2"
-                        @click="changeMute()"
-                    >volume_off</i>
-                    <i v-else
-                        style="cursor: pointer;"
-                        class="material-icons z-depth-2"
-                        @click="changeMute()"
-                    >volume_up</i>
+                    <i v-if="is_mute" style="cursor: pointer;" class="material-icons z-depth-2"
+                        @mousedown="changeMute()">volume_off</i>
+                    <i v-else style="cursor: pointer;" class="material-icons z-depth-2"
+                        @mousedown="changeMute()">volume_up</i>
                 </h5>
             </div>
 
@@ -66,6 +134,12 @@
                 <label for="token">請輸入任意英文數字, 或直接加入遊戲</label>
 
                 <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
+                <button data-target="modal1"
+                    class="modal-trigger waves-effect waves-light btn red darken-1">有話要跟作者說</button>
+                <br />
+
+                <qrcode :value="homeQRCode" :options="{ width: 200 }" />
+                </qrcode>
             </div>
 
             <div v-else class="col s12">
@@ -93,7 +167,7 @@
                         <hr />
                         <label v-for="n,k in combine">
                             <p>
-                                <input name="combine-value" type="radio" :value="k" v-model="selectedRule" />
+                                <input name="combine-value" type="radio" :value="k" :checked="k == lastCombineKey"  @change="changeCombine(k)" />
                                 <span>{{ k }}, 角色有: {{ lookCombineDetail(n) }}</span>
                             </p>
                         </label>
@@ -101,7 +175,7 @@
                     <div v-else>
                         <label v-for="c,r in rules">
                             <span>{{ r }}</span>
-                            <input :id="r" type="number" min="0" @change="changeRule" @keyup="changeRule" />
+                            <input :id="r" type="number" min="0" :value="isNaN(selectedRule[r]) ? 0 : selectedRule[r]" @change="changeRule" @keyup="changeRule" />
                         </label>
                     </div>
 
@@ -160,17 +234,13 @@
 
                             <span v-if="ruleVisible" class="teal-text text-darken-2">
                                 #{{ player }}
-                                <i style="cursor: pointer;"
-                                    class="material-icons small black-text text-darken-2"
-                                    @click="()=> (ruleVisible=false)"
-                                >visibility</i>
+                                <i style="cursor: pointer;" class="material-icons small black-text text-darken-2"
+                                    @mousedown="()=> (ruleVisible=false)">visibility</i>
                             </span>
                             <span v-else class="teal-text text-darken-2">
                                 # ****
-                                <i style="cursor: pointer;"
-                                    class="material-icons small black-text text-darken-2"
-                                    @click="()=> (ruleVisible=true)"
-                                >visibility_off</i>
+                                <i style="cursor: pointer;" class="material-icons small black-text text-darken-2"
+                                    @mousedown="()=> (ruleVisible=true)">visibility_off</i>
                             </span>
                         </li>
                         <li class="collection-item">
@@ -208,6 +278,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
     <script src="vue-qrcode.js"></script>
     <script>Vue.component(VueQrcode.name, VueQrcode);</script>
@@ -235,6 +306,7 @@
                 combine: [],
                 rules: {},
                 selectedRule: '',
+                lastCombineKey: '',
                 setRuleType: 'combine',
                 gameStart: false,
                 gameOver: false,
@@ -251,8 +323,49 @@
                 ruleVisible: true,
                 setupRules: {},
                 is_mute: true,
+                initializing: true,
+                chatting: false,
+                chatDone: false,
+                chatOK: false,
+                userEmail: '',
+                suggest: '',
             },
             methods: {
+                chat() {
+                    if (this.suggest.trim() === '') {
+                        return
+                    }
+                    this.chatDone = false
+                    this.chatting = true
+                    axios.post('/api/suggest', {
+                        email: this.userEmail,
+                        suggest: this.suggest,
+                    })
+                        .then((response) => {
+                            this.chatDone = true
+
+                            if (response.status !== 200 || response.data !== 'ok') {
+                                this.chatOK = false
+                                return
+                            }
+
+                            this.userEmail = ''
+                            this.suggest = ''
+                            this.chatOK = true
+                        })
+                        .catch((error) => {
+                            console.log('suggest error ->', error)
+                        }).finally(() => {
+                            if (this.chatOK) {
+                                this.chatting = false
+                            } else {
+                                this.chatting = true
+                                setTimeout(() => {
+                                    this.chatting = false
+                                }, 10000)
+                            }
+                        })
+                },
                 joinGame() {
 
                     if (this.ws !== null) {
@@ -290,6 +403,11 @@
                         'reply': `${this.input}`,
                     }))
                 },
+                changeCombine(k) {
+                    this.lastCombineKey = k
+                    this.input = this.lastCombineKey
+                    this.selectedRule = {...this.combine[k]}
+                },
                 changeRule(e) {
                     const rule = e.target.id
                     const n = parseInt(e.target.value)
@@ -299,7 +417,6 @@
                         this.selectedRule[rule] = n
                     }
                     this.input = JSON.stringify(this.selectedRule)
-                    console.log('rule', this.input)
                 },
                 selectNumber(n) {
                     if (this.selectedNumber !== 0) {
@@ -404,13 +521,26 @@
                             this.combine = tmp.data.combine
                             let combineKeys = Object.keys(this.combine)
                             if (combineKeys.length > 0) {
-                                this.setRuleType = 'combine'
-                                this.selectedRule = combineKeys[0]
-                                this.input = this.selectedRule
+                                if (this.lastCombineKey === '' || this.setRuleType !== 'combine') {
+                                    this.lastCombineKey = combineKeys[0]
+                                }
+                                // this.selectedRule = this.combine[this.lastCombineKey]
                             } else {
-                                this.setRuleType = 'rule'
-                                this.input = {}
+                                this.lastCombineKey = ''
                             }
+
+                            if (this.setRuleType === '') {
+                                this.setRuleType = 'combine'
+                                this.selectedRule = this.lastCombineKey = '' ? {} : {...this.combine[this.lastCombineKey]}
+                                this.input = this.lastCombineKey
+                            }
+
+                            if (this.setRuleType === 'combine') {
+                                this.input = this.lastCombineKey
+                            } else {
+                                this.input = JSON.stringify(this.selectedRule)
+                            }
+
                             this.rules = tmp.data.rule
                             this.gameOver = false
                             break
@@ -475,29 +605,24 @@
                         default:
                             break
                     }
-                }
+                },
             },
             watch: {
                 setRuleType(v) {
                     if (v === 'combine') {
-                        if (this.combine.length > 0) {
-                            this.selectedRule = this.combine[0]
-                        } else {
-                            this.selectedRule = ''
-                        }
+                        this.input = this.lastCombineKey
                     } else {
-                        this.selectedRule = {}
+                        this.selectedRule = {...this.combine[this.lastCombineKey]}
+                        this.input = JSON.stringify(this.selectedRule)
                     }
                 },
-                selectedRule(v) {
-                    if (this.setRuleType == 'combine') {
-                        this.input = v
-                    }
-                }
             },
             computed: {
                 qrcode() {
                     return window.location.origin + window.location.pathname + '?' + this.token
+                },
+                homeQRCode() {
+                    return window.location.href
                 },
                 gameRules() {
                     return this.lookCombineDetail(this.setupRules)
@@ -518,12 +643,17 @@
             },
             mounted() {
                 console.log('Ws URL', this.wsURL)
+                const modelElems = document.querySelectorAll('.modal')
+                let modelInstances = M.Modal.init(modelElems, {
+                    onCloseEnd: () => {
+                        this.chatDone = false
+                    }
+                })
+
                 if ('speechSynthesis' in window) {
                     this.synth = window.speechSynthesis
-                    console.log('synth => ', this.synth)
                     setTimeout(() => {
                         let voices = this.synth.getVoices()
-                        // console.log('all.voices => ', voices)
                         const allowVoices = {
                             'zh-TW': true,
                             'zh-CN': true,
@@ -565,8 +695,8 @@
                             let instance = M.FloatingActionButton.init(elems, {
                                 hoverEnabled: false,
                             });
-                            // console.log('this.voice => ', this.voice)
-                            // console.log('this.voices => ', this.voices)
+
+                            this.initializing = false
                         }, 500)
                     }, 500)
 

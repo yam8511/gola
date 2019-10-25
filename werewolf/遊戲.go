@@ -178,7 +178,7 @@ func (遊戲 *Game) 開始() {
 		Sound:  sound,
 		Action: 遊戲結束,
 		Data:   遊戲結果,
-	}, 0)
+	}, 1200)
 	runtime.Gosched()
 
 	遊戲.重置()
@@ -817,7 +817,7 @@ func (遊戲 *Game) 判斷勝負(有救人 bool) 遊戲結果 {
 		}
 	}
 
-	if 狼職人數 >= 神職人數+平民人數 {
+	if 狼職人數 > 神職人數+平民人數 {
 		遊戲.勝負 = 狼勝
 		return 狼勝
 	}

@@ -36,6 +36,11 @@ ENV TZ=Asia/Taipei
 ARG ENTER=server
 ENV ENTER=${ENTER}
 
+ARG TG_TOKEN
+ARG TG_CHAT_ID
+ENV TG_TOKEN=${TG_TOKEN}
+ENV TG_CHAT_ID=${TG_CHAT_ID}
+
 # 啟動服務
 CMD [ "sh", "-c", "./gola $ENTER" ]
 
