@@ -3,13 +3,730 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Welcome GoLa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>小小狼人殺</title>
+
+    <!-- <script data-ad-client="ca-pub-5823049391292672" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
+
+    <style>
+        * {
+            -moz-user-select: none;
+            /* for Firefox */
+            -webkit-user-select: none;
+            /* for Chrome */
+            user-select: none;
+        }
+
+        input,
+        textarea {
+            -moz-user-select: initial;
+            /* for Firefox */
+            -webkit-user-select: initial;
+            /* for Chrome */
+            user-select: initial;
+        }
+    </style>
+
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
 
 <body>
-    <h1>Hello GoLa</h1>
+    <div id="app" class="container">
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large teal">
+                <div v-if="initializing" class="preloader-wrapper small active">
+                    <div class="spinner-layer spinner-yellow-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+                <i v-else class="large material-icons">translate</i>
+            </a>
+            <ul>
+                <li v-for="v in voices">
+                    <a v-if="v.lang === voice.lang" class="btn-floating purple lighten-2 btn-large">{{ v.text }}</a>
+                    <a v-else class="btn-floating teal lighten-2 btn-large" @mousedown="changeLang(v)">{{ v.text }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Modal Structure -->
+        <div id="modal1" class="modal bottom-sheet">
+            <div class="modal-content">
+                <div v-if="!chatDone">
+                    <div class="input-field">
+                        <i class="material-icons prefix">email</i>
+                        <input id="icon_prefix" type="text" v-model="userEmail">
+                        <label for="icon_prefix">Ｅｍａｉｌ (可能會回覆給您唷)</label>
+                    </div>
+                    <div class="input-field">
+                        <i class="material-icons prefix">chat</i>
+                        <textarea id="icon_prefix2" class="materialize-textarea" v-model="suggest"></textarea>
+                        <label for="icon_prefix2">有話要說嗎~ 歡迎指教與評價</label>
+                    </div>
+                </div>
+                <div v-else-if="chatOK">
+                    <i class="material-icons small">child_care</i> 感謝您的回饋~
+                </div>
+                <div v-else>
+                    <i class="material-icons small">nature_people</i> 通知失敗，請稍後重試。或者作者正在趕修中
+                </div>
+                <div v-if="chatting && !chatDone" class="progress">
+                    <div class="indeterminate"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a v-if="!chatDone" class="waves-effect waves-light btn" @mousedown="chat()" :disabled="chatting">
+                    <i class="material-icons left">send</i>
+                    快點給作者
+                </a>
+                <a v-else-if="chatOK" class="waves-effect waves-light btn cyan accent-1 black-text">
+                    <i class="material-icons left">done_all</i>
+                    已通知給作者
+                </a>
+                <a v-else class="waves-effect waves-light btn red accent-1 black-text">
+                    <i class="material-icons left">battery_alert</i>
+                    稍候重試
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s12">
+                <h4><a href="/wf">歡迎狼人殺 🐺</a></h4>
+                <h5>
+                    <i v-if="is_mute" style="cursor: pointer;" class="material-icons z-depth-2"
+                        @mousedown="changeMute()">volume_off</i>
+                    <i v-else style="cursor: pointer;" class="material-icons z-depth-2"
+                        @mousedown="changeMute()">volume_up</i>
+                </h5>
+            </div>
+
+            <div class="col s12">
+                <!-- 顯示輸出 -->
+                <div v-if="output !== ''">
+                    <p>{{ output }}</p>
+                </div>
+
+                <div v-if="gameOver">
+                    <button class="waves-effect waves-light btn" @mousedown="finishGame">
+                        <i class="material-icons small">check</i>遊戲結束
+                    </button>
+                </div>
+
+            </div>
+
+            <div v-if="ws === null && !gameOver" class="input-field col s12">
+                <input id="token" class="validate" type="text" v-model="token" :autofocus="this.token !== ''" />
+                <label for="token">請輸入任意英文數字, 或直接加入遊戲</label>
+
+                <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
+                <button data-target="modal1"
+                    class="modal-trigger waves-effect waves-light btn red darken-1">有話要跟作者說</button>
+                <br />
+
+                <qrcode :value="homeQRCode" :options="{ width: 200 }" />
+                </qrcode>
+            </div>
+
+            <div v-else class="col s12">
+                <!-- 顯示session輸入 -->
+                <div v-if="needEnterSession" class="input-field">
+                    <input id="session" class="validate" type="text" v-model="session" />
+                    <label for="session">輸入號碼...</label>
+
+                    <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
+                </div>
+
+                <!-- 顯示角色設定 -->
+                <div v-if="showRules">
+                    <label for="combine">
+                        <input type="radio" id="combine" value="combine" v-model="setRuleType">
+                        <span>快速組合</span>
+                    </label>
+
+                    <label for="rule">
+                        <input type="radio" id="rule" value="rule" v-model="setRuleType">
+                        <span>自訂角色</span>
+                    </label>
+
+                    <div v-if="setRuleType === 'combine'">
+                        <hr />
+                        <label v-for="n,k in combine">
+                            <p>
+                                <input name="combine-value" type="radio" :value="k" :checked="k == lastCombineKey"
+                                    @change="changeCombine(k)" />
+                                <span>{{ k }}, 角色有: {{ lookCombineDetail(n) }}</span>
+                            </p>
+                        </label>
+                    </div>
+                    <div v-else>
+                        <label v-for="c,r in rules">
+                            <span>{{ r }}</span>
+                            <input :id="r" type="number" min="0" :value="isNaN(selectedRule[r]) ? 0 : selectedRule[r]"
+                                @change="changeRule" @keyup="changeRule" />
+                        </label>
+                    </div>
+
+                    <br />
+
+                    <button class="waves-effect waves-light btn-small" @mousedown="sendGame()">setup</button>
+                </div>
+
+                <!-- 顯示選擇號碼 -->
+                <div v-if="showNumber">
+                    <hr>
+
+                    <div class="row">
+                        <div v-for="n in numbers" :class="'col s' + parseInt(12 / numbers.length)">
+                            <a class="btn-floating btn pulse" @mousedown="selectNumber(n)">{{ n }}</a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 等待確認 -->
+                <qrcode v-if="shareToken" :value="qrcode" :options="{ width: 200 }"></qrcode>
+                <div v-if="isWaiting" class="row">
+                    <div v-for="v,k in waitingOptions" :class="'col s' + optionsCol">
+                        <a class="btn-floating btn pulse" @mousedown="selectOptions(k, v)">{{ k }}</a>
+                    </div>
+                </div>
+
+                <!-- 顯示結果 -->
+                <div v-if="showVote">
+                    <hr />
+                    <ul class="collection">
+                        <li v-for="v,k in voteResult" class="collection-item">
+                            {{ k }} <i class="material-icons small">restaurant_menu</i> {{ v }}
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 房主按鈕 -->
+                <div v-if="leader && !gameStart">
+                    <button class="waves-effect waves-light btn" @mousedown="sendGame">
+                        <i class="material-icons">send</i>遊戲開始
+                    </button>
+                </div>
+
+                <!-- 顯示玩家資訊 -->
+                <div v-if="no !== ''">
+                    <hr />
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <i class="material-icons small deep-purple-text text-darken-2">casino</i> 號碼
+                            <span class="deep-purple-text text-darken-2">#{{ no }}</span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small teal-text text-darken-2">account_box</i> 角色
+
+                            <span v-if="ruleVisible" class="teal-text text-darken-2">
+                                #{{ player }}
+                                <i style="cursor: pointer;" class="material-icons small black-text text-darken-2"
+                                    @mousedown="()=> (ruleVisible=false)">visibility</i>
+                            </span>
+                            <span v-else class="teal-text text-darken-2">
+                                # ****
+                                <i style="cursor: pointer;" class="material-icons small black-text text-darken-2"
+                                    @mousedown="()=> (ruleVisible=true)">visibility_off</i>
+                            </span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small red-text text-darken-3">favorite</i> 存活
+                            <i v-if="isOut" class="material-icons small red-text text-lighten-2">cancel</i>
+                            <i v-else class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small light-blue-text text-darken-4">person_add</i> 房主
+                            <i v-if="leader"
+                                class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                            <i v-else class="material-icons small red-text text-lighten-2">cancel</i>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small orange-text text-darken-2">fingerprint</i> Token:
+                            <span class="orange-text text-darken-2">{{ token }}</span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small purple-text text-accent-2">people</i> 連線人數
+                            <span v-for="on in online">
+                                <i v-if="on" class="material-icons small purple-text text-accent-2">person</i>
+                                <i v-else class="material-icons small brown-text text-darken-2">person_outline</i>
+                            </span>
+                        </li>
+                        <li class="collection-item">
+                            <i class="material-icons small brown-text text-darken-2">child_care</i> 遊戲角色:
+                            <span class="brown-text text-darken-2">{{ gameRules }}</span>
+                        </li>
+                        <li class="collection-item" v-if="qrcode !== ''">
+                            <qrcode :value="qrcode" :options="{ width: 200 }"></qrcode>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="center">
+        <script async src="//pagead2.googlesyndication.com/
+        pagead/js/adsbygoogle.js"></script>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({
+                google_ad_client: "pub-5823049391292672",
+                enable_page_level_ads: true
+            });
+        </script>
+    </div>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script src="vue-qrcode.js"></script>
+    <script>Vue.component(VueQrcode.name, VueQrcode);</script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                synth: null,
+                voices: [],
+                voice: null,
+                token: '',
+                session: '',
+                input: '',
+                action: '',
+                output: '',
+                list: '',
+                no: '',
+                player: '',
+                leader: false,
+                ws: null,
+                showNumber: false,
+                numbers: [],
+                selectedNumber: 0,
+                showRules: false,
+                combine: [],
+                rules: {},
+                selectedRule: '',
+                lastCombineKey: '',
+                setRuleType: 'combine',
+                gameStart: false,
+                gameOver: false,
+                needEnterSession: false,
+                isWaiting: false,
+                shareToken: false,
+                waitingOptions: {},
+                onlyOneOption: false,
+                showVote: false,
+                voteResult: {},
+                isOut: false,
+                online: [],
+                intervalID: 0,
+                ruleVisible: true,
+                setupRules: {},
+                is_mute: true,
+                initializing: true,
+                chatting: false,
+                chatDone: false,
+                chatOK: false,
+                userEmail: '',
+                suggest: '',
+            },
+            methods: {
+                chat() {
+                    if (this.suggest.trim() === '') {
+                        return
+                    }
+                    this.chatDone = false
+                    this.chatting = true
+                    axios.post('/api/suggest', {
+                        email: this.userEmail,
+                        suggest: this.suggest,
+                    })
+                        .then((response) => {
+                            this.chatDone = true
+
+                            if (response.status !== 200 || response.data !== 'ok') {
+                                this.chatOK = false
+                                return
+                            }
+
+                            this.userEmail = ''
+                            this.suggest = ''
+                            this.chatOK = true
+                        })
+                        .catch((error) => {
+                            console.log('suggest error ->', error)
+                        }).finally(() => {
+                            if (this.chatOK) {
+                                this.chatting = false
+                            } else {
+                                this.chatting = true
+                                setTimeout(() => {
+                                    this.chatting = false
+                                }, 10000)
+                            }
+                        })
+                },
+                joinGame() {
+
+                    if (this.ws !== null) {
+                        if (this.needEnterSession) {
+                            this.input = this.session
+                            this.sendGame()
+                            return
+                        }
+
+                        return
+                    }
+
+                    const ws = new WebSocket(this.wsURL + '?token=' + this.token)
+                    this.ws = ws
+                    this.intervalID = setInterval(() => {
+                        if (this.ws !== null) {
+                            this.ws.send('ping')
+                        }
+                    }, 10000)
+                    ws.onmessage = this.receiveGame
+                    ws.onclose = this.closedGame
+                },
+                closedGame() {
+                    clearInterval(this.intervalID)
+                    this.ws = null
+                    this.resetInfo()
+                    this.showVote = false
+                    if (this.gameStart) {
+                        this.output = '遊戲已經關閉'
+                    }
+                },
+                sendGame() {
+                    this.ws.send(JSON.stringify({
+                        'action': this.action,
+                        'reply': `${this.input}`,
+                    }))
+                },
+                changeCombine(k) {
+                    this.lastCombineKey = k
+                    this.input = this.lastCombineKey
+                    this.selectedRule = { ...this.combine[k] }
+                },
+                changeRule(e) {
+                    const rule = e.target.id
+                    const n = parseInt(e.target.value)
+                    if (n === 0 || n === null) {
+                        this.selectedRule[rule] = 0
+                    } else {
+                        this.selectedRule[rule] = n
+                    }
+                    this.input = JSON.stringify(this.selectedRule)
+                },
+                selectNumber(n) {
+                    if (this.selectedNumber !== 0) {
+                        return
+                    }
+
+                    this.selectedNumber = n
+                    this.numbers = [this.selectedNumber]
+                    this.input = n + ''
+                    this.sendGame()
+                },
+                selectOptions(k, v) {
+                    this.waitingOptions = {}
+                    if (!this.onlyOneOption) {
+                        this.waitingOptions[k] = v
+                    }
+                    this.input = v
+                    this.sendGame()
+                },
+                resetInfo() {
+                    this.leader = false
+                    this.no = ''
+                    this.player = ''
+                    this.session = ''
+                },
+                finishGame() {
+                    this.gameOver = false
+                    this.output = ''
+                },
+                changeLang(v) {
+                    this.voice = v.voice
+                    M.Toast.dismissAll();
+                    setTimeout(() => {
+                        M.toast({ html: `改成 ${v.voice.name} 發音` })
+                    }, 1)
+                },
+                lookCombineDetail(rules) {
+                    let display = []
+                    for (const key in rules) {
+                        display.push(`${key} x ${rules[key]}`)
+                    }
+
+                    return display.join(' | ')
+                },
+                changeMute() {
+                    this.is_mute = !this.is_mute
+                    this.speak(' ')
+                },
+                speak(sound) {
+                    if (sound === '' || sound === null || this.is_mute) {
+                        return
+                    }
+                    const speech = new window.SpeechSynthesisUtterance(sound)
+                    speech.voice = this.voice
+                    window.speechSynthesis.speak(speech)
+                },
+                receiveGame(e) {
+                    if (e.data === 'ping') {
+                        return
+                    }
+
+                    const tmp = JSON.parse(e.data)
+
+                    if (tmp.action === 'refresh_online') {
+                        this.online = tmp.data
+                        return
+                    }
+
+                    if (tmp.action === 'change_room_master') {
+                        this.leader = true
+                        this.gameStart = tmp.data['遊戲開始']
+                        if (!this.gameStart) {
+                            this.action = 'change_room_master'
+                            this.input = 'start'
+                        }
+                        return
+                    }
+
+
+                    this.output = tmp.sound
+                    if (tmp.display !== '') {
+                        this.output = tmp.display
+                    }
+
+                    this.speak(tmp.sound)
+
+                    this.shareToken = false
+                    this.showRules = false
+                    this.showNumber = false
+                    this.needEnterSession = false
+                    this.isWaiting = false
+                    this.waitingOptions = { '確認': '' }
+                    this.onlyOneOption = true
+                    this.hasSkill = false
+                    this.action = tmp.action
+
+                    switch (tmp.action) {
+                        case 'role_setup':
+                            this.resetInfo()
+                            // 角色設定
+                            this.showRules = true
+                            this.combine = tmp.data.combine
+                            let combineKeys = Object.keys(this.combine)
+                            if (combineKeys.length > 0) {
+                                if (this.lastCombineKey === '' || this.setRuleType !== 'combine') {
+                                    this.lastCombineKey = combineKeys[0]
+                                }
+                                // this.selectedRule = this.combine[this.lastCombineKey]
+                            } else {
+                                this.lastCombineKey = ''
+                            }
+
+                            if (this.setRuleType === '') {
+                                this.setRuleType = 'combine'
+                                this.selectedRule = this.lastCombineKey = '' ? {} : { ...this.combine[this.lastCombineKey] }
+                                this.input = this.lastCombineKey
+                            }
+
+                            if (this.setRuleType === 'combine') {
+                                this.input = this.lastCombineKey
+                            } else {
+                                this.input = JSON.stringify(this.selectedRule)
+                            }
+
+                            this.rules = tmp.data.rule
+                            this.gameOver = false
+                            break
+                        case 'select_number':
+                            this.resetInfo()
+                            // 選擇號碼
+                            this.selectedNumber = 0
+                            this.showNumber = true
+                            this.numbers = tmp.data
+                            break
+                        case 'take_rule':
+                            this.session = tmp.data['編號']
+                            this.no = tmp.data['位子']
+                            this.player = tmp.data['職業']
+                            this.setupRules = tmp.data['角色設定']
+                            this.output = '等待遊戲開始...'
+                            break
+                        case 'select_player':
+                            // 選擇號碼
+                            this.selectedNumber = 0
+                            this.showNumber = true
+                            this.numbers = tmp.data
+                            this.onlyOneOption = tmp.data.length == 1
+                            break
+                        case 'game_is_running':
+                            this.gameStart = true
+                            this.needEnterSession = true
+                            break
+                        case 'all_close_eyes':
+                            this.gameStart = true
+                            break
+                        case 'waiting':
+                            this.isWaiting = true
+                            if (tmp.data !== null && Object.keys(tmp.data).length > 0) {
+                                this.onlyOneOption = Object.keys(tmp.data).length == 1
+                                this.waitingOptions = {}
+                                for (const key in tmp.data) {
+                                    this.waitingOptions[key] = tmp.data[key]
+                                }
+                            }
+                            break
+                        case 'take_token':
+                            this.token = tmp.data
+                            this.shareToken = true
+                            this.isWaiting = true
+                            break
+                        case 'game_over':
+                            this.gameStart = false
+                            this.gameOver = true
+                            this.isOut = false
+                            this.showVote = false
+                            this.voteResult = {}
+                            this.resetInfo()
+                            break
+                        case 'vote_result':
+                            this.showVote = true
+                            this.voteResult = tmp.data
+                            break
+                        case 'player_out':
+                            this.isOut = true
+                            break
+                        default:
+                            break
+                    }
+                },
+            },
+            watch: {
+                setRuleType(v) {
+                    if (v === 'combine') {
+                        this.input = this.lastCombineKey
+                    } else {
+                        this.selectedRule = { ...this.combine[this.lastCombineKey] }
+                        this.input = JSON.stringify(this.selectedRule)
+                    }
+                },
+            },
+            computed: {
+                qrcode() {
+                    return window.location.origin + window.location.pathname + '?' + this.token
+                },
+                homeQRCode() {
+                    return window.location.href
+                },
+                gameRules() {
+                    return this.lookCombineDetail(this.setupRules)
+                },
+                optionsCol() {
+                    const optionLen = parseInt(12 / Object.keys(this.waitingOptions).length)
+                    return optionLen > 12 ? 1 : optionLen
+                },
+                wsURL() {
+                    let url = window.location.host + '/wf/game'
+                    if (window.location.protocol === 'http:') {
+                        url = 'ws://' + url
+                    } else {
+                        url = 'wss://' + url
+                    }
+                    return url
+                }
+            },
+            mounted() {
+                console.log('Ws URL', this.wsURL)
+                const modelElems = document.querySelectorAll('.modal')
+                let modelInstances = M.Modal.init(modelElems, {
+                    onCloseEnd: () => {
+                        this.chatDone = false
+                    }
+                })
+
+                if ('speechSynthesis' in window) {
+                    this.synth = window.speechSynthesis
+                    setTimeout(() => {
+                        let voices = this.synth.getVoices()
+                        const allowVoices = {
+                            'zh-TW': true,
+                            'zh-CN': true,
+                            'zh-HK': true,
+                            'zh-HK': true,
+                            'en-US': true,
+                            'ja-JP': true,
+                            'ko-KR': true,
+                        }
+                        voices = voices.
+                            filter((e) => allowVoices[e.lang] ? allowVoices[e.lang] : false).
+                            map((e) => {
+                                let words = e.name.split(' ')
+                                let text = words[words.length - 1]
+                                if (words.length == 1) {
+                                    words = e.name.split(' ')
+                                    text = words[words.length - 1]
+                                    words = text.split('（')
+                                    text = words[0]
+                                }
+                                if (e.lang === 'zh-TW') {
+                                    this.voice = e
+                                }
+                                return {
+                                    text: text,
+                                    lang: e.lang,
+                                    voice: e,
+                                }
+                            })
+
+                        this.voices = {}
+                        for (const i in voices) {
+                            const voice = voices[i]
+                            this.voices[voice.lang] = voice
+                        }
+
+                        setTimeout(() => {
+                            const elems = document.querySelectorAll('.fixed-action-btn');
+                            let instance = M.FloatingActionButton.init(elems, {
+                                hoverEnabled: false,
+                            });
+
+                            this.initializing = false
+                        }, 500)
+                    }, 500)
+
+                    if (window.location.search !== '') {
+                        let hashes = window.location.search.split('?', 2)
+                        if (hashes.length == 1) {
+                            this.token = hashes[0]
+                        } else if (hashes.length > 1) {
+                            this.token = hashes[1]
+                        }
+
+                        this.joinGame()
+                    }
+                }
+            }
+        })
+    </script>
 </body>
 
 </html>
