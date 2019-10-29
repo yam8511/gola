@@ -37,9 +37,11 @@ func (c *Witness) Skill(game *Game) GameResult {
 
 	me := c.Owner()
 	data := map[string]int{}
-	players := game.HasOtherCardPlayers(me)
+	playerNums := []int{}
+	players := game.OtherPlayers(me)
 	for _, player := range players {
 		data[player.Name()] = player.No()
+		playerNums = append(playerNums, player.No())
 	}
 
 	if len(data) == 0 {
@@ -52,15 +54,16 @@ func (c *Witness) Skill(game *Game) GameResult {
 		Data:   data,
 	}, 1000)
 
+	var no int
 	for {
 		td, err := me.WaitingAction(等待回應)
 		if err != nil {
-			return 進行中
-		}
-
-		no, err := strconv.Atoi(td.Reply)
-		if err != nil {
-			continue
+			no = playerNums[random(len(playerNums)-1)]
+		} else {
+			no, err = strconv.Atoi(td.Reply)
+			if err != nil {
+				continue
+			}
 		}
 
 		he, exists := game.玩家資料(no)

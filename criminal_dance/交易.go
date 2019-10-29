@@ -61,7 +61,7 @@ func (c *Trade) Skill(game *Game) GameResult {
 		var no int
 		td, err := me.WaitingAction(等待回應)
 		if err != nil {
-			no = RandomHasCardPlayerNo(players, me)
+			no = RandomPlayerNo(players)
 		} else {
 			no, err = strconv.Atoi(td.Reply)
 			if err != nil {
@@ -99,12 +99,23 @@ func (c *Trade) Skill(game *Game) GameResult {
 		me.TakeCard(herCard)
 		he.TakeCard(myCard)
 
+		var herCardOutput, myCardOutput *CardDisplay
+		if herCard != nil {
+			t := CardInfoOutput(herCard)
+			herCardOutput = &t
+		}
+
+		if myCard != nil {
+			t := CardInfoOutput(myCard)
+			myCardOutput = &t
+		}
+
 		ptds := map[Player]TransferData{
 			me: TransferData{
 				Sound:  "請看交換到的牌",
 				Action: 顯示拿牌,
 				Data: map[string]interface{}{
-					"GetCard": CardInfoOutput(herCard),
+					"GetCard": herCardOutput,
 					"MyCard":  CardsInfoOutput(me.Cards()),
 				},
 			},
@@ -112,7 +123,7 @@ func (c *Trade) Skill(game *Game) GameResult {
 				Sound:  "請看交換到的牌",
 				Action: 顯示拿牌,
 				Data: map[string]interface{}{
-					"GetCard": CardInfoOutput(myCard),
+					"GetCard": myCardOutput,
 					"MyCard":  CardsInfoOutput(he.Cards()),
 				},
 			},

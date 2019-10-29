@@ -40,7 +40,7 @@ func (c *Detective) Skill(game *Game) GameResult {
 
 	me := c.Owner()
 	data := map[string]int{}
-	players := game.HasOtherCardPlayers(me)
+	players := game.OtherPlayers(me)
 	for _, player := range players {
 		data[player.Name()] = player.No()
 	}
@@ -59,7 +59,7 @@ func (c *Detective) Skill(game *Game) GameResult {
 		var no int
 		td, err := me.WaitingAction(等待回應)
 		if err != nil {
-			no = RandomHasCardPlayerNo(players, me)
+			no = RandomPlayerNo(players)
 		} else {
 			no, err = strconv.Atoi(td.Reply)
 			if err != nil {

@@ -34,6 +34,6 @@ func (c *Accomplice) CanUse() bool {
 
 // Skill 功能
 func (c *Accomplice) Skill(game *Game) GameResult {
-	c.Owner().BecomeCriminal(true)
+	c.Owner().BecomeAccomplice(true)
 	return 進行中
 }

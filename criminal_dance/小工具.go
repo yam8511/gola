@@ -45,14 +45,11 @@ func NewPlayer(no int, game *Game) Player {
 	return NewBasicPlayer(no, game)
 }
 
-// RandomHasCardPlayerNo 隨機曲有卡片的玩家號碼
-func RandomHasCardPlayerNo(players []Player, owner Player) int {
+// RandomPlayerNo 隨機曲有卡片的玩家號碼
+func RandomPlayerNo(players []Player) int {
 
 	nums := []int{}
 	for _, p := range players {
-		if p.No() == owner.No() {
-			continue
-		}
 		nums = append(nums, p.No())
 	}
 	no := nums[random(len(nums))-1]

@@ -150,17 +150,6 @@
             </div>
 
             <div v-else class="col s12">
-                <!-- 顯示session輸入 -->
-                <div v-if="needEnterSession" class="input-field">
-                    <div class="input-field">
-                        <input id="myName" class="validate" type="text" v-model="myName" />
-                        <label for="myName">輸入暱稱...</label>
-                    </div>
-                    <input id="session" class="validate" type="text" v-model="session" />
-                    <label for="session">輸入號碼...</label>
-
-                    <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
-                </div>
 
                 <!-- 顯示卡牌設定 -->
                 <div v-if="showSetup">
@@ -310,7 +299,7 @@
                             <span class="card-title"> {{ i + 1 }}</span>
                             <span class="card-content"> </span>
                         </div>
-                        <div class="card-action">
+                        <div v-if="!hasDrawedCard" class="card-action">
                             <a class="btn" @mousedown="playCard(i)">抽這張</a>
                         </div>
                     </div>
@@ -359,7 +348,7 @@
                             </li>
                             <li class="collection-item">
                                 <div class="row">
-                                    <div class="col s2 card yellow darken-1" v-for="j in CardNum[i]">
+                                    <div class="col s3 card yellow darken-1" v-for="j in CardNum[i]">
                                         <div class="card-content">
                                             <span class="card-title">{{ j }}</span>
                                             <span class="card-content"> </span>

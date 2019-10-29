@@ -244,10 +244,9 @@ type Player interface {
 	TurnMe(int) Card
 	PlayCard(Player) Card
 	TakeCard(Card)
-	// SendCard(Player)
-	// DrawCard(Player) Card
 	ClearCard()
 	BecomeCriminal(becomCrimnal bool)
+	BecomeAccomplice(becomeAccomplice bool)
 	BecomeDetective(becomeDetective bool)
 	IsCriminal() bool
 	IsDetective() bool

@@ -26,18 +26,19 @@ func NewBasicPlayer(no int, game *Game) *BasicPlayer {
 
 // BasicPlayer 玩家
 type BasicPlayer struct {
-	name        string
-	no          int
-	cards       []Card
-	throwCards  []Card
-	isCriminal  bool
-	isDetective bool
-	point       int
-	conn        *websocket.Conn
-	game        *Game
-	readCh      chan TransferData
-	writeCh     chan TransferData
-	mx          sync.RWMutex
+	name         string
+	no           int
+	cards        []Card
+	throwCards   []Card
+	isCriminal   bool
+	isAccomplice bool
+	isDetective  bool
+	point        int
+	conn         *websocket.Conn
+	game         *Game
+	readCh       chan TransferData
+	writeCh      chan TransferData
+	mx           sync.RWMutex
 }
 
 // Name 號碼
@@ -167,6 +168,11 @@ func (me *BasicPlayer) IsEmptyCard() bool {
 func (me *BasicPlayer) TurnMe(no int) Card {
 	for {
 		card := me.PlayCard(nil)
+
+		if card == nil {
+			return nil
+		}
+
 		if !card.CanUse() && me.No() == no {
 			me.TakeCard(card)
 			continue
@@ -264,19 +270,6 @@ func (me *BasicPlayer) TakeCard(card Card) {
 	me.mx.Unlock()
 }
 
-// SendCard 自己選一張卡片給其他玩家
-// func (me *BasicPlayer) SendCard(he Player) {
-// 	card := me.PlayCard(nil)
-// 	he.TakeCard(card)
-// }
-
-// DrawCard 從其他玩家的手牌中抽牌
-// func (me *BasicPlayer) DrawCard(he Player) Card {
-// 	card := me.PlayCard(he.Cards())
-// 	me.TakeCard(card)
-// 	return card
-// }
-
 // ClearCard 清空牌
 func (me *BasicPlayer) ClearCard() {
 	me.mx.Lock()
@@ -293,6 +286,13 @@ func (me *BasicPlayer) BecomeCriminal(becomeCriminal bool) {
 	me.mx.Unlock()
 }
 
+// BecomeAccomplice 變成犯人
+func (me *BasicPlayer) BecomeAccomplice(becomeAccomplice bool) {
+	me.mx.Lock()
+	me.isAccomplice = becomeAccomplice
+	me.mx.Unlock()
+}
+
 // BecomeDetective 變成偵探
 func (me *BasicPlayer) BecomeDetective(becomeDetective bool) {
 	me.mx.Lock()
@@ -303,8 +303,11 @@ func (me *BasicPlayer) BecomeDetective(becomeDetective bool) {
 // BeAskedCriminal 被問是不是犯人
 func (me *BasicPlayer) BeAskedCriminal() bool {
 
-	if me.IsCriminal() {
+	me.mx.Lock()
+	isCriminal := me.isCriminal
+	me.mx.Unlock()
 
+	if isCriminal {
 		cards := me.Cards()
 		for _, card := range cards {
 			if card.Name() == 不在場證明 {
@@ -321,7 +324,7 @@ func (me *BasicPlayer) BeAskedCriminal() bool {
 // IsCriminal 是犯人嗎？
 func (me *BasicPlayer) IsCriminal() bool {
 	me.mx.RLock()
-	isCriminal := me.isCriminal
+	isCriminal := me.isCriminal || me.isAccomplice
 	me.mx.RUnlock()
 	return isCriminal
 }

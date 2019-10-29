@@ -37,37 +37,45 @@ func (g *Game) 加入(conn *websocket.Conn) {
 		me.Waiting()
 	}
 
-	if g.目前階段() != 準備階段 {
+	for g.目前階段() != 準備階段 {
+		players := g.Players()
+		availablePlayer := []int{}
+		for _, player := range players {
+			if !player.IsConnected() {
+				availablePlayer = append(availablePlayer, player.No())
+			}
+		}
+
 		err := g.旁白有話對連線說(conn, TransferData{
 			Sound:  "遊戲已經開始，想重新進入遊戲，請輸入玩家號碼",
 			Action: 遊戲已開始,
+			Data:   availablePlayer,
 		}, 0)
 
 		if err != nil {
 			return
 		}
 
-		for g.目前階段() == 開始階段 {
-			so, err := waitSocketBack(conn, 遊戲已開始)
-			if err != nil {
-				return
-			}
+		so, err := waitSocketBack(conn, 遊戲已開始)
+		if err != nil {
+			return
+		}
 
-			var input struct {
-				Name string `json:"name"`
-				No   int    `json:"no"`
-			}
+		var input struct {
+			Name string `json:"name"`
+			No   int    `json:"no"`
+		}
 
-			err = json.Unmarshal([]byte(so.Reply), &input)
-			if err != nil {
-				continue
-			}
+		err = json.Unmarshal([]byte(so.Reply), &input)
+		if err != nil {
+			continue
+		}
 
-			me, exist := g.玩家資料(input.No)
-			if exist && me.Join(conn, input.Name) {
-				進入遊戲(me)
-				return
-			}
+		me, exist := g.玩家資料(input.No)
+		if exist && me.Join(conn, input.Name) {
+			g.RefreshDesktop()
+			進入遊戲(me)
+			return
 		}
 	}
 
@@ -166,6 +174,9 @@ func (g *Game) 開始() {
 				}, 1000)
 				card := p.TurnMe(p.No())
 				g.RefreshDesktop()
+				if card == nil {
+					continue
+				}
 				g.旁白(TransferData{
 					Sound:  p.Name() + "出" + string(card.Name()),
 					Action: 顯示出牌,
@@ -243,6 +254,7 @@ func (g *Game) 開始() {
 			p.WaitingAction(顯示結算)
 			p.ClearCard()
 			p.BecomeCriminal(false)
+			p.BecomeAccomplice(false)
 			p.BecomeDetective(false)
 		}
 
@@ -363,6 +375,19 @@ func (g *Game) HasOtherCardPlayers(onwer Player) []Player {
 	g.mx.RLock()
 	for _, p := range g.players {
 		if !p.IsEmptyCard() && p.No() != onwer.No() {
+			players = append(players, p)
+		}
+	}
+	g.mx.RUnlock()
+	return players
+}
+
+// OtherPlayers 其他玩家們
+func (g *Game) OtherPlayers(onwer Player) []Player {
+	players := []Player{}
+	g.mx.RLock()
+	for _, p := range g.players {
+		if p.No() != onwer.No() {
 			players = append(players, p)
 		}
 	}

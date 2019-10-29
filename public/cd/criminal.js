@@ -40,6 +40,7 @@ var vm = new Vue({
         DrawedCard: {},
         needDrawCard: false,
         drawCard: [],
+        hasDrawedCard: false,
 
         // 以下不知道會不會再用到
         list: '',
@@ -121,7 +122,10 @@ var vm = new Vue({
 
             if (this.ws !== null) {
                 if (this.needEnterSession) {
-                    this.input = this.session
+                    this.input = JSON.stringify({
+                        name: this.myName,
+                        no: parseInt(this.session),
+                    })
                     this.sendGame()
                     return
                 }
@@ -242,6 +246,7 @@ var vm = new Vue({
         },
         playCard(index) {
             this.needPlayCard = false
+            this.hasDrawedCard = true
             this.input = index
             this.sendGame()
         },
@@ -252,31 +257,62 @@ var vm = new Vue({
 
             const tmp = JSON.parse(e.data)
 
-            if (tmp.action === 'refresh_online') {
-                this.online = tmp.data
-                return
+            switch (tmp.action) {
+                case 'refresh_online':
+                    this.online = tmp.data
+                    return
+
+                case 'change_room_master':
+                    this.leader = true
+                    this.gameStart = tmp.data['遊戲開始']
+                    if (!this.gameStart) {
+                        this.action = 'change_room_master'
+                        this.input = 'start'
+                    }
+                    return
+
+                case 'refresh_desktop':
+                    this.gameStart = true
+
+                    this.playerCount = tmp.data.PlayerNo.length
+                    this.targetPoint = tmp.data.TargetPoint
+
+                    this.PlayerPoint = tmp.data.PlayerPoint
+                    this.PlayerName = tmp.data.PlayerName
+                    this.CardNum = tmp.data.CardNum
+
+                    this.ThrowCard = {}
+                    for (const no in tmp.data.ThrowCard) {
+                        const cards = tmp.data.ThrowCard[no]
+                        this.ThrowCard[no] = cards.map((card) => ({
+                            ...card,
+                            Detail: card.Detail.trim().split("\n\t").join('<br />'),
+                        }))
+                    }
+                    this.ThrowCard = { ...this.ThrowCard }
+
+                    this.MyCard = tmp.data.MyCard.map((card) => ({
+                        ...card,
+                        Detail: card.Detail.trim().split("\n\t").join('<br />'),
+                    }))
+                    return
             }
 
-            if (tmp.action === 'change_room_master') {
-                this.leader = true
-                this.gameStart = tmp.data['遊戲開始']
-                if (!this.gameStart) {
-                    this.action = 'change_room_master'
-                    this.input = 'start'
+
+
+
+            if (!(tmp.action === 'game_is_running' && !isNaN(this.getHash()))) {
+                if (tmp.sound !== '') {
+                    this.output = tmp.sound
                 }
-                return
+
+                if (tmp.display !== '') {
+                    this.output = tmp.display
+                }
+
+                this.speak(tmp.sound)
             }
 
-
-            if (tmp.sound !== '') {
-                this.output = tmp.sound
-            }
-
-            if (tmp.display !== '') {
-                this.output = tmp.display
-            }
-
-            this.speak(tmp.sound)
 
             this.shareToken = false
             this.showSetup = false
@@ -342,33 +378,7 @@ var vm = new Vue({
                     this.no = tmp.data['No']
                     this.myName = tmp.data['Name']
                     this.output = '等待遊戲開始...'
-                    break
-
-                case 'refresh_desktop':
-                    this.gameStart = true
-
-                    this.playerCount = tmp.data.PlayerNo.length
-                    this.targetPoint = tmp.data.TargetPoint
-
-                    this.PlayerPoint = tmp.data.PlayerPoint
-                    this.PlayerName = tmp.data.PlayerName
-                    this.CardNum = tmp.data.CardNum
-
-                    this.ThrowCard = {}
-                    for (const no in tmp.data.ThrowCard) {
-                        const cards = tmp.data.ThrowCard[no]
-                        this.ThrowCard[no] = cards.map((card) => ({
-                            ...card,
-                            Detail: card.Detail.trim().split("\n\t").join('<br />'),
-                        }))
-                    }
-                    this.ThrowCard = { ...this.ThrowCard }
-
-                    this.MyCard = tmp.data.MyCard.map((card) => ({
-                        ...card,
-                        Detail: card.Detail.trim().split("\n\t").join('<br />'),
-                    }))
-
+                    window.location.hash = this.no
                     break
 
                 case 'turn_me':
@@ -396,6 +406,7 @@ var vm = new Vue({
                 case 'draw_card':
                     this.drawCard = tmp.data
                     this.needDrawCard = true
+                    this.hasDrawedCard = false
                     break
 
                 case 'look_player_cards':
@@ -458,8 +469,22 @@ var vm = new Vue({
                     break
 
                 case 'game_is_running':
-                    this.gameStart = true
                     this.needEnterSession = true
+
+                    let hash = this.getHash()
+                    console.log('Hash ===> ', hash, tmp.data)
+                    this.selectedNumber = 0
+                    if (isNaN(hash) || tmp.data.indexOf(hash) < 0) {
+                        this.showNumber = true
+                        this.numbers = tmp.data
+                        this.showNameInput = true
+                    } else {
+                        this.showNumber = true
+                        this.numbers = [hash]
+                        this.showNameInput = true
+                        this.selectNumber(hash)
+                    }
+
                     break
                 case 'all_close_eyes':
                     this.gameStart = true
@@ -476,8 +501,9 @@ var vm = new Vue({
                     break
                 case 'take_token':
                     this.token = tmp.data
-                    this.shareToken = true
-                    this.isWaiting = true
+                    window.location.search = this.token
+                    // this.shareToken = true
+                    // this.isWaiting = true
                     break
                 case 'game_over':
                     this.gameStart = false
@@ -488,6 +514,18 @@ var vm = new Vue({
                 default:
                     break
             }
+        },
+        getHash() {
+            const hashes = window.location.hash.split('#', 2)
+            let hash = ''
+            if (hashes.length == 1) {
+                hash = hashes[0]
+            } else if (hashes.length > 1) {
+                hash = hashes[1]
+            }
+
+            hash = parseInt(hash)
+            return hash
         },
     },
     watch: {
@@ -505,6 +543,13 @@ var vm = new Vue({
                 const count = setup.CardSet[name]
                 this.selectedCards[name] = count
             }
+
+            this.input = JSON.stringify({
+                PlayerCount: this.playerCount,
+                TargetPoint: this.targetPoint,
+                Advanced: this.advanced,
+                CardSet: this.selectedCards,
+            })
         },
     },
     computed: {

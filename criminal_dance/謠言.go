@@ -67,7 +67,6 @@ func (c *Rumor) Skill(game *Game) GameResult {
 		}
 
 		card := player.PlayCard(nextPlayer)
-		player.TakeCard(card)
 		mx.Lock()
 		drawedCards[nextNo] = card
 		takeCards[no] = card
@@ -87,6 +86,7 @@ func (c *Rumor) Skill(game *Game) GameResult {
 		takeCard := takeCards[player.No()]
 		drawedCard := drawedCards[player.No()]
 		if takeCard != nil {
+			player.TakeCard(takeCard)
 			t := CardInfoOutput(takeCard)
 			takeCardOutput = &t
 		}

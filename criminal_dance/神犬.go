@@ -40,7 +40,7 @@ func (c *Dog) Skill(game *Game) GameResult {
 
 	me := c.Owner()
 	data := map[string]int{}
-	players := game.HasOtherCardPlayers(me)
+	players := game.OtherPlayers(me)
 	for _, player := range players {
 		data[player.Name()] = player.No()
 	}
@@ -59,7 +59,7 @@ func (c *Dog) Skill(game *Game) GameResult {
 		var no int
 		td, err := me.WaitingAction(等待回應)
 		if err != nil {
-			no = RandomHasCardPlayerNo(players, me)
+			no = RandomPlayerNo(players)
 		} else {
 			no, err = strconv.Atoi(td.Reply)
 			if err != nil {
@@ -77,6 +77,7 @@ func (c *Dog) Skill(game *Game) GameResult {
 		for {
 			// card := he.PlayCard(nil)
 			card := he.TurnMe(me.No())
+			he.TakeCard(c)
 			if card != nil {
 				game.旁白(TransferData{Sound: he.Name() + "丟棄了" + string(card.Name())}, 2000)
 				if card.Name() == 犯人 {
@@ -84,11 +85,8 @@ func (c *Dog) Skill(game *Game) GameResult {
 					me.BecomeDetective(true)
 					return 神犬勝利
 				}
-				he.TakeCard(c)
-				break
 			}
+			return 進行中
 		}
-
-		return 進行中
 	}
 }
