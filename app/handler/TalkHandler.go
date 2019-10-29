@@ -29,12 +29,23 @@ func Suggest(c *gin.Context) {
 	type requestParams struct {
 		Email   string `json:"email"`
 		Suggest string `json:"suggest"`
+		Game    string `json:"game"`
 	}
 
 	reqParams := requestParams{}
 	err := c.ShouldBindJSON(&reqParams)
 	if err != nil {
 		c.String(http.StatusOK, "failed: "+err.Error())
+		return
+	}
+
+	var gameName string
+	switch reqParams.Game {
+	case "wf":
+		gameName = "狼人殺🐺"
+	case "cd":
+		gameName = "犯人在跳舞💃🕺"
+	default:
 		return
 	}
 
@@ -46,14 +57,14 @@ func Suggest(c *gin.Context) {
 	}
 
 	text := fmt.Sprintf(`
-		🕹狼人殺🐺 有使用者回饋囉！
+		🕹%s 有使用者回饋囉！
 
 		📮 %s
 
 		📜
 		%s
 		📝
-	`, reqParams.Email, reqParams.Suggest)
+	`, gameName, reqParams.Email, reqParams.Suggest)
 
 	query := url.Values{}
 	query.Add("chat_id", chatID)

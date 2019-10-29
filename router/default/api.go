@@ -16,5 +16,6 @@ func LoadAPIRouter(r *gin.Engine) {
 	// api.POST("/seed", handler.Seed)
 
 	api.POST("/suggest", handler.Suggest)
-	r.GET("/wf/game", handler.JoinGame)
+	r.GET("/wf/game", handler.WerewolfGame)
+	r.GET("/cd/game", handler.CriminalDanceGame)
 }

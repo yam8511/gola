@@ -111,12 +111,9 @@ func (我 *Human) 加入(連線 *websocket.Conn) (加入成功 bool) {
 }
 
 func (我 *Human) 等待中() {
-	我.讀寫鎖.Lock()
-	if 我.conn == nil {
-		我.讀寫鎖.Unlock()
+	if !我.已經被選擇() {
 		return
 	}
-	我.讀寫鎖.Unlock()
 
 	go func() {
 		defer func() {

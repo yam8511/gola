@@ -349,6 +349,7 @@
                     axios.post('/api/suggest', {
                         email: this.userEmail,
                         suggest: this.suggest,
+                        game: 'wf',
                     })
                         .then((response) => {
                             this.chatDone = true
