@@ -1,4 +1,7 @@
-# werewolf 狼人殺
+# GoLa
+
+- Werewolf 狼人殺
+- Crimnal Dance 犯人在跳舞
 
 ---
 
@@ -11,7 +14,10 @@ $ go run main.go server
 
 ---
 
-## [查看頁面](http://127.0.0.1:8000/wf)
+## 查看頁面
+
+- [狼人殺](http://127.0.0.1:8000/wf)
+- [犯人在跳舞](http://127.0.0.1:8000/cd)
 
 ---
 

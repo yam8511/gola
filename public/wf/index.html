@@ -7,13 +7,6 @@
     <title>小小狼人殺</title>
 
     <!-- <script data-ad-client="ca-pub-5823049391292672" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({
-            google_ad_client: "pub-5823049391292672",
-            enable_page_level_ads: true
-        });
-    </script>
 
     <style>
         * {
@@ -24,7 +17,8 @@
             user-select: none;
         }
 
-        input, textarea {
+        input,
+        textarea {
             -moz-user-select: initial;
             /* for Firefox */
             -webkit-user-select: initial;
@@ -95,10 +89,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a v-if="!chatDone" class="waves-effect waves-light btn"
-                    @mousedown="chat()"
-                    :disabled="chatting"
-                >
+                <a v-if="!chatDone" class="waves-effect waves-light btn" @mousedown="chat()" :disabled="chatting">
                     <i class="material-icons left">send</i>
                     快點給作者
                 </a>
@@ -152,13 +143,6 @@
             </div>
 
             <div v-else class="col s12">
-                <!-- 顯示session輸入 -->
-                <div v-if="needEnterSession" class="input-field">
-                    <input id="session" class="validate" type="text" v-model="session" />
-                    <label for="session">輸入號碼...</label>
-
-                    <button class="waves-effect waves-light btn cyan darken-1" @mousedown="joinGame()">加入遊戲</button>
-                </div>
 
                 <!-- 顯示角色設定 -->
                 <div v-if="showRules">
@@ -176,7 +160,8 @@
                         <hr />
                         <label v-for="n,k in combine">
                             <p>
-                                <input name="combine-value" type="radio" :value="k" :checked="k == lastCombineKey"  @change="changeCombine(k)" />
+                                <input name="combine-value" type="radio" :value="k" :checked="k == lastCombineKey"
+                                    @change="changeCombine(k)" />
                                 <span>{{ k }}, 角色有: {{ lookCombineDetail(n) }}</span>
                             </p>
                         </label>
@@ -184,7 +169,8 @@
                     <div v-else>
                         <label v-for="c,r in rules">
                             <span>{{ r }}</span>
-                            <input :id="r" type="number" min="0" :value="isNaN(selectedRule[r]) ? 0 : selectedRule[r]" @change="changeRule" @keyup="changeRule" />
+                            <input :id="r" type="number" min="0" :value="isNaN(selectedRule[r]) ? 0 : selectedRule[r]"
+                                @change="changeRule" @keyup="changeRule" />
                         </label>
                     </div>
 
@@ -285,6 +271,16 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="center">
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({
+                google_ad_client: "pub-5823049391292672",
+                enable_page_level_ads: true
+            });
+        </script>
     </div>
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -405,7 +401,9 @@
                     this.showVote = false
                     if (this.gameStart) {
                         this.output = '遊戲已經關閉'
+                        window.location.search = this.token
                     }
+                    this.gameStart = false
                 },
                 sendGame() {
                     this.ws.send(JSON.stringify({
@@ -416,7 +414,7 @@
                 changeCombine(k) {
                     this.lastCombineKey = k
                     this.input = this.lastCombineKey
-                    this.selectedRule = {...this.combine[k]}
+                    this.selectedRule = { ...this.combine[k] }
                 },
                 changeRule(e) {
                     const rule = e.target.id
@@ -506,12 +504,17 @@
                     }
 
 
-                    this.output = tmp.sound
-                    if (tmp.display !== '') {
-                        this.output = tmp.display
-                    }
+                    if (!(tmp.action === 'game_is_running' && !isNaN(this.getHash()))) {
+                        if (tmp.sound !== '') {
+                            this.output = tmp.sound
+                        }
 
-                    this.speak(tmp.sound)
+                        if (tmp.display !== '') {
+                            this.output = tmp.display
+                        }
+
+                        this.speak(tmp.sound)
+                    }
 
                     this.shareToken = false
                     this.showRules = false
@@ -541,7 +544,7 @@
 
                             if (this.setRuleType === '') {
                                 this.setRuleType = 'combine'
-                                this.selectedRule = this.lastCombineKey = '' ? {} : {...this.combine[this.lastCombineKey]}
+                                this.selectedRule = this.lastCombineKey = '' ? {} : { ...this.combine[this.lastCombineKey] }
                                 this.input = this.lastCombineKey
                             }
 
@@ -567,6 +570,7 @@
                             this.player = tmp.data['職業']
                             this.setupRules = tmp.data['角色設定']
                             this.output = '等待遊戲開始...'
+                            window.location.hash = this.no
                             break
                         case 'select_player':
                             // 選擇號碼
@@ -578,6 +582,17 @@
                         case 'game_is_running':
                             this.gameStart = true
                             this.needEnterSession = true
+
+                            let hash = this.getHash()
+                            this.selectedNumber = 0
+                            if (isNaN(hash) || tmp.data.indexOf(hash) < 0) {
+                                this.showNumber = true
+                                this.numbers = tmp.data
+                            } else {
+                                this.showNumber = true
+                                this.numbers = [hash]
+                                this.selectNumber(hash)
+                            }
                             break
                         case 'all_close_eyes':
                             this.gameStart = true
@@ -616,13 +631,25 @@
                             break
                     }
                 },
+                getHash() {
+                    const hashes = window.location.hash.split('#', 2)
+                    let hash = ''
+                    if (hashes.length == 1) {
+                        hash = hashes[0]
+                    } else if (hashes.length > 1) {
+                        hash = hashes[1]
+                    }
+
+                    hash = parseInt(hash)
+                    return hash
+                },
             },
             watch: {
                 setRuleType(v) {
                     if (v === 'combine') {
                         this.input = this.lastCombineKey
                     } else {
-                        this.selectedRule = {...this.combine[this.lastCombineKey]}
+                        this.selectedRule = { ...this.combine[this.lastCombineKey] }
                         this.input = JSON.stringify(this.selectedRule)
                     }
                 },
