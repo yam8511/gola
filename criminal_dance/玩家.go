@@ -321,9 +321,17 @@ func (me *BasicPlayer) BeAskedCriminal() bool {
 // IsCriminal 是犯人嗎？
 func (me *BasicPlayer) IsCriminal() bool {
 	me.mx.RLock()
-	isCriminal := me.isCriminal || me.isAccomplice
+	isCriminal := me.isCriminal
 	me.mx.RUnlock()
 	return isCriminal
+}
+
+// IsAccomplice 是共犯嗎？
+func (me *BasicPlayer) IsAccomplice() bool {
+	me.mx.RLock()
+	isAccomplice := me.isAccomplice
+	me.mx.RUnlock()
+	return isAccomplice
 }
 
 // IsDetective 是偵探嗎？

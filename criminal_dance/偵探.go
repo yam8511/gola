@@ -40,7 +40,7 @@ func (c *Detective) Skill(game *Game) GameResult {
 
 	me := c.Owner()
 	data := map[string]int{}
-	players := game.OtherPlayers(me)
+	players := game.HasOtherCardPlayers(me)
 	for _, player := range players {
 		data[player.Name()] = player.No()
 	}

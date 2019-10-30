@@ -350,6 +350,18 @@ var vm = new Vue({
                         this.targetPoint = c.TargetPoint
                         this.advanced = c.Advanced
 
+                        let extra = 0
+                        for (const name in this.selectedCards) {
+                            if (name === '隨機') {
+                                continue
+                            }
+                            extra += this.selectedCards[name]
+                        }
+
+                        extra = this.playerCount * 4 - extra
+                        this.selectedCards['隨機'] = extra
+                        this.selectedCards = { ...this.selectedCards }
+
                         this.input = JSON.stringify({
                             PlayerCount: this.playerCount,
                             TargetPoint: this.targetPoint,

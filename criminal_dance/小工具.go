@@ -35,7 +35,9 @@ func NewCard(name CardName, owner Player) Card {
 	case 神犬:
 		return NewDog(owner)
 	case 警部:
+		return NewPolice(owner)
 	case 少年:
+		return NewTeenager(owner)
 	}
 	return nil
 }

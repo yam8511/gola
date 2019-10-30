@@ -88,36 +88,36 @@ var 規則牌組設定 = map[string]規則設定{
 			神犬:    1,
 		},
 	},
-	// "8-advanced": {
-	// 	"8人進階場",
-	// 	8, 10, true, map[CardName]int{
-	// 		第一發現者: 1,
-	// 		偵探:    4,
-	// 		犯人:    1,
-	// 		共犯:    2,
-	// 		普通人:   2,
-	// 		目擊者:   2,
-	// 		不在場證明: 5,
-	// 		情報交換:  4,
-	// 		交易:    4,
-	// 		謠言:    4,
-	// 		神犬:    1,
-	// 		警部:    1,
-	// 		少年:    1,
-	// 	},
-	// },
-	// "8-random": {
-	// 	"8人隨機場",
-	// 	8, 10, true, map[CardName]int{
-	// 		第一發現者: 1,
-	// 		偵探:    4,
-	// 		犯人:    1,
-	// 		共犯:    2,
-	// 		普通人:   2,
-	// 		目擊者:   3,
-	// 		隨機:    19,
-	// 	},
-	// },
+	"8-advanced": {
+		"8人進階場",
+		8, 10, true, map[CardName]int{
+			第一發現者: 1,
+			偵探:    4,
+			犯人:    1,
+			共犯:    2,
+			普通人:   2,
+			目擊者:   2,
+			不在場證明: 5,
+			情報交換:  4,
+			交易:    4,
+			謠言:    4,
+			神犬:    1,
+			警部:    1,
+			少年:    1,
+		},
+	},
+	"8-random": {
+		"8人隨機場",
+		8, 10, true, map[CardName]int{
+			第一發現者: 1,
+			偵探:    4,
+			犯人:    1,
+			共犯:    2,
+			普通人:   2,
+			目擊者:   3,
+			隨機:    19,
+		},
+	},
 }
 
 var 基本牌組 = map[CardName]int{
@@ -132,8 +132,8 @@ var 基本牌組 = map[CardName]int{
 	交易:    4,
 	謠言:    5,
 	神犬:    1,
-	// 警部:    1,
-	// 少年:    1,
+	警部:    1,
+	少年:    1,
 }
 
 // CardName 卡片名稱
@@ -163,6 +163,7 @@ const (
 	進行中  = GameResult("進行中")
 	偵探勝利 = GameResult("偵探勝利")
 	神犬勝利 = GameResult("神犬勝利")
+	警部勝利 = GameResult("警部勝利")
 	犯人勝利 = GameResult("犯人勝利")
 )
 
@@ -249,6 +250,7 @@ type Player interface {
 	BecomeAccomplice(becomeAccomplice bool)
 	BecomeDetective(becomeDetective bool)
 	IsCriminal() bool
+	IsAccomplice() bool
 	IsDetective() bool
 	BeAskedCriminal() bool
 	Exit()

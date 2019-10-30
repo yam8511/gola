@@ -13,12 +13,14 @@ import (
 
 // Game 犯人在跳舞遊戲
 type Game struct {
-	roomMaster  Player
-	players     []Player
-	mx          sync.RWMutex
-	cards       []Card
-	targetPoint int
-	gameState   遊戲階段
+	roomMaster     Player
+	players        []Player
+	police         Player
+	futureCriminal Player
+	mx             sync.RWMutex
+	cards          []Card
+	targetPoint    int
+	gameState      遊戲階段
 }
 
 func (g *Game) 加入(conn *websocket.Conn) {
@@ -209,6 +211,24 @@ func (g *Game) 開始() {
 			return
 		}
 
+		if criminal := g.FutureCriminal(); criminal != nil {
+			for _, player := range g.Players() {
+				if player.No() == criminal.No() {
+					if player.IsCriminal() {
+						result = 警部勝利
+					}
+					break
+				}
+			}
+		}
+
+		if police := g.Police(); result == 警部勝利 && police != nil {
+			for _, player := range g.Players() {
+				player.BecomeDetective(false)
+			}
+			police.BecomeDetective(true)
+		}
+
 		// 結算分數
 		g.ChangeGameState(結算階段)
 		var normalPoint, criminalPoint, detectivePoint int
@@ -216,7 +236,7 @@ func (g *Game) 開始() {
 		case 偵探勝利:
 			normalPoint = 1
 			detectivePoint = 2
-		case 神犬勝利:
+		case 神犬勝利, 警部勝利:
 			normalPoint = 1
 			detectivePoint = 3
 		case 犯人勝利:
@@ -233,7 +253,7 @@ func (g *Game) 開始() {
 			case p.IsDetective():
 				p.TakePoint(detectivePoint)
 				pointChanged[no] = detectivePoint
-			case p.IsCriminal():
+			case p.IsCriminal() || p.IsAccomplice():
 				p.TakePoint(criminalPoint)
 				pointChanged[no] = criminalPoint
 			default:
@@ -269,6 +289,7 @@ func (g *Game) 開始() {
 			p.BecomeAccomplice(false)
 			p.BecomeDetective(false)
 		}
+		g.GuessFutureCriminal(nil, nil)
 
 		// 如果有玩家達到目標分數，遊戲結束
 		if len(reachPointPlayer) > 0 {
@@ -457,6 +478,30 @@ func (g *Game) ChangeGameState(state 遊戲階段) {
 	g.mx.Lock()
 	g.gameState = state
 	g.mx.Unlock()
+}
+
+// GuessFutureCriminal 預測未來的犯人
+func (g *Game) GuessFutureCriminal(police, criminal Player) {
+	g.mx.Lock()
+	g.police = police
+	g.futureCriminal = criminal
+	g.mx.Unlock()
+}
+
+// FutureCriminal 預測未來的犯人
+func (g *Game) FutureCriminal() (criminal Player) {
+	g.mx.RLock()
+	criminal = g.futureCriminal
+	g.mx.RUnlock()
+	return
+}
+
+// Police 警長
+func (g *Game) Police() (plice Player) {
+	g.mx.RLock()
+	plice = g.police
+	g.mx.RUnlock()
+	return
 }
 
 func (g *Game) 目前階段() 遊戲階段 {
