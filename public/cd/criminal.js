@@ -168,17 +168,7 @@ var vm = new Vue({
                 this.selectedCards[name] = n
             }
 
-            let extra = 0
-            for (const name in this.selectedCards) {
-                if (name === '隨機') {
-                    continue
-                }
-                extra += this.selectedCards[name]
-            }
-
-            extra = this.playerCount * 4 - extra
-            this.selectedCards['隨機'] = extra
-            this.selectedCards = { ...this.selectedCards }
+            this.calculateRandomCount(this.selectedCards)
 
             this.input = JSON.stringify({
                 PlayerCount: this.playerCount,
@@ -349,18 +339,7 @@ var vm = new Vue({
                         this.playerCount = c.PlayerCount
                         this.targetPoint = c.TargetPoint
                         this.advanced = c.Advanced
-
-                        let extra = 0
-                        for (const name in this.selectedCards) {
-                            if (name === '隨機') {
-                                continue
-                            }
-                            extra += this.selectedCards[name]
-                        }
-
-                        extra = this.playerCount * 4 - extra
-                        this.selectedCards['隨機'] = extra
-                        this.selectedCards = { ...this.selectedCards }
+                        this.calculateRandomCount(this.selectedCards)
 
                         this.input = JSON.stringify({
                             PlayerCount: this.playerCount,
@@ -524,6 +503,19 @@ var vm = new Vue({
             hash = parseInt(hash)
             return hash
         },
+        calculateRandomCount(selectedCards) {
+            let extra = 0
+            for (const name in selectedCards) {
+                if (name === '隨機') {
+                    continue
+                }
+                extra += selectedCards[name]
+            }
+
+            extra = this.playerCount * 4 - extra
+            selectedCards['隨機'] = extra
+            this.selectedCards = { ...selectedCards }
+        },
     },
     watch: {
         selectedCombine(v) {
@@ -532,6 +524,7 @@ var vm = new Vue({
             this.targetPoint = setup.TargetPoint
             this.advanced = setup.Advanced
 
+            this.selectedCards['隨機'] = 0
             for (const name in this.basicCard) {
                 this.selectedCards[name] = 0
             }
@@ -540,6 +533,7 @@ var vm = new Vue({
                 const count = setup.CardSet[name]
                 this.selectedCards[name] = count
             }
+            this.calculateRandomCount(this.selectedCards)
 
             this.input = JSON.stringify({
                 PlayerCount: this.playerCount,
