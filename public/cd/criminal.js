@@ -470,7 +470,6 @@ var vm = new Vue({
                     this.needEnterSession = true
 
                     let hash = this.getHash()
-                    console.log('Hash ===> ', hash, tmp.data)
                     this.selectedNumber = 0
                     if (isNaN(hash) || tmp.data.indexOf(hash) < 0) {
                         this.showNumber = true

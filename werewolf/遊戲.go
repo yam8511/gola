@@ -50,25 +50,38 @@ func (遊戲 *Game) 加入(連線 *websocket.Conn) {
 	}
 
 	if 遊戲.目前階段() == 開始階段 {
-		err := 遊戲.旁白有話對連線說(連線, 傳輸資料{
-			Sound:  "遊戲已經開始，想重新進入遊戲，請輸入玩家號碼",
-			Action: 遊戲已開始,
-		}, 0)
-
-		if err != nil {
-			return
-		}
 
 		for 遊戲.目前階段() == 開始階段 {
+			availablePlayer := []int{}
+			for _, player := range 遊戲.玩家們 {
+				if !player.已經被選擇() {
+					availablePlayer = append(availablePlayer, player.號碼())
+				}
+			}
+
+			err := 遊戲.旁白有話對連線說(連線, 傳輸資料{
+				Sound:  "遊戲已經開始，想重新進入遊戲，請輸入玩家號碼",
+				Action: 遊戲已開始,
+				Data:   availablePlayer,
+			}, 0)
+
+			if err != nil {
+				return
+			}
+
 			so, err := waitSocketBack(連線, 遊戲已開始)
 			if err != nil {
 				return
 			}
 
-			uid := so.Reply
-			玩家, 存在 := 遊戲.玩家資料ByUID(uid)
+			no, err := strconv.Atoi(so.Reply)
+			if err != nil {
+				continue
+			}
+
+			玩家, 存在 := 遊戲.玩家資料(no)
 			if 存在 && 玩家.加入(連線) {
-				進入遊戲(uid, 玩家)
+				進入遊戲(strconv.Itoa(no), 玩家)
 				return
 			}
 		}
