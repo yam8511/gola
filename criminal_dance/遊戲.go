@@ -37,7 +37,7 @@ func (g *Game) 加入(conn *websocket.Conn) {
 		me.Waiting()
 	}
 
-	for g.目前階段() != 準備階段 {
+	for g.目前階段() > 準備階段 {
 		players := g.Players()
 		availablePlayer := []int{}
 		for _, player := range players {
@@ -135,12 +135,16 @@ func (g *Game) 加入(conn *websocket.Conn) {
 }
 
 func (g *Game) 開始() {
+
 	reachPointPlayer := map[int]Player{}
 	players := g.Players()
 	playerNum := len(players)
 	for {
-		g.ChangeGameState(開始階段)
+		if g.目前階段() == 初始階段 {
+			return
+		}
 
+		g.ChangeGameState(開始階段)
 		// 洗牌
 		cards := ShuffleAndCopy(g.cards)
 
@@ -161,6 +165,10 @@ func (g *Game) 開始() {
 		// 輪流出牌
 		for cardPlayers := g.HasCardPlayers(); len(cardPlayers) > 0; cardPlayers = g.HasCardPlayers() {
 			for _, p := range cardPlayers {
+				if g.目前階段() == 初始階段 {
+					return
+				}
+
 				if firstPlayer != nil {
 					if p.No() != firstPlayer.No() {
 						continue
@@ -196,6 +204,10 @@ func (g *Game) 開始() {
 		}
 
 	SETTLE:
+
+		if g.目前階段() == 初始階段 {
+			return
+		}
 
 		// 結算分數
 		g.ChangeGameState(結算階段)
@@ -263,11 +275,18 @@ func (g *Game) 開始() {
 			break
 		}
 
+		if g.目前階段() == 初始階段 {
+			return
+		}
+
 		// 通知結算顯示
 		g.旁白(TransferData{Sound: "開始新的一局"}, 2000)
 	}
 
 	// 遊戲結束
+	if g.目前階段() == 初始階段 {
+		return
+	}
 
 	winner := []string{}
 	for _, player := range reachPointPlayer {
@@ -346,6 +365,8 @@ func (g *Game) Setup(
 	g.targetPoint = setupData.TargetPoint
 
 	g.mx.Unlock()
+
+	g.ChangeGameState(準備階段)
 }
 
 // Players 玩家們
@@ -470,7 +491,8 @@ func (g *Game) 重置() {
 	g.roomMaster = nil
 	g.cards = nil
 	g.players = nil
-	g.gameState = 準備階段
+	g.gameState = 初始階段
+	g.targetPoint = 0
 	g.mx.Unlock()
 }
 

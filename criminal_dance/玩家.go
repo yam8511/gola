@@ -167,15 +167,9 @@ func (me *BasicPlayer) IsEmptyCard() bool {
 // TurnMe 輪到我
 func (me *BasicPlayer) TurnMe(no int) Card {
 	for {
-		card := me.PlayCard(nil)
-
+		card := me.PlayCard(nil, me.No() == no)
 		if card == nil {
 			return nil
-		}
-
-		if !card.CanUse() && me.No() == no {
-			me.TakeCard(card)
-			continue
 		}
 
 		if card != nil && card.Name() != 神犬 {
@@ -188,7 +182,7 @@ func (me *BasicPlayer) TurnMe(no int) Card {
 }
 
 // PlayCard 出牌
-func (me *BasicPlayer) PlayCard(he Player) Card {
+func (me *BasicPlayer) PlayCard(he Player, isTurnMe bool) Card {
 	var cards []Card
 
 	if he == nil {
@@ -226,6 +220,9 @@ func (me *BasicPlayer) PlayCard(he Player) Card {
 		so, err := waitChannelBack(me.readCh, targetAction)
 		if err != nil {
 			no = random(len(cards)) - 1
+			if !cards[no].CanUse() && isTurnMe {
+				continue
+			}
 			break
 		} else {
 			no, err = strconv.Atoi(so.Reply)

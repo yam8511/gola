@@ -29,7 +29,7 @@ func (*Criminal) Detail() string {
 
 // CanUse 可以使用?
 func (c *Criminal) CanUse() bool {
-	return len(c.Owner().Cards()) == 0
+	return len(c.Owner().Cards()) == 1
 }
 
 // Skill 功能

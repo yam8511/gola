@@ -75,7 +75,6 @@ func (c *Dog) Skill(game *Game) GameResult {
 		game.旁白(TransferData{Sound: me.Name() + "咬了" + he.Name()}, 2000)
 
 		for {
-			// card := he.PlayCard(nil)
 			card := he.TurnMe(me.No())
 			he.TakeCard(c)
 			if card != nil {

@@ -66,7 +66,7 @@ func (c *Rumor) Skill(game *Game) GameResult {
 			return
 		}
 
-		card := player.PlayCard(nextPlayer)
+		card := player.PlayCard(nextPlayer, false)
 		mx.Lock()
 		drawedCards[nextNo] = card
 		takeCards[no] = card

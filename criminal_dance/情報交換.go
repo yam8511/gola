@@ -63,7 +63,7 @@ func (c *InformationExchange) Skill(game *Game) GameResult {
 			prevNo = len(players)
 		}
 
-		card := player.PlayCard(nil)
+		card := player.PlayCard(nil, false)
 
 		mx.Lock()
 		tmpCard[prevNo] = card

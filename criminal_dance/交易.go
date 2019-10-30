@@ -83,13 +83,13 @@ func (c *Trade) Skill(game *Game) GameResult {
 
 		go func() {
 			// 對方出卡
-			herCard = he.PlayCard(nil)
+			herCard = he.PlayCard(nil, false)
 			wg.Done()
 		}()
 
 		go func() {
 			// 換我出卡
-			myCard = me.PlayCard(nil)
+			myCard = me.PlayCard(nil, false)
 			wg.Done()
 		}()
 

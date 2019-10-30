@@ -151,6 +151,7 @@ var vm = new Vue({
                 this.output = '遊戲已經關閉'
             }
             this.gameStart = false
+            window.location.search = this.token
         },
         sendGame() {
             this.ws.send(JSON.stringify({
@@ -298,9 +299,6 @@ var vm = new Vue({
                     return
             }
 
-
-
-
             if (!(tmp.action === 'game_is_running' && !isNaN(this.getHash()))) {
                 if (tmp.sound !== '') {
                     this.output = tmp.sound
@@ -312,7 +310,6 @@ var vm = new Vue({
 
                 this.speak(tmp.sound)
             }
-
 
             this.shareToken = false
             this.showSetup = false
@@ -501,9 +498,8 @@ var vm = new Vue({
                     break
                 case 'take_token':
                     this.token = tmp.data
-                    window.location.search = this.token
-                    // this.shareToken = true
-                    // this.isWaiting = true
+                    this.shareToken = true
+                    this.isWaiting = true
                     break
                 case 'game_over':
                     this.gameStart = false

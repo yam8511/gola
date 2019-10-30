@@ -169,7 +169,8 @@ const (
 type 遊戲階段 int
 
 const (
-	準備階段 = 遊戲階段(iota)
+	初始階段 = 遊戲階段(iota)
+	準備階段
 	開始階段
 	結算階段
 )
@@ -242,7 +243,7 @@ type Player interface {
 	IsEmptyCard() bool
 	HasFirstFinder() bool
 	TurnMe(int) Card
-	PlayCard(Player) Card
+	PlayCard(he Player, isTurnMe bool) Card
 	TakeCard(Card)
 	ClearCard()
 	BecomeCriminal(becomCrimnal bool)
