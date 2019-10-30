@@ -453,6 +453,7 @@
                 finishGame() {
                     this.gameOver = false
                     this.output = ''
+                    window.location.search = this.token
                 },
                 changeLang(v) {
                     this.voice = v.voice

@@ -458,14 +458,6 @@ var vm = new Vue({
 
                     break
 
-                case 'select_player':
-                    // 選擇號碼
-                    this.selectedNumber = 0
-                    this.showNumber = true
-                    this.numbers = tmp.data
-                    this.onlyOneOption = tmp.data.length == 1
-                    break
-
                 case 'game_is_running':
                     this.needEnterSession = true
 
@@ -482,9 +474,6 @@ var vm = new Vue({
                         this.selectNumber(hash)
                     }
 
-                    break
-                case 'all_close_eyes':
-                    this.gameStart = true
                     break
                 case 'waiting':
                     this.isWaiting = true

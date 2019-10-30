@@ -194,7 +194,6 @@ const (
 	顯示被抽牌   = 動作("show_draw_card")
 	顯示拿牌    = 動作("show_take_card")
 	顯示結算    = 動作("show_result")
-	選擇玩家    = 動作("select_player")
 	等待回應    = 動作("waiting")
 	更新人數    = 動作("refresh_online")
 	更新桌面    = 動作("refresh_desktop")
