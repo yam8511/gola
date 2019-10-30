@@ -149,9 +149,9 @@ var vm = new Vue({
             this.resetInfo()
             if (this.gameStart) {
                 this.output = '遊戲已經關閉'
+                window.location.search = this.token
             }
             this.gameStart = false
-            window.location.search = this.token
         },
         sendGame() {
             this.ws.send(JSON.stringify({
@@ -217,6 +217,7 @@ var vm = new Vue({
         finishGame() {
             this.gameOver = false
             this.output = ''
+            window.location.search = this.token
         },
         changeLang(v) {
             this.voice = v.voice
