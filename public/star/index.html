@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>豬豬🐷算業績</title>
+    <link id="favicon" rel="icon" href="/favicon.png" type="image/png">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+
+        <div class="row">
+            <h5>今天的實業績: {{ tRm }}</h5>
+            <h5>累積: {{ hasRm }}</h5>
+            <h5>應該: {{ shouldRm }}</h5>
+            <h5>淨算: {{ cleanRm }}</h5>
+            <hr>
+            <h5>今天的虛業績: {{ tCm }}</h5>
+            <h5>累積: {{ hasCm }}</h5>
+            <h5>應該: {{ shouldCm }}</h5>
+            <h5>淨算: {{ cleanCm }}</h5>
+            <hr>
+        </div>
+
+        <div class="row">
+            <div class="input-field col s6">
+                <input id="targetRm" type="number" class="validate" v-model="targetRm">
+                <label for="targetRm">這個月實業績</label>
+            </div>
+            <div class="input-field col s6">
+                <input id="targetCm" type="number" class="validate" v-model="targetCm">
+                <label for="targetCm">這個月虛業績</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-field col s6">
+                <input id="workDay" type="number" class="validate" v-model="workDay">
+                <label for="workDay">工作天</label>
+            </div>
+            <div class="input-field col s6">
+                <input id="day" type="number" class="validate" min="1" :max="workDay" v-model="day">
+                <label for="day">今天第幾天</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s6">
+                <textarea id="rm" class="materialize-textarea" v-model="rmInput"></textarea>
+                <label for="rm">輸入今天實業績</label>
+            </div>
+            <div class="col s6">
+                <textarea id="cm" class="materialize-textarea" v-model="cmInput"></textarea>
+                <label for="cm">輸入今天虛業績</label>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                // 工作天
+                workDay: 23,
+                // 實業績
+                targetRm: 20000,
+                // 虛業績
+                targetCm: 50000,
+                // 第幾天
+                day: 0,
+                // 實業績輸入
+                rmInput: '',
+                // 虛業績輸入
+                cmInput: '',
+                // 每天的紀錄
+                recordRm: {},
+                recordCm: {},
+            },
+            methods: {
+                verifyNum(n) {
+                    n = parseInt(n)
+                    if (isNaN(n)) {
+                        n = 0
+                    }
+                    return n
+                },
+                saveClient(key, val) {
+                    if (typeof (Storage) !== "undefined") {
+                        localStorage.setItem(key, val)
+                    } else {
+                        document.cookie = `${key}=${val}`
+                    }
+                },
+                getClient(key) {
+                    if (typeof (Storage) !== "undefined") {
+                        return localStorage.getItem(key)
+                    }
+
+                    let cookies = document.cookie.split('; ')
+                    let storage = {}
+                    for (const c of cookies) {
+                        const cc = c.split('=', 2)
+                        storage[cc[0]] = cc[1]
+                    }
+                    return storage[key]
+                },
+                parseHasMoney(record) {
+                    let ms = record.split('\n')
+                    let m = 0
+                    for (const i of ms) {
+                        m += this.verifyNum(i)
+                    }
+                    return m
+                },
+                autogrow(textarea) {
+                    var adjustedHeight = textarea.clientHeight;
+
+                    adjustedHeight = Math.max(textarea.scrollHeight, adjustedHeight);
+                    if (adjustedHeight > textarea.clientHeight) {
+                        textarea.style.height = adjustedHeight + 'px';
+                    }
+                },
+            },
+            watch: {
+                targetRm(v) {
+                    this.saveClient('targetRm', v)
+                },
+                targetCm(v) {
+                    this.saveClient('targetCm', v)
+                },
+                recordRm(v) {
+                    this.saveClient('recordRm', JSON.stringify(v))
+                },
+                recordCm(v) {
+                    this.saveClient('recordCm', JSON.stringify(v))
+                },
+                day(v) {
+                    const day = this.verifyNum(v)
+                    this.rmInput = this.recordRm[day] === undefined ? '' : this.recordRm[day]
+                    this.cmInput = this.recordCm[day] === undefined ? '' : this.recordCm[day]
+                    this.saveClient('day', v)
+                },
+                workDay(v) {
+                    this.saveClient('workDay', v)
+                },
+                rmInput() {
+                    setTimeout(() => this.autogrow(document.getElementById('rm')), 10)
+
+                },
+                cmInput() {
+                    setTimeout(() => this.autogrow(document.getElementById('cm')), 10)
+                },
+            },
+            computed: {
+                tRm() {
+                    this.recordRm[this.day] = this.rmInput
+                    this.recordRm = { ...this.recordRm }
+                    return this.parseHasMoney(this.rmInput)
+                },
+                tCm() {
+                    this.recordCm[this.day] = this.cmInput
+                    this.recordCm = { ...this.recordCm }
+                    return this.parseHasMoney(this.cmInput)
+                },
+                hasRm() {
+                    let sum = 0
+                    const records = { ...this.recordRm }
+                    for (const day in records) {
+                        sum += this.parseHasMoney(records[day])
+                    }
+                    return sum
+                },
+                hasCm() {
+                    let sum = 0
+                    const records = { ...this.recordCm }
+                    for (const day in records) {
+                        sum += this.parseHasMoney(records[day])
+                    }
+                    return sum
+                },
+                shouldRm() {
+                    const targetRm = this.verifyNum(this.targetRm)
+                    const day = this.verifyNum(this.workDay)
+                    let sh = 0
+                    if (day !== 0) {
+                        sh = parseInt(targetRm / day)
+                        if (targetRm % day !== 0) {
+                            sh += 1
+                        }
+                    }
+                    return sh * this.verifyNum(this.day)
+                },
+                shouldCm() {
+                    const targetCm = this.verifyNum(this.targetCm)
+                    const day = this.verifyNum(this.workDay)
+                    let sh = 0
+                    if (day !== 0) {
+                        sh = parseInt(targetCm / day)
+                        if (targetCm % day !== 0) {
+                            sh += 1
+                        }
+                    }
+                    return sh * this.verifyNum(this.day)
+                },
+                cleanRm() {
+                    return this.hasRm - this.shouldRm
+                },
+                cleanCm() {
+                    return this.hasCm - this.shouldCm
+                },
+            },
+            mounted() {
+                this.workDay = this.verifyNum(this.getClient('workDay'))
+                this.targetRm = this.verifyNum(this.getClient('targetRm'))
+                this.targetCm = this.verifyNum(this.getClient('targetCm'))
+                this.day = this.verifyNum(this.getClient('day'))
+
+                let recordRm
+                let recordCm
+                try {
+                    recordRm = JSON.parse(this.getClient('recordRm'))
+                    if (recordRm === null) {
+                        recordRm = {}
+                    }
+                } catch (error) {
+                    recordRm = {}
+                }
+
+                try {
+                    recordCm = JSON.parse(this.getClient('recordCm'))
+                    if (recordCm === null) {
+                        recordCm = {}
+                    }
+                } catch (error) {
+                    recordCm = {}
+                }
+
+                this.recordRm = recordRm
+                this.recordCm = recordCm
+            }
+        })
+    </script>
+</body>
+
+</html>
