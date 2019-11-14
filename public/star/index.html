@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-    <title>豬豬🐷算業績</title>
+    <title>算業績</title>
     <link id="favicon" rel="icon" href="/favicon.png" type="image/png">
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
@@ -15,6 +16,24 @@
 
 <body>
     <div id="app" class="container">
+
+        <div class="row">
+            <a class="waves-effect waves-light btn blue darken-1"
+                @click="reset"
+            >
+                <i class="material-icons left">backup</i>
+                重設
+            </a>
+            <a class="waves-effect waves-light btn cyan darken-2"
+                :class="{
+                    'disabled': backupCount === 0
+                }"
+                @click="recovery"
+            >
+                <i class="material-icons left">history</i>
+                恢復 <span v-if="backupCount > 0">({{ backupCount }})</span>
+            </a>
+        </div>
 
         <div class="row">
             <h5>今天的實業績: {{ tRm }}</h5>
@@ -83,6 +102,8 @@
                 // 每天的紀錄
                 recordRm: {},
                 recordCm: {},
+                // 備份數量
+                backupCount: 0,
             },
             methods: {
                 verifyNum(n) {
@@ -127,6 +148,135 @@
                     if (adjustedHeight > textarea.clientHeight) {
                         textarea.style.height = adjustedHeight + 'px';
                     }
+                },
+                getStorageData() {
+                    return this.parseRecordData(
+                        this.getClient('day'),
+                        this.getClient('workDay'),
+                        this.getClient('targetCm'),
+                        this.getClient('targetRm'),
+                        this.getClient('recordCm'),
+                        this.getClient('recordRm'),
+                    )
+                },
+                parseRecordData(
+                    day,
+                    workDay,
+                    targetCm,
+                    targetRm,
+                    recordCm,
+                    recordRm,
+                ) {
+                    workDay = this.verifyNum(workDay)
+                    targetRm = this.verifyNum(targetRm)
+                    targetCm = this.verifyNum(targetCm)
+                    day = this.verifyNum(day)
+
+                    try {
+                        recordRm = JSON.parse(recordRm)
+                        if (recordRm === null) {
+                            recordRm = {}
+                        }
+                    } catch (error) {
+                        recordRm = {}
+                    }
+
+                    try {
+                        recordCm = JSON.parse(recordCm)
+                        if (recordCm === null) {
+                            recordCm = {}
+                        }
+                    } catch (error) {
+                        recordCm = {}
+                    }
+
+                    return {
+                        day,
+                        workDay,
+                        targetCm,
+                        targetRm,
+                        recordCm,
+                        recordRm,
+                    }
+                },
+                backupData() {
+                    let bk = this.getClient("star_backup")
+                    if (bk === null) {
+                        bk = []
+                    }
+
+                    try {
+                        bk = JSON.parse(bk)
+                    } catch (error) {
+                        bk = []
+                    }
+
+                    return bk
+                },
+                reset() {
+                    const yes = window.confirm('確定要重設資料嗎？重設之後，現有的資料會備份起來，可以再恢復')
+                    if (!yes) {
+                        return
+                    }
+
+                    let bk = this.backupData()
+                    const data = this.getStorageData()
+                    bk.push(data)
+
+                    this.saveClient('star_backup', JSON.stringify(bk))
+                    this.backupCount = bk.length
+
+                    // 工作天
+                    this.workDay = 0
+                    // 實業績
+                    this.targetRm = 0
+                    // 虛業績
+                    this.targetCm = 0
+                    // 第幾天
+                    this.day = 0
+                    // 實業績輸入
+                    this.rmInput = ''
+                    // 虛業績輸入
+                    this.cmInput = ''
+                    // 每天的紀錄
+                    this.recordRm = { }
+                    this.recordCm = { }
+                },
+                recovery() {
+                    const yes = window.confirm('確定要恢復上一次的資料嗎？恢復之後，現有的資料將為消失')
+                    if (!yes) {
+                        return
+                    }
+                    let bk = this.backupData()
+
+                    if (bk.length === 0) {
+                        return
+                    }
+
+                    const obj = bk.pop()
+                    const data = this.parseRecordData(
+                        obj.day,
+                        obj.workDay,
+                        obj.targetCm,
+                        obj.targetRm,
+                        obj.recordCm,
+                        obj.recordRm,
+                    )
+
+                    // 工作天
+                    this.workDay = obj.workDay
+                    // 實業績
+                    this.targetRm = obj.targetRm
+                    // 虛業績
+                    this.targetCm = obj.targetCm
+                    // 第幾天
+                    this.day = obj.day
+                    // 每天的紀錄
+                    this.recordRm = obj.recordRm
+                    this.recordCm = obj.recordCm
+
+                    this.saveClient('star_backup', JSON.stringify(bk))
+                    this.backupCount = bk.length
                 },
             },
             watch: {
@@ -218,33 +368,15 @@
                 },
             },
             mounted() {
-                this.workDay = this.verifyNum(this.getClient('workDay'))
-                this.targetRm = this.verifyNum(this.getClient('targetRm'))
-                this.targetCm = this.verifyNum(this.getClient('targetCm'))
-                this.day = this.verifyNum(this.getClient('day'))
+                const storageData = this.getStorageData()
+                this.workDay = storageData.workDay
+                this.targetRm = storageData.targetRm
+                this.targetCm = storageData.targetCm
+                this.day = storageData.day
+                this.recordRm = storageData.recordRm
+                this.recordCm = storageData.recordCm
 
-                let recordRm
-                let recordCm
-                try {
-                    recordRm = JSON.parse(this.getClient('recordRm'))
-                    if (recordRm === null) {
-                        recordRm = {}
-                    }
-                } catch (error) {
-                    recordRm = {}
-                }
-
-                try {
-                    recordCm = JSON.parse(this.getClient('recordCm'))
-                    if (recordCm === null) {
-                        recordCm = {}
-                    }
-                } catch (error) {
-                    recordCm = {}
-                }
-
-                this.recordRm = recordRm
-                this.recordCm = recordCm
+                this.backupCount = this.backupData().length
             }
         })
     </script>
