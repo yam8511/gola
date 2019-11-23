@@ -49,14 +49,16 @@ func (我 *WolfKing) 能力() (_ Player) {
 			可殺的玩家號碼[strconv.Itoa(號碼)] = 號碼
 		}
 
+		uid := newUID()
 		我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+			UID:     uid,
 			Display: "請問你要帶走誰？",
 			Action:  等待回應,
 			Data:    可殺的玩家號碼,
 		}, 1000)
 
 		for {
-			so, err := 我.等待動作(等待回應)
+			so, err := 我.等待動作(等待回應, uid)
 			if err != nil {
 				return
 			}

@@ -5,8 +5,10 @@ import (
 	"errors"
 	"log"
 	"math/rand"
+	"runtime"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,7 +20,7 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 	case 騎士:
 		return NewKnight(遊戲, 號碼)
 	case 預言家:
-		return NewProphesier(遊戲, 號碼)
+		return NewSeer(遊戲, 號碼)
 	case 獵人:
 		return NewHunter(遊戲, 號碼)
 	case 女巫:
@@ -141,6 +143,10 @@ func random(n int) int {
 	return rand.Intn(n) + 1
 }
 
+func newUID() string {
+	return uuid.New().String()
+}
+
 // waitSocketBack 等待Socket回傳
 func waitSocketBack(連線 *websocket.Conn, 對應動作 動作) (回傳資料 傳輸資料, err error) {
 	var msg []byte
@@ -174,14 +180,25 @@ func waitSocketBack(連線 *websocket.Conn, 對應動作 動作) (回傳資料 �
 }
 
 // waitChannelBack 等待Channel回傳
-func waitChannelBack(傳話筒 chan 傳輸資料, 對應動作 動作) (回傳資料 傳輸資料, err error) {
+func waitChannelBack(傳話筒 chan 傳輸資料, 對應動作 動作, uid string) (回傳資料 傳輸資料, err error) {
 	if 傳話筒 == nil {
 		err = errors.New("玩家已經斷線")
 		return
 	}
 
 	for {
-		電報 := <-傳話筒
+		var 電報 傳輸資料
+		var ok bool
+		select {
+		case 電報, ok = <-傳話筒:
+			if !ok {
+				err = errors.New("玩家已經斷線")
+				return
+			}
+		case <-time.After(time.Second):
+			runtime.Gosched()
+			continue
+		}
 
 		if 電報.Action == 無 {
 			err = errors.New("玩家已經斷線")
@@ -202,7 +219,7 @@ func waitChannelBack(傳話筒 chan 傳輸資料, 對應動作 動作) (回傳�
 			continue
 		}
 
-		if 回傳資料.Action != 對應動作 {
+		if 回傳資料.Action != 對應動作 || 回傳資料.UID != uid {
 			continue
 		}
 

@@ -38,15 +38,16 @@ func (我 *SnowWolf) 能力() (_ Player) {
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
+	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+		UID:     uid,
 		Display: "請問你要殺誰？",
 		Action:  選擇玩家,
 		Data:    可殺的玩家號碼,
 	}, 0)
 
 	for {
-
-		so, err := 我.等待動作(選擇玩家)
+		so, err := 我.等待動作(選擇玩家, uid)
 		if err != nil {
 			rand.Seed(time.Now().UTC().UnixNano())
 			rd := rand.Int()

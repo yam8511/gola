@@ -86,9 +86,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  TextEditingController _room_input = new TextEditingController();
-  // IOWebSocketChannel _websocket_channel;
-  int _sliderValue = 0;
+  TextEditingController _roomInput = new TextEditingController();
+  // IOWebSocketChannel _websocketChannel;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                   horizontal: 32.0,
                 ),
                 child: TextField(
-                  controller: _room_input,
+                  controller: _roomInput,
                   decoration: InputDecoration(
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
@@ -160,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5.0)),
                 onPressed: () {
-                  int room = int.parse(_room_input.text);
+                  int room = int.parse(_roomInput.text);
                   if (room != 0) {
                     Navigator.pushNamed(context, "game");
                   }
@@ -180,7 +179,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  TextEditingController _token_input = new TextEditingController();
+  TextEditingController _tokenInput = new TextEditingController();
 
   var mapPlayerSelect = {
     "Human" : 0,
@@ -190,7 +189,7 @@ class _SettingPageState extends State<SettingPage> {
     "Hunter" : 0,
     "Witch" : 0,
     };
-  
+
   int _sliderHuman = 0;
   int _sliderWolf = 0;
   int _sliderKnight = 0;
@@ -198,7 +197,7 @@ class _SettingPageState extends State<SettingPage> {
   int _sliderHunter = 0;
   int _sliderWitch = 0;
 
-  IOWebSocketChannel _websocket_channel;
+  IOWebSocketChannel _websocketChannel;
 
   String host = "127.0.0.1";
   String gamestart = "/wf/";
@@ -235,7 +234,7 @@ class _SettingPageState extends State<SettingPage> {
                   horizontal: 32.0,
                 ),
                 child: TextField(
-                  controller: _token_input,
+                  controller: _tokenInput,
                   decoration: InputDecoration(
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
@@ -472,7 +471,7 @@ class _SettingPageState extends State<SettingPage> {
                       ],
                     ),
                     Row(
-                      
+
                       children: <Widget>[
                         Expanded(
                           child: Slider(
@@ -511,10 +510,10 @@ class _SettingPageState extends State<SettingPage> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5.0)),
                 onPressed: () {
-                  // int token = int.parse(_token_input.text);
-                  // _websocket_channel = new IOWebSocketChannel.connect(
-                  //     ws + host + gamename + "?token=" + _token_input.text);
-                  // _websocket_channel.sink.add(token);
+                  // int token = int.parse(_tokenInput.text);
+                  // _websocketChannel = new IOWebSocketChannel.connect(
+                  //     ws + host + gamename + "?token=" + _tokenInput.text);
+                  // _websocketChannel.sink.add(token);
                   Navigator.pushNamed(context, "game");
                 },
               ),
@@ -527,20 +526,12 @@ class _SettingPageState extends State<SettingPage> {
 }
 
 class GamePage extends StatefulWidget {
-  IOWebSocketChannel _websocket_channel;
-
-  String host = "127.0.0.1";
-  String gamestart = "/wf/";
-  String gamename = "/wf/game";
-  String ws = "ws://";
-  String wss = "wss://";
-
   @override
   _GamePageState createState() => _GamePageState();
 }
 
 class _GamePageState extends State<GamePage> {
-  IOWebSocketChannel _websocket_channel;
+  IOWebSocketChannel _websocketChannel;
   String host = "127.0.0.1";
   String gamename = "wf/game";
   String ws = "ws://";
@@ -549,14 +540,14 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    _phone_speak("遊戲開始");
+    _phoneSpeak("遊戲開始");
   }
-  
+
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController _num_input = new TextEditingController();
-    _websocket_channel = new IOWebSocketChannel.connect(
+    TextEditingController _numInput = new TextEditingController();
+    _websocketChannel = new IOWebSocketChannel.connect(
         'ws://127.0.0.1:8000/wf/game?token=' + '9');
     return Scaffold(
       appBar: AppBar(
@@ -575,7 +566,7 @@ class _GamePageState extends State<GamePage> {
                 horizontal: 32.0,
               ),
               child: TextField(
-                controller: _num_input,
+                controller: _numInput,
                 decoration: InputDecoration(
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
@@ -600,14 +591,14 @@ class _GamePageState extends State<GamePage> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5.0)),
               onPressed: () {
-                _websocket_channel.sink.add(_num_input.text);
+                _websocketChannel.sink.add(_numInput.text);
               },
             ),
             Padding(
               padding: EdgeInsets.all(20.0),
             ),
             StreamBuilder(
-              stream: _websocket_channel.stream,
+              stream: _websocketChannel.stream,
               builder: (context, snapshot) {
                 String jsonData = snapshot.data;
                 switch (jsonData) {
@@ -646,7 +637,7 @@ class _GamePageState extends State<GamePage> {
   }
 }
 
-// _phone_speak 手機說話
-void _phone_speak(String sound) {
+// _phoneSpeak 手機說話
+void _phoneSpeak(String sound) {
   TtsHelper.instance.setLanguageAndSpeak(sound, "zh");
 }

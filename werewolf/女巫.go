@@ -3,6 +3,8 @@ package werewolf
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 // Witch 玩家
@@ -46,20 +48,22 @@ func (我 *Witch) 能力() (_ Player) {
 			救的選項 := map[string]string{
 				"不救": "no",
 			}
-			顯示文字 := fmt.Sprintf("你要救%d號嗎？", 被狼殺玩家.號碼())
+			顯示文字 := fmt.Sprintf("你要救『%d號玩家』嗎？", 被狼殺玩家.號碼())
 			if 可以救 {
 				救的選項["救"] = "yes"
 			} else {
 				顯示文字 += "  (不能救自己唷哈哈哈笨蛋)"
 			}
 
+			uid := newUID()
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+				UID:     uid,
 				Display: 顯示文字,
 				Action:  等待回應,
 				Data:    救的選項,
 			}, 0)
 
-			是否使用解藥, err := 我.等待動作(等待回應)
+			是否使用解藥, err := 我.等待動作(等待回應, uid)
 
 			if err != nil || 是否使用解藥.Reply == "yes" {
 				我.遊戲.救玩家(狼殺)
@@ -75,17 +79,19 @@ func (我 *Witch) 能力() (_ Player) {
 
 	if !有使用過藥了嗎 && 我.有毒藥 && !我.出局了() {
 
+		uid := uuid.New().String()
 		我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+			UID:     uid,
 			Display: "你要使用毒藥嗎？",
 			Action:  等待回應,
 			Data: map[string]interface{}{
 				"要":  "yes",
 				"不要": "no",
 			},
-		}, 100)
+		}, 0)
 
 		//如果是第二晚之後被殺的是女巫，則不能使用解藥
-		是否使用毒藥, err := 我.等待動作(等待回應)
+		是否使用毒藥, err := 我.等待動作(等待回應, uid)
 		if err != nil {
 			return
 		}
@@ -104,14 +110,16 @@ func (我 *Witch) 能力() (_ Player) {
 				可毒的玩家號碼 = append(可毒的玩家號碼, 玩家.號碼())
 			}
 
+			uid := uuid.New().String()
 			我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+				UID:     uid,
 				Display: "你要毒誰呢？",
 				Action:  選擇玩家,
 				Data:    可毒的玩家號碼,
-			}, 100)
+			}, 0)
 
 			for {
-				被女巫毒的人, err := 我.等待動作(選擇玩家)
+				被女巫毒的人, err := 我.等待動作(選擇玩家, uid)
 				if err != nil {
 					return
 				}

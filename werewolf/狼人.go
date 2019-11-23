@@ -38,22 +38,27 @@ func (我 *Wolf) 能力() (_ Player) {
 		可殺的玩家號碼 = append(可殺的玩家號碼, 玩家.號碼())
 	}
 
+	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+		UID:     uid,
 		Display: "請問你要殺誰？",
 		Action:  選擇玩家,
 		Data:    可殺的玩家號碼,
 	}, 0)
 
 	for {
-
-		so, err := 我.等待動作(選擇玩家)
+		so, err := 我.等待動作(選擇玩家, uid)
 		if err != nil {
 			rand.Seed(time.Now().UTC().UnixNano())
 			rd := rand.Int()
-			玩家號碼 := 可殺的玩家號碼[rd%len(可殺的玩家號碼)]
+			count := len(可殺的玩家號碼)
+			if count == 0 {
+				return
+			}
+
+			玩家號碼 := 可殺的玩家號碼[rd%count]
 			玩家, 存在 := 我.遊戲.玩家資料(玩家號碼)
 			if 存在 {
-				// 我.遊戲.殺玩家(狼殺, 玩家)
 				return 玩家
 			}
 

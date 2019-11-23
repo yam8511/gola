@@ -10,6 +10,7 @@ type 淘汰者 struct {
 }
 
 type 傳輸資料 struct {
+	UID     string      `json:"uid"`
 	Sound   string      `json:"sound"`
 	Display string      `json:"display"`
 	Action  動作          `json:"action"`
@@ -104,17 +105,17 @@ type Player interface {
 	號碼() int
 	閉眼睛()
 	開眼睛()
-	投票() int
+	投票(string) int
 	出局(KILL)
 	出局了() bool
 	種族() GROUP
 	職業() RULE
 	換位子(int) int
 	已經被選擇() bool
-	發言() (進入黑夜 bool)
+	發言(投票發言 bool) (進入黑夜 bool)
 	連線() *websocket.Conn
 	發表遺言()
-	等待動作(動作) (傳輸資料, error)
+	等待動作(動作, string) (傳輸資料, error)
 	傳話給玩家(傳輸資料) error
 }
 

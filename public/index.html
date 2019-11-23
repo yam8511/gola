@@ -128,7 +128,7 @@
 
                     <p>希望狼人殺愉快，有需要改進或建議</p>
                     <p>歡迎<span class="pink-text text-lighten-1">「有話要跟作者說」</span></p>
-                    <p class="blue-text text-lighten-1">製作遊戲艱辛，可以的話老闆犒賞個1元吧。謝謝您🤵</p>
+                    <p class="blue-text text-lighten-1">製作遊戲艱辛，可以的話老闆犒賞個一杯咖啡☕️吧。謝謝您🤵</p>
                     <p class="grey-text text-lighten-1">ps. 可選擇「街口支付」或「Richart轉帳」</p>
 
                     <div class="row">
@@ -322,6 +322,7 @@
                 token: '',
                 session: '',
                 input: '',
+                uid: '',
                 action: '',
                 output: '',
                 list: '',
@@ -432,6 +433,7 @@
                 },
                 sendGame() {
                     this.ws.send(JSON.stringify({
+                        'uid': this.uid,
                         'action': this.action,
                         'reply': `${this.input}`,
                     }))
@@ -551,6 +553,7 @@
                     this.onlyOneOption = true
                     this.hasSkill = false
                     this.action = tmp.action
+                    this.uid = tmp.uid
 
                     switch (tmp.action) {
                         case 'role_setup':
