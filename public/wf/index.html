@@ -264,8 +264,11 @@
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small red-text text-darken-3">favorite</i> 存活
-                            <i v-if="isOut" class="material-icons small red-text text-lighten-2">cancel</i>
-                            <i v-else class="material-icons small light-green-text text-lighten-2">check_circle</i>
+                            <span v-for="out, i in player_is_out">
+                                <i v-if="out" class="material-icons small red-text text-lighten-2">favorite_border</i>
+                                <i v-else class="material-icons small red-text text-lighten-2">favorite</i>
+                                {{ i + 1 }}
+                            </span>
                         </li>
                         <li class="collection-item">
                             <i class="material-icons small light-blue-text text-darken-4">person_add</i> 房主
@@ -349,6 +352,7 @@
                 voteResult: {},
                 isOut: false,
                 online: [],
+                player_is_out: [],
                 intervalID: 0,
                 ruleVisible: true,
                 setupRules: {},
@@ -520,6 +524,11 @@
                         return
                     }
 
+                    if (tmp.action === 'player_out') {
+                        this.player_is_out = tmp.data
+                        return
+                    }
+
                     if (tmp.action === 'change_room_master') {
                         this.leader = true
                         this.gameStart = tmp.data['遊戲開始']
@@ -651,9 +660,6 @@
                         case 'vote_result':
                             this.showVote = true
                             this.voteResult = tmp.data
-                            break
-                        case 'player_out':
-                            this.isOut = true
                             break
                         default:
                             break
