@@ -194,7 +194,7 @@ func (遊戲 *Game) 開始() {
 		Sound:  sound,
 		Action: 遊戲結束,
 		Data:   遊戲結果,
-	}, 1200)
+	}, 10)
 	runtime.Gosched()
 
 	遊戲.重置()
@@ -318,7 +318,7 @@ func (遊戲 *Game) 宣布淘汰玩家() {
 			UID:    uid,
 			Sound:  "昨晚 " + strings.Join(死者名單號碼, ",") + "玩家淘汰!，大家請點擊確認，之後開始發言。",
 			Action: 等待回應,
-		}, 0)
+		}, 5000)
 
 		for _, 玩家 := range 遊戲.存活玩家們() {
 			玩家.等待動作(等待回應, uid)

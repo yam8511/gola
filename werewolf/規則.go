@@ -95,6 +95,7 @@ const (
 	毒殺 = KILL("毒殺")
 	獵殺 = KILL("獵殺")
 	騎殺 = KILL("騎殺")
+	自爆 = KILL("自爆")
 )
 
 // Player 玩家

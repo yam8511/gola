@@ -28,6 +28,7 @@ func (我 *Knight) 種族() GROUP {
 func (我 *Knight) 職業() RULE {
 	return 騎士
 }
+
 func (我 *Knight) 發言(投票發言 bool) bool {
 
 	if 我.發動過技能了 || 投票發言 {
@@ -38,20 +39,16 @@ func (我 *Knight) 發言(投票發言 bool) bool {
 	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		UID:     uid,
-		Display: "您有技能可以發動, 要發動嗎?",
+		Display: "您要發動技能嗎?",
 		Action:  等待回應,
 		Data: map[string]string{
-			"發動": "yes",
-			"不要": "no",
+			"發動✅": "yes",
+			"跳過❌": "no",
 		},
-	}, 100)
+	}, 0)
 
 	so, err := 我.等待動作(等待回應, uid)
-	if err != nil {
-		return false
-	}
-
-	if so.Reply == "yes" {
+	if err == nil && so.Reply == "yes" {
 		我.遊戲.旁白(傳輸資料{Sound: strconv.Itoa(我.號碼()) + "號騎士發動技能，請問你要查驗的對象是？"}, 0)
 
 		玩家 := 我.能力()

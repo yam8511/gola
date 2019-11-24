@@ -25,6 +25,10 @@
             /* for Chrome */
             user-select: initial;
         }
+
+        .col {
+            margin-bottom: 10px;
+        }
     </style>
 
     <!-- Compiled and minified CSS -->
@@ -208,7 +212,7 @@
                     <hr>
 
                     <div class="row">
-                        <div v-for="n in numbers" :class="'col s' + parseInt(12 / numbers.length)">
+                        <div v-for="n,i in numbers" :class="'col s' + numberCol">
                             <a class="btn-floating btn pulse" @mousedown="selectNumber(n)">{{ n }}</a>
                         </div>
                     </div>
@@ -219,7 +223,8 @@
                 <qrcode v-if="shareToken" :value="qrcode" :options="{ width: 200 }"></qrcode>
                 <div v-if="isWaiting" class="row">
                     <div v-for="v,k in waitingOptions" :class="'col s' + optionsCol">
-                        <a class="btn-floating btn pulse" @mousedown="selectOptions(k, v)">{{ k }}</a>
+                        <a v-if="optionsCol < 3" class="btn-floating btn pulse light-blue lighten-3 black-text" @mousedown="selectOptions(k, v)">{{ k }}</a>
+                        <a v-else class="btn pulse light-blue lighten-3 black-text" @mousedown="selectOptions(k, v)">{{ k }}</a>
                     </div>
                 </div>
 
@@ -557,7 +562,7 @@
                     this.showNumber = false
                     this.needEnterSession = false
                     this.isWaiting = false
-                    this.waitingOptions = { '確認': '' }
+                    this.waitingOptions = { '確認➤': '' }
                     this.onlyOneOption = true
                     this.hasSkill = false
                     this.action = tmp.action
@@ -700,7 +705,11 @@
                 },
                 optionsCol() {
                     const optionLen = parseInt(12 / Object.keys(this.waitingOptions).length)
-                    return optionLen > 12 ? 1 : optionLen
+                    return optionLen < 2 ? 2 : optionLen
+                },
+                numberCol() {
+                    const optionLen = parseInt(12 / this.numbers.length)
+                    return optionLen < 2 ? 2 : optionLen
                 },
                 wsURL() {
                     let url = window.location.host + '/wf/game'

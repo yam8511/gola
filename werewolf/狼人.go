@@ -3,6 +3,7 @@ package werewolf
 import (
 	"encoding/json"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -25,6 +26,46 @@ func (我 *Wolf) 種族() GROUP {
 
 func (我 *Wolf) 職業() RULE {
 	return 狼人
+}
+
+func (我 *Wolf) 發言(投票發言 bool) bool {
+
+	if 投票發言 {
+		我.Human.發言(投票發言)
+		return false
+	}
+
+	uid := newUID()
+	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+		UID:     uid,
+		Display: "您要發動技能嗎?",
+		Action:  等待回應,
+		Data: map[string]string{
+			"發動✅": "yes",
+			"跳過❌": "no",
+		},
+	}, 0)
+
+	so, err := 我.等待動作(等待回應, uid)
+	if err == nil && so.Reply == "yes" {
+
+		uid := newUID()
+		我.遊戲.旁白(傳輸資料{
+			UID:    uid,
+			Sound:  strconv.Itoa(我.號碼()) + "號玩家自爆。請點擊確認，即將進入黑夜。",
+			Action: 等待回應,
+		}, 2000)
+
+		for _, 存活玩家 := range 我.遊戲.存活玩家們() {
+			存活玩家.等待動作(等待回應, uid)
+		}
+
+		我.遊戲.殺玩家(自爆, 我)
+
+		return true
+	}
+
+	return false
 }
 
 func (我 *Wolf) 能力() (_ Player) {

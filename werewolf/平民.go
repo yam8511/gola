@@ -178,14 +178,43 @@ func (我 *Human) 已經被選擇() bool {
 	return 被選擇
 }
 
-func (我 *Human) 發言(bool) bool {
+func (我 *Human) 發言(投票發言 bool) bool {
+
+	if 投票發言 {
+		uid := newUID()
+		我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+			UID:     uid,
+			Display: "請發言",
+			Action:  等待回應,
+		}, 0)
+		我.等待動作(等待回應, uid)
+		return false
+	}
+
 	uid := newUID()
+
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		UID:     uid,
-		Display: "請發言",
+		Display: "您要發動技能嗎?",
 		Action:  等待回應,
-	}, 100)
-	我.等待動作(等待回應, uid)
+		Data: map[string]string{
+			"發動✅": "yes",
+			"跳過❌": "no",
+		},
+	}, 0)
+
+	so, err := 我.等待動作(等待回應, uid)
+	if err == nil && so.Reply == "yes" {
+		uid := newUID()
+		我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
+			UID:     uid,
+			Display: "你目前沒有技能可以發動！旁白笑你，哈哈。",
+			Action:  等待回應,
+		}, 0)
+
+		我.等待動作(等待回應, uid)
+	}
+
 	return false
 }
 
