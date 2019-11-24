@@ -39,7 +39,7 @@ func (我 *Knight) 發言(投票發言 bool) bool {
 	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		UID:     uid,
-		Display: "您要發動技能嗎?",
+		Display: "您要發動技能嗎? (狼人發動可自爆，騎士發動可查驗)",
 		Action:  等待回應,
 		Data: map[string]string{
 			"發動✅": "yes",
