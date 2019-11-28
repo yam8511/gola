@@ -39,7 +39,7 @@ func (我 *Knight) 發言(投票發言 bool) bool {
 	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		UID:     uid,
-		Display: "您要發動技能嗎? (狼人發動可自爆，騎士發動可查驗)",
+		Display: "您要發動技能嗎? " + 我.遊戲.提示發言(),
 		Action:  等待回應,
 		Data: map[string]string{
 			"發動✅": "yes",
@@ -111,7 +111,7 @@ func (我 *Knight) 能力() (_ Player) {
 				}, 3000)
 				我.遊戲.殺玩家(騎殺, 玩家)
 			} else {
-				台詞 := strconv.Itoa(玩家.號碼()) + "號不是狼人！ 騎士以死謝罪。大家請點擊確認，即將進入黑夜。"
+				台詞 := strconv.Itoa(玩家.號碼()) + "號不是狼人！ 騎士以死謝罪。" + 我.遊戲.提示點擊(true)
 				我.遊戲.旁白(傳輸資料{
 					UID:    uid,
 					Sound:  台詞,

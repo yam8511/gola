@@ -3,7 +3,6 @@ package werewolf
 import (
 	"encoding/json"
 	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -38,7 +37,7 @@ func (我 *Wolf) 發言(投票發言 bool) bool {
 	uid := newUID()
 	我.遊戲.旁白有話對單個玩家說(我, 傳輸資料{
 		UID:     uid,
-		Display: "您要發動技能嗎? (狼人發動可自爆，騎士發動可查驗)",
+		Display: "您要發動技能嗎? " + 我.遊戲.提示發言(),
 		Action:  等待回應,
 		Data: map[string]string{
 			"發動✅": "yes",
@@ -48,21 +47,7 @@ func (我 *Wolf) 發言(投票發言 bool) bool {
 
 	so, err := 我.等待動作(等待回應, uid)
 	if err == nil && so.Reply == "yes" {
-
-		uid := newUID()
-		我.遊戲.旁白(傳輸資料{
-			UID:    uid,
-			Sound:  strconv.Itoa(我.號碼()) + "號玩家自爆。請點擊確認，即將進入黑夜。",
-			Action: 等待回應,
-		}, 2000)
-
-		for _, 存活玩家 := range 我.遊戲.存活玩家們() {
-			存活玩家.等待動作(等待回應, uid)
-		}
-
-		我.遊戲.殺玩家(自爆, 我)
-
-		return true
+		return 狼人自爆(我, 我.遊戲)
 	}
 
 	return false

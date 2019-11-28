@@ -27,6 +27,7 @@ type Game struct {
 	有神職       bool
 	有人質       bool
 	獵人場       bool
+	可自爆       bool
 	角色設定      map[RULE]int
 }
 
@@ -316,7 +317,7 @@ func (遊戲 *Game) 宣布淘汰玩家() {
 		uid := newUID()
 		遊戲.旁白(傳輸資料{
 			UID:    uid,
-			Sound:  "昨晚 " + strings.Join(死者名單號碼, ",") + "玩家淘汰!，大家請點擊確認，之後開始發言。",
+			Sound:  "昨晚 " + strings.Join(死者名單號碼, ",") + "玩家淘汰!" + 遊戲.提示點擊(false),
 			Action: 等待回應,
 		}, 5000)
 
@@ -324,7 +325,7 @@ func (遊戲 *Game) 宣布淘汰玩家() {
 			玩家.等待動作(等待回應, uid)
 		}
 
-		if 遊戲.輪數 == 1 {
+		if 遊戲.輪數 == 1 && !遊戲.獵人場 {
 			for i := range 遊戲.淘汰者 {
 				死者 := 遊戲.淘汰者[i]
 				遊戲.旁白(傳輸資料{Sound: strconv.Itoa(死者.玩家.號碼()) + "號玩家發表遺言"}, 2000)
@@ -357,6 +358,8 @@ func (遊戲 *Game) 大家開始發言(玩家們 []Player) (直接天黑 bool) {
 }
 
 func (遊戲 *Game) 全員請投票() {
+	遊戲.時間 = 投票
+
 	投票流程 := func(
 		還沒出局的玩家們 []Player,
 		可投票玩家號碼 []int,
@@ -561,6 +564,7 @@ func (遊戲 *Game) 初始設定過() bool {
 
 func (遊戲 *Game) 初始設定(
 	選擇角色 map[RULE]int,
+	可自爆 bool,
 ) {
 	if len(選擇角色) == 0 {
 		return
@@ -581,6 +585,7 @@ func (遊戲 *Game) 初始設定(
 	隨機可選角色 = 亂數洗牌(隨機可選角色)
 
 	遊戲.獵人場 = true
+	遊戲.可自爆 = 可自爆
 	玩家們 := map[string]Player{}
 	for i := range 隨機可選角色 {
 		新玩家 := NewPlayer(隨機可選角色[i], 遊戲, i+1)
@@ -896,4 +901,32 @@ func (遊戲 *Game) 目前階段() 階段 {
 	目前階段 := 遊戲.階段
 	遊戲.讀寫鎖.RUnlock()
 	return 目前階段
+}
+
+func (遊戲 *Game) 提示點擊(直接進入黑夜 bool) string {
+	if 直接進入黑夜 {
+		return "請大家點擊確認，即將進入黑夜。"
+	}
+
+	if 遊戲.獵人場 {
+		return "請大家點擊確認，即將進入黑夜。"
+	}
+
+	if 遊戲.時間 == 白天 {
+		return "請大家點擊確認，然後開始進行發言。"
+	}
+
+	if 遊戲.時間 == 投票 {
+		return "請大家點擊確認，即將進入黑夜。"
+	}
+
+	return "請大家點擊確認。"
+}
+
+func (遊戲 *Game) 提示發言() string {
+	if 遊戲.可自爆 {
+		return "(狼人發動可自爆，騎士發動可查驗，其他則直接結束發言)"
+	}
+
+	return "(騎士發動可查驗，其他則直接結束發言)"
 }
