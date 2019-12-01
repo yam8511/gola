@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>股票計算機</title>
+    <link id="favicon" rel="icon" href="favicon.png" type="image/png">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+
+        <h1>股票計算機</h1>
+
+        <div class="row">
+            <div class="input-field col s6 m3">
+                <input id="inP" type="number" step="any" class="validate" v-model="inP">
+                <label for="inP">*股票買入價格</label>
+            </div>
+            <div class="input-field col s6 m3">
+                <input id="n" type="number" class="validate" v-model="n">
+                <label for="n">*股數</label>
+            </div>
+            <div class="input-field col s6 m3">
+                <input id="disCount" type="number" step="any" class="validate" v-model="disCount">
+                <label for="disCount">手續費折扣</label>
+            </div>
+            <div class="input-field col s6 m3">
+                <input id="gain" type="number" step="any" class="validate" v-model="gain">
+                <label for="gain">想要的淨利(元)</label>
+            </div>
+            <h3 v-if="outP > 0">{{ outP }}</h3>
+        </div>
+
+        <div v-if="record.length > 0">
+            <hr>
+            <ul class="collection">
+                <li class="collection-item" v-for="r of record">
+                    買入價錢: {{ r.inP }}, 股數: {{ r.n }}, 手續折扣: {{ r.disCount }}折<br />
+                    買入手續費: {{ r.buyTax }}, 買出手續費: {{ r.sellTax }}, 交易稅: {{ r.tradeTax }}<br />
+                    賣出價錢: {{ r.outP }}, 可賺: {{ r.gain }}
+                </li>
+            </ul>
+        </div>
+
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large waves-effect waves-light" @click="rec">
+                <i class="large material-icons">touch_app</i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                inP: 0,
+                n: 1000,
+                disCount: 100,
+                gain: 0,
+                outP: 0,
+                record: [],
+
+                tax: 0.001425,
+                trade: 0.003,
+
+                buyTax: 0,
+                sellTax: 0,
+                tradeTax: 0,
+            },
+            methods: {
+                cal() {
+                    let buy = Number((this.inP * this.n).toFixed(2))
+                    let buyTax = buy * this.tax * this.disCount / 100
+                    if (buyTax < 20) {
+                        buyTax = 20
+                    }
+                    buyTax = Number(buyTax.toFixed(2)) // 買入的手續費
+
+                    const buyTotal = buy + buyTax
+                    const oneGain = this.gain / this.n
+
+                    this.outP = oneGain + buyTotal / (this.n * (1 - this.trade - this.tax)) // 預估的賣出
+                    let sellTax = this.outP * this.tax * this.disCount / 100
+                    if (sellTax < 20) {
+                        sellTax = 20
+                        this.outP = oneGain + (buyTotal + sellTax) / (this.n * (1 - this.trade))
+                    }
+                    sellTax = Number(sellTax.toFixed(2))
+                    const roundP = Number(this.outP.toFixed(2))
+                    if (this.outP > roundP) {
+                        this.outP = roundP + 0.01
+                    } else{
+                        this.outP = roundP
+                    }
+                    this.outP = Number(this.outP.toFixed(2))
+
+                    this.buyTax = buyTax
+                    this.sellTax = sellTax
+                    this.tradeTax = Number((this.outP * this.n * this.trade).toFixed(2))
+                },
+                rec() {
+                    const obj = {
+                        inP: this.inP,
+                        outP: this.outP,
+                        gain: this.gain,
+                        n: this.n,
+                        disCount: this.disCount,
+                        buyTax: this.buyTax,
+                        sellTax: this.sellTax,
+                        tradeTax: this.tradeTax
+                    }
+
+                    if (this.record.length >= 5) {
+                        this.record.pop()
+                    }
+
+                    this.record = this.record.reverse()
+                    this.record.push(obj)
+                    this.record = this.record.reverse()
+
+                    localStorage.setItem("stock", JSON.stringify(this.record))
+                },
+            },
+            watch: {
+                inP(v) {
+                    let p = parseFloat(v)
+                    if (isNaN(p)) {
+                        return
+                    }
+                    this.cal()
+                },
+                n(v) {
+                    let p = parseInt(v)
+                    if (isNaN(p)) {
+                        return
+                    }
+                    this.cal()
+                },
+                disCount(v) {
+                    let p = parseFloat(v)
+                    if (isNaN(p)) {
+                        return
+                    }
+                    this.cal()
+                },
+                gain(v) {
+                    let p = parseFloat(v)
+                    if (isNaN(p)) {
+                        return
+                    }
+                    this.cal()
+                },
+            },
+            mounted() {
+                var elems = document.querySelectorAll('.fixed-action-btn');
+                var instances = M.FloatingActionButton.init(elems);
+
+                try {
+                    this.record = JSON.parse(localStorage.getItem("stock"))
+                    if (!(this.record instanceof Array)) {
+                        this.record = []
+                    }
+                } catch (error) {
+                    this.record = []
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
