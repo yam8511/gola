@@ -44,7 +44,7 @@
             <ul class="collection">
                 <li class="collection-item" v-for="r of record">
                     買入價錢: {{ r.inP }}, 股數: {{ r.n }}, 手續折扣: {{ r.disCount }}折<br />
-                    買入手續費: {{ r.buyTax }}, 買出手續費: {{ r.sellTax }}, 交易稅: {{ r.tradeTax }}<br />
+                    買入手續費: {{ r.buyTax }}, 賣出手續費: {{ r.sellTax }}, 交易稅: {{ r.tradeTax }}<br />
                     賣出價錢: {{ r.outP }}, 可賺: {{ r.gain }}
                 </li>
             </ul>
@@ -89,19 +89,25 @@
                     const oneGain = this.gain / this.n
 
                     this.outP = oneGain + buyTotal / (this.n * (1 - this.trade - this.tax)) // 預估的賣出
-                    let sellTax = this.outP * this.tax * this.disCount / 100
+                    let sellTax = this.outP * this.n * this.tax * this.disCount / 100
                     if (sellTax < 20) {
                         sellTax = 20
                         this.outP = oneGain + (buyTotal + sellTax) / (this.n * (1 - this.trade))
                     }
-                    sellTax = Number(sellTax.toFixed(2))
+
                     const roundP = Number(this.outP.toFixed(2))
                     if (this.outP > roundP) {
                         this.outP = roundP + 0.01
-                    } else{
+                    } else {
                         this.outP = roundP
                     }
                     this.outP = Number(this.outP.toFixed(2))
+
+                    sellTax = this.outP * this.n * this.tax * this.disCount / 100
+                    if (sellTax < 20) {
+                        sellTax = 20
+                    }
+                    sellTax = Number(sellTax.toFixed(2))
 
                     this.buyTax = buyTax
                     this.sellTax = sellTax
@@ -133,31 +139,39 @@
             watch: {
                 inP(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p)) {
+                    if (isNaN(p) && v !== '') {
                         return
                     }
+                    p = Number(p.toFixed(2))
                     this.cal()
+                    localStorage.setItem('inP', p)
                 },
                 n(v) {
                     let p = parseInt(v)
-                    if (isNaN(p)) {
+                    if (isNaN(p) || v === '') {
                         return
                     }
+
                     this.cal()
+                    localStorage.setItem('n', v)
                 },
                 disCount(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p)) {
+                    if (isNaN(p) || v === '') {
                         return
                     }
+                    p = Number(p.toFixed(2))
                     this.cal()
+                    localStorage.setItem('disCount', p)
                 },
                 gain(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p)) {
+                    if (isNaN(p) || v === '') {
                         return
                     }
+                    p = Number(p.toFixed(2))
                     this.cal()
+                    localStorage.setItem('gain', p)
                 },
             },
             mounted() {
@@ -172,6 +186,11 @@
                 } catch (error) {
                     this.record = []
                 }
+
+                this.inP = localStorage.getItem('inP')
+                this.n = localStorage.getItem('n')
+                this.disCount = localStorage.getItem('disCount')
+                this.gain = localStorage.getItem('gain')
             }
         })
     </script>
