@@ -53,7 +53,7 @@ func (我 *Wolf) 發言(投票發言 bool) bool {
 	return false
 }
 
-func (我 *Wolf) 能力() (_ Player) {
+func (我 *Wolf) 能力(i int) (_ Player) {
 	可殺的玩家號碼 := []int{}
 	目前存活玩家們 := 我.遊戲.存活玩家們()
 	for i := range 目前存活玩家們 {

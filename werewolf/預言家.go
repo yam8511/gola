@@ -30,7 +30,7 @@ func (我 *Seer) 需要夜晚行動() bool {
 	return true
 }
 
-func (我 *Seer) 能力() (_ Player) {
+func (我 *Seer) 能力(i int) (_ Player) {
 
 	我.遊戲.旁白(傳輸資料{Sound: "請問你要查驗的對象是？"}, 1500)
 

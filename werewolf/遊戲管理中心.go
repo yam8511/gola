@@ -38,7 +38,7 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 			return
 		}
 
-		var canSuicide bool
+		var canSuicide, needTalkRandom bool
 		rules := map[RULE]int{}
 		for {
 			so, err := waitSocketBack(連線, 角色設定)
@@ -54,7 +54,8 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 				Combine *string       `json:"combine"`
 				Rules   *map[RULE]int `json:"rules"`
 				Options *struct {
-					Suicide bool `json:"suicide"`
+					Suicide    bool `json:"suicide"`
+					TalkRandom bool `json:"talk_random"`
 				} `json:"options"`
 			}{}
 			err = json.Unmarshal([]byte(so.Reply), &input)
@@ -62,6 +63,7 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 
 				if input.Options != nil {
 					canSuicide = input.Options.Suicide
+					needTalkRandom = input.Options.TalkRandom
 				}
 
 				var ok bool
@@ -87,7 +89,7 @@ func EnterGame(連線 *websocket.Conn, 編號 string) {
 		if 遊戲.初始設定過() {
 			新進入 = false
 		} else {
-			遊戲.初始設定(rules, canSuicide)
+			遊戲.初始設定(rules, canSuicide, needTalkRandom)
 		}
 	}
 

@@ -51,7 +51,7 @@ func (我 *Knight) 發言(投票發言 bool) bool {
 	if err == nil && so.Reply == "yes" {
 		我.遊戲.旁白(傳輸資料{Sound: strconv.Itoa(我.號碼()) + "號騎士發動技能，請問你要查驗的對象是？"}, 0)
 
-		玩家 := 我.能力()
+		玩家 := 我.能力(0)
 		if 玩家 != nil && 玩家.種族() == 狼職 {
 			return true
 		}
@@ -60,7 +60,7 @@ func (我 *Knight) 發言(投票發言 bool) bool {
 	return false
 }
 
-func (我 *Knight) 能力() (_ Player) {
+func (我 *Knight) 能力(i int) (_ Player) {
 
 	我.發動過技能了 = true
 

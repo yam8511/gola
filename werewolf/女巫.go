@@ -32,7 +32,7 @@ func (我 *Witch) 職業() RULE {
 	return 女巫
 }
 
-func (我 *Witch) 能力() (_ Player) {
+func (我 *Witch) 能力(i int) (_ Player) {
 
 	有使用過藥了嗎 := false
 

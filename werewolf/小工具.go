@@ -1,9 +1,11 @@
 package werewolf
 
 import (
+	realRand "crypto/rand"
 	"encoding/json"
 	"errors"
 	"log"
+	"math/big"
 	"math/rand"
 	"runtime"
 	"time"
@@ -28,9 +30,13 @@ func NewPlayer(角色 RULE, 遊戲 *Game, 號碼 int) Player {
 	case 狼人:
 		return NewWolf(遊戲, 號碼)
 	case 狼王:
-		return NewWolfKing(遊戲, 號碼)
+		return NewKingWolf(遊戲, 號碼)
 	case 雪狼:
 		return NewSnowWolf(遊戲, 號碼)
+	case 狼美人:
+		return NewPrettyWolf(遊戲, 號碼)
+	case 熊:
+		return NewBear(遊戲, 號碼)
 	}
 
 	return nil
@@ -46,6 +52,8 @@ func 角色選單() map[RULE]GROUP {
 		女巫:  神職,
 		狼王:  狼職,
 		雪狼:  狼職,
+		狼美人: 狼職,
+		熊:   神職,
 	}
 }
 
@@ -107,6 +115,16 @@ func 快速組合() map[string]map[RULE]int {
 			獵人:  1,
 			騎士:  1,
 		},
+		"10(熊局)": map[RULE]int{
+			平民: 3,
+			狼人: 1,
+			雪狼: 1,
+			狼王: 1,
+			熊:  1,
+			女巫: 1,
+			獵人: 1,
+			騎士: 1,
+		},
 	}
 }
 
@@ -139,8 +157,14 @@ func 亂數洗牌(職業牌 []RULE) []RULE {
 }
 
 func random(n int) int {
-	rand.Seed(time.Now().UnixNano() / 347000)
-	return rand.Intn(n) + 1
+	b := new(big.Int).SetInt64(time.Now().UnixNano())
+	r, err := realRand.Int(realRand.Reader, b)
+	if err != nil {
+		log.Println("🎃 硬體產生亂數失敗 : ", err)
+		rand.Seed(time.Now().UnixNano() / 347000)
+		return rand.Intn(n) + 1
+	}
+	return int(r.Uint64())%n + 1
 }
 
 func newUID() string {

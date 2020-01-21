@@ -1,23 +1,23 @@
 package werewolf
 
-// NewWolfKing 建立新WolfKing
-func NewWolfKing(遊戲 *Game, 位子 int) *WolfKing {
+// NewKingWolf 建立新KingWolf
+func NewKingWolf(遊戲 *Game, 位子 int) *KingWolf {
 	wolf := NewWolf(遊戲, 位子)
-	return &WolfKing{
+	return &KingWolf{
 		Wolf: wolf,
 	}
 }
 
-// WolfKing 狼王
-type WolfKing struct {
+// KingWolf 狼王
+type KingWolf struct {
 	*Wolf
 }
 
-func (我 *WolfKing) 職業() RULE {
+func (我 *KingWolf) 職業() RULE {
 	return 狼王
 }
 
-func (我 *WolfKing) 發言(投票發言 bool) bool {
+func (我 *KingWolf) 發言(投票發言 bool) bool {
 
 	if 投票發言 {
 		我.Human.發言(投票發言)
@@ -43,19 +43,20 @@ func (我 *WolfKing) 發言(投票發言 bool) bool {
 	return false
 }
 
-func (我 *WolfKing) 出局(殺法 KILL) {
+func (我 *KingWolf) 出局(殺法 KILL) {
 	我.Human.出局(殺法)
 	我.遊戲.判斷勝負(false)
 	if 殺法 != 毒殺 && 我.遊戲.勝負 == 進行中 {
-		我.能力()
+		我.能力(1)
 	}
 }
 
-func (我 *WolfKing) 能力() (_ Player) {
-	if 我.出局了() {
+func (我 *KingWolf) 能力(i int) (_ Player) {
+	switch i {
+	case 1:
 		獵人技能(我, 我.遊戲)
 		return
+	default:
+		return 我.Wolf.能力(0)
 	}
-
-	return 我.Wolf.能力()
 }

@@ -79,12 +79,14 @@ const (
 	// http://www.87g.com/lrs/59119.html
 	平民  = RULE("平民")
 	預言家 = RULE("預言家")
+	熊   = RULE("熊")
 	女巫  = RULE("女巫")
 	獵人  = RULE("獵人")
 	騎士  = RULE("騎士")
 	狼人  = RULE("狼人")
 	狼王  = RULE("狼王")
 	雪狼  = RULE("雪狼")
+	狼美人 = RULE("狼美人")
 )
 
 // KILL 殺法
@@ -124,6 +126,6 @@ type Player interface {
 // Skiller 有能力的人
 type Skiller interface {
 	Player
-	能力() (用來表示狼人咬誰 Player)
+	能力(第幾個技能 int) (用來表示狼人咬誰 Player)
 	需要夜晚行動() bool
 }

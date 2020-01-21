@@ -184,6 +184,11 @@
                         <input type="checkbox" v-model="suicide" />
                         <span>可自爆</span>
                     </label>
+                    ｜
+                    <label>
+                        <input type="checkbox" v-model="talkRandom" />
+                        <span>隨機發言</span>
+                    </label>
 
                     <hr />
 
@@ -250,7 +255,7 @@
                     <hr />
                     <ul class="collection">
                         <li v-for="v,k in voteResult" class="collection-item">
-                            {{ k }} <i class="material-icons small">restaurant_menu</i> {{ v }}
+                            {{ k }} <i class="material-icons small">redo</i> {{ v }}
                         </li>
                     </ul>
                 </div>
@@ -376,7 +381,7 @@
                 online: [],
                 player_is_out: [],
                 intervalID: 0,
-                ruleVisible: true,
+                ruleVisible: false,
                 setupRules: {},
                 is_mute: true,
                 initializing: true,
@@ -386,6 +391,7 @@
                 userEmail: '',
                 suggest: '',
                 suicide: false,
+                talkRandom: false,
             },
             methods: {
                 chat() {
@@ -477,6 +483,7 @@
                     this.input = JSON.stringify({
                         options: {
                             suicide: this.suicide,
+                            talk_random: this.talkRandom,
                         },
                         combine: this.lastCombineKey
                     })
@@ -495,6 +502,7 @@
                         rules: this.selectedRule,
                         options: {
                             suicide: this.suicide,
+                            talk_random: this.talkRandom,
                         },
                     })
                     console.log('input => ', this.input)
@@ -633,6 +641,7 @@
                                     combine: this.lastCombineKey,
                                     options: {
                                         suicide: this.suicide,
+                                        talk_random: this.talkRandom,
                                     },
                                 })
                             } else {
@@ -640,6 +649,7 @@
                                     rules: this.selectedRule,
                                     options: {
                                         suicide: this.suicide,
+                                        talk_random: this.talkRandom,
                                     },
                                 })
                             }
@@ -755,6 +765,7 @@
                             combine: this.lastCombineKey,
                             options: {
                                 suicide: this.suicide,
+                                talk_random: this.talkRandom,
                             },
                         })
                     } else {
@@ -763,6 +774,7 @@
                             rules: this.selectedRule,
                             options: {
                                 suicide: this.suicide,
+                                talk_random: this.talkRandom,
                             },
                         })
                     }

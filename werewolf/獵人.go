@@ -29,11 +29,11 @@ func (我 *Hunter) 出局(殺法 KILL) {
 	我.Human.出局(殺法)
 	我.遊戲.判斷勝負(false)
 	if 殺法 != 毒殺 && 我.遊戲.勝負 == 進行中 {
-		我.能力()
+		我.能力(0)
 	}
 }
 
-func (我 *Hunter) 能力() (_ Player) {
+func (我 *Hunter) 能力(i int) (_ Player) {
 	獵人技能(我, 我.遊戲)
 	return
 }
