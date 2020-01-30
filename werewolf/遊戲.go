@@ -386,24 +386,25 @@ func (遊戲 *Game) 大家開始發言(玩家們 []Player) (直接天黑 bool) {
 		for i := s; i < plen; i++ {
 			玩家 := 玩家們[i]
 			if 發言功能(玩家) {
-				break
+				goto 結束發言
 			}
 		}
 
 		for i := 0; i < s; i++ {
 			玩家 := 玩家們[i]
 			if 發言功能(玩家) {
-				break
+				goto 結束發言
 			}
 		}
 	} else {
 		for _, 玩家 := range 玩家們 {
 			if 發言功能(玩家) {
-				break
+				goto 結束發言
 			}
 		}
 	}
 
+結束發言:
 	return
 }
 
