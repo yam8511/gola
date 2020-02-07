@@ -12,6 +12,12 @@ var mappingAPIError = map[string]APIError{
 	"panic": {500, "服務異常，請通知系統人員"}, // 意外錯誤！
 
 	/**
+	 * Mask 相關錯誤
+	 */
+	"mask_api_error":      {2001, "請確認是否有連接網路，或者政府伺服器目前有問題，請稍後再試試看"}, // 抓口罩數量API失敗
+	"read_mask_csv_error": {2001, "政府伺服器給的資料有問題，等待政府資料恢復正常 (API)"},   // 抓口罩數量API失敗
+
+	/**
 	 * Auth 相關錯誤
 	 */
 	"no_cookie":      {1000, "請重新登入"},        // 取Cookie失敗

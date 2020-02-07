@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>查詢口罩數量與店家</title>
+    <link id="favicon" rel="icon" href="favicon.png" type="image/png">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <h4>口罩店家數量查詢</h1>
+        <qrcode :value="homeQRCode" :options="{ width: 200 }" /></qrcode>
+
+        <div class="row">
+            <div class="input-field inline col m10 s12">
+                <input id="search" type="text" class="validate" v-model="search" @keyup.enter="searchMask" />
+                <label for="search">查詢店家或地區或地址, 例如: 「鳳山區 青年路」 或 「丁丁藥局 高雄 鳳山」</label>
+            </div>
+            <div class="input-field inline col m2 s12">
+                <button class="btn waves-effect waves-light" type="submit" name="action" @click="searchMask">
+                    查詢
+                    <i class="material-icons right">send</i>
+                </button>
+            </div>
+        </div>
+        <div v-if="loading" class="progress">
+            <div class="indeterminate"></div>
+        </div>
+        <div v-if="data.length > 0" class="flow-text">
+            <h5>目前有<span class="red-text text-darken-2">{{ data.length }}</span>家有口罩😷，點擊店家或地址可查看地圖🗾</h5>
+            <ul class="collection">
+                <li v-for="info in data" class="collection-item">
+                    <p>成人口罩: {{ info.number }} | 小孩口罩: {{ info.child }}</p>
+                    <p>🏥  <a class="blue-text text-darken-2" :href="info.name_url" target="_blank">{{ info.name }}<i class="small material-icons">open_in_new</i></a></p>
+                    <p>🧭  <a class="teal-text text-darken-2" :href="info.address_url" target="_blank">{{ info.address }}<i class="small material-icons">open_in_new</i></a></p>
+                    <p>📞  {{ info.phone }}  ⏱ {{ info.updated_at }}</p>
+                </li>
+            </ul>
+        </div>
+        <div v-if="data.length > 3" class="row">
+            <div v-if="loading" class="progress">
+                <div class="indeterminate"></div>
+            </div>
+            <div class="input-field inline col m10 s12">
+                <input id="search" type="text" class="validate" v-model="search" @keyup.enter="searchMask" />
+                <label for="search">{{search}}</label>
+            </div>
+            <div class="input-field inline col m2 s12">
+                <button class="btn waves-effect waves-light" type="submit" name="action" @click="searchMask">
+                    查詢
+                    <i class="material-icons right">send</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script src="vue-qrcode.js"></script>
+    <script>Vue.component(VueQrcode.name, VueQrcode);</script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                search: '',
+                data: [],
+                loading: false,
+            },
+            computed: {
+                homeQRCode() {
+                    return window.location.href
+                },
+            },
+            methods: {
+                alert(text) {
+                    M.Toast.dismissAll();
+                    M.toast({
+                        html: text,
+                        classes: 'rounded',
+                    });
+                },
+                searchMask() {
+                    this.search = this.search.trim()
+                    localStorage.setItem('q', this.search)
+                    if (this.search === '') {
+                        return
+                    }
+
+                    this.loading = true
+                    axios.get(`/api/mask?q=${this.search}`)
+                        .then((response) => {
+                            if (response.status !== 200 || response.data.error_code !== undefined) {
+                                if (response.status !== 200) {
+                                    this.alert(`伺服器目前壞掉中... (Status: ${response.status})`)
+                                } else {
+                                    this.alert(`${response.data.error_text} (${response.data.error_code})`)
+                                }
+                                return
+                            }
+
+                            this.data = response.data
+                        })
+                        .catch((error) => {
+                            console.log(`抓取口罩API時，發生意外錯誤, ${error}`)
+                            this.alert(`目前伺服器沒有啟動，請等待修復... (${error})`)
+                        }).finally(() => {
+                            this.loading = false
+                        })
+                }
+            },
+            mounted() {
+                this.search = localStorage.getItem('q')
+                this.searchMask()
+            }
+        })
+    </script>
+</body>
+
+</html>
