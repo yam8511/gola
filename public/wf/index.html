@@ -324,6 +324,25 @@
                     </ul>
                 </div>
             </div>
+            <!--顯示memo-->
+            <div v-if="no !== ''" class="col s12 collection">
+                <div class="collection-item" v-for="out, i in player_is_out">
+                    <i v-if="out" class="material-icons small red-text text-lighten-2">favorite_border</i>
+                    <i v-else class="material-icons small red-text text-lighten-2">favorite</i>
+                    {{ i + 1 }} 號玩家
+                    <hr>
+                    <div>
+                        <span>猜測角色：</span>
+                        <label v-for="item in characterPrint">
+                            <input type="checkbox" />
+                            <span>{{ item }}</span>
+                        </label>
+                    </div>
+                    <hr>
+                    <div>memo：</div>
+                    <textarea name="慶菜啦" cols="30" rows="30"></textarea>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -550,6 +569,14 @@
                     }
 
                     return display.join(' | ')
+                },
+                printCharacter(rules) {
+                    let display = []
+                    for (const key in rules) {
+                        display.push(`${key}`);
+                    }
+
+                    return display;
                 },
                 changeMute() {
                     this.is_mute = !this.is_mute
@@ -789,6 +816,10 @@
                 },
                 gameRules() {
                     return this.lookCombineDetail(this.setupRules)
+                },
+                characterPrint() {
+                    const pp = this.printCharacter(this.setupRules)
+                    return pp
                 },
                 optionsCol() {
                     const optionLen = parseInt(12 / Object.keys(this.waitingOptions).length)
