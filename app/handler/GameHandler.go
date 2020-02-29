@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gola/werewolf"
 	dance "gola/criminal_dance"
+	"gola/werewolf"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -14,7 +14,7 @@ import (
 // WerewolfGame 狼人殺
 // @Summary 狼人殺
 // @Tags 遊戲
-// @Success 200 {object} object "狼人殺"
+// @Success 200 {string} string "狼人殺"
 // @Router /api/wf/game [get]
 func WerewolfGame(c *gin.Context) {
 	token := strings.TrimSpace(c.Query("token"))
@@ -37,7 +37,7 @@ func WerewolfGame(c *gin.Context) {
 // CriminalDanceGame 犯人在跳舞
 // @Summary 犯人在跳舞
 // @Tags 遊戲
-// @Success 200 {object} object "犯人在跳舞"
+// @Success 200 {string} string "犯人在跳舞"
 // @Router /api/wf/game [get]
 func CriminalDanceGame(c *gin.Context) {
 	token := strings.TrimSpace(c.Query("token"))

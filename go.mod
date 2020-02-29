@@ -1,23 +1,24 @@
 module gola
 
-go 1.13
+go 1.14
 
 require (
-	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-contrib/static v0.0.0-20190913125243-df30d4057ba1
-	github.com/gin-gonic/gin v1.4.0
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/fatih/color v1.9.0
+	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
+	github.com/gin-gonic/gin v1.5.0
+	github.com/go-redis/redis v6.15.7+incompatible
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
-	github.com/graphql-go/graphql v0.7.8
+	github.com/graphql-go/graphql v0.7.9
 	github.com/graphql-go/handler v0.2.3
-	github.com/jinzhu/gorm v1.9.11
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/mattn/go-isatty v0.0.8 // indirect
-	github.com/naoina/go-stringutil v0.1.0 // indirect
-	github.com/naoina/toml v0.1.1
-	github.com/ugorji/go/codec v1.1.5-pre // indirect
-	golang.org/x/net v0.0.0-20190611141213-3f473d35a33a // indirect
-	golang.org/x/sys v0.0.0-20190610200419-93c9922d18ae // indirect
+	github.com/jinzhu/gorm v1.9.12
+	github.com/onsi/ginkgo v1.12.0 // indirect
+	github.com/onsi/gomega v1.9.0 // indirect
+	github.com/spf13/viper v1.6.2
+	github.com/swaggo/gin-swagger v1.2.0
+	github.com/swaggo/swag v1.6.5
+	github.com/tidwall/gjson v1.6.0
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 )

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gola/app/model"
 	"gola/internal/entry"
 	"os"
 	// "gola/internal/database"
@@ -17,8 +18,7 @@ func main() {
 	entry.Run(
 		func() {
 			// 設置資料表
-			// model.SetupTable()
-			// go database.SetupPool(150)
+			model.SetupTable()
 		},
 	)
 }

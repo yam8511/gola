@@ -13,6 +13,7 @@ func LoadAPIRouter(r *gin.Engine) {
 		// middleware.Middleware("check_google_login"),
 	)
 	api.GET("/hello", handler.API)
+	api.POST("/config", handler.Config)
 	// api.POST("/seed", handler.Seed)
 
 	api.GET("/mask", handler.SearchMask)

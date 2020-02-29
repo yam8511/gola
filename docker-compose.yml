@@ -8,8 +8,8 @@ services:
             context: .
             args:
                 - ENTER=server
-                - TG_TOKEN=${TG_TOKEN}
-                - TG_CHAT_ID=${TG_CHAT_ID}
+                - BOT_TOKEN=${BOT_TOKEN}
+                - BOT_CHAT_ID=${BOT_CHAT_ID}
         image: registry.heroku.com/golar/web:latest
         command: server
         restart: always
@@ -21,8 +21,7 @@ services:
             - APP_SITE=${APP_SITE}
             - PORT=8000
         volumes:
-            - storage_app:/app/storage/app
-            - storage_logs:/app/storage/logs
+            - ./storage:/app/storage
 
     # 排程服務
     cronjob:
@@ -33,13 +32,7 @@ services:
         environment:
             - APP_ENV=${APP_ENV}
         volumes:
-            - storage_app:/app/storage/app
-            - storage_logs:/app/storage/logs
-
-    adminer:
-        image: adminer
-        ports:
-            - "8080:8080"
+            - ./storage:/app/storage
 
     db:
         image: mysql:5.6
@@ -50,16 +43,33 @@ services:
             MYSQL_ROOT_PASSWORD: qwe123
             MYSQL_DATABASE: gola
         volumes:
-            - data:/var/lib/mysql
+            - db:/var/lib/mysql
         depends_on:
             - adminer
 
+    cache:
+        image: redis
+        ports:
+            - "6379:6379"
+        volumes:
+            - cache:/data
+        depends_on:
+            - redis-admin
+
+    adminer:
+        image: adminer
+        ports:
+            - "8080:8080"
+
+    redis-admin:
+        image: rediscommander/redis-commander
+        ports:
+            - "8081:8081"
+        environment:
+            - REDIS_HOSTS=redis:cache:6379:0
+
 volumes:
-    data:
-        driver: local
-    gopath:
-        driver: local
-    storage_app:
-        driver: local
-    storage_logs:
-        driver: local
+    db:
+        driver: "local"
+    cache:
+        driver: "local"

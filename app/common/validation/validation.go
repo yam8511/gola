@@ -2,7 +2,7 @@ package validation
 
 import (
 	"fmt"
-	"gola/internal/bootstrap"
+	"gola/internal/logger"
 	"regexp"
 	"strings"
 )
@@ -16,7 +16,7 @@ func IsEmailPassed(email string) (isPassed bool) {
 	}
 	reg, err := regexp.Compile(RegexpEmail)
 	if err != nil {
-		go bootstrap.WriteLog("WARNING", fmt.Sprintf("編譯[信箱]的正則表達式錯誤 /%s/ ---> %s", RegexpEmail, err.Error()))
+		go logger.Warn(fmt.Sprintf("編譯[信箱]的正則表達式錯誤 /%s/ ---> %s", RegexpEmail, err.Error()))
 		return
 	}
 	isPassed = reg.MatchString(email)
@@ -32,7 +32,7 @@ func IsPhonePassed(phone string) (isPassed bool) {
 	}
 	reg, err := regexp.Compile(RegexpPhone)
 	if err != nil {
-		go bootstrap.WriteLog("WARNING", fmt.Sprintf("編譯[手機]的正則表達式錯誤 /%s/ ---> %s", RegexpPhone, err.Error()))
+		go logger.Warn(fmt.Sprintf("編譯[手機]的正則表達式錯誤 /%s/ ---> %s", RegexpPhone, err.Error()))
 		return
 	}
 	isPassed = reg.MatchString(phone)
@@ -48,7 +48,7 @@ func IsPasswordPassed(password string) (isPassed bool) {
 	}
 	reg, err := regexp.Compile(RegexpPassword)
 	if err != nil {
-		go bootstrap.WriteLog("WARNING", fmt.Sprintf("編譯[密碼]的正則表達式錯誤 /%s/ ---> %s", RegexpPassword, err.Error()))
+		go logger.Warn(fmt.Sprintf("編譯[密碼]的正則表達式錯誤 /%s/ ---> %s", RegexpPassword, err.Error()))
 		return
 	}
 	isPassed = reg.MatchString(password)

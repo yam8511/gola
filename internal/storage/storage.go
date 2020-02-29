@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"bytes"
+	"errors"
 	"gola/internal/bootstrap"
+	"gola/internal/logger"
 	"io"
 	"mime/multipart"
 	"os"
@@ -9,71 +12,67 @@ import (
 	"strings"
 )
 
-// CreateFile 建立檔案
-func CreateFile(filename string, data []byte) error {
-	filename = bootstrap.GetAppRoot() + "/storage/app/" + filename
-	//檢查檔案是否存在
-	if !CheckFileExists(filename) {
-		//建立資料夾
-		err := os.MkdirAll(filepath.Dir(filename), 0777)
-		if err != nil {
-			go bootstrap.WriteLog("ERROR", "CreateFile: 建立相關資料夾錯誤, "+err.Error())
-			return err
-		}
-	}
-
-	out, err := os.Create(filename)
+// WriteFile 開啟檔案，若檔案不存在，系統會自動建立
+func WriteFile(filename string, data []byte) error {
+	filename = GetStorageAppFilePath(filename)
+CREATE:
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
 	if err != nil {
-		go bootstrap.WriteLog("ERROR", "CreateFile: 建立檔案錯誤, "+err.Error())
+		if os.IsNotExist(err) {
+			//建立資料夾
+			err := os.MkdirAll(filepath.Dir(filename), 0777)
+			if err != nil {
+				logger.Error(errors.New("storage.WriteFile: 建立資料夾錯誤: " + err.Error()))
+				return err
+			}
+			goto CREATE
+		}
+		logger.Error(errors.New("storage.WriteFile: 開啟檔案錯誤: " + err.Error()))
 		return err
 	}
-	defer out.Close()
 
-	return nil
+	_, err = f.Write(data)
+	if err != nil {
+		if os.IsNotExist(err) {
+			goto CREATE
+		}
+		logger.Error(errors.New("storage.WriteFile: 寫入檔案錯誤: " + err.Error()))
+		goto CLOSE
+	}
+CLOSE:
+	f.Close()
+
+	return err
 }
 
 // CopyFile 複製檔案
 func CopyFile(file *multipart.FileHeader, dst string) error {
 	src, err := file.Open()
 	if err != nil {
-		go bootstrap.WriteLog("ERROR", "CopyFile: 開啟檔案錯誤, "+err.Error())
+		logger.Error(errors.New("storage.CopyFile: 開啟檔案錯誤: " + err.Error()))
 		return err
 	}
 	defer src.Close()
 
-	filename := bootstrap.GetAppRoot() + "/storage/app/" + dst
-	//檢查檔案是否存在
-	if !CheckFileExists(filename) {
-		//建立資料夾
-		err = os.MkdirAll(filepath.Dir(filename), 0777)
-		if err != nil {
-			go bootstrap.WriteLog("ERROR", "CopyFile: 建立相關資料夾錯誤, "+err.Error())
-			return err
-		}
-	}
-
-	out, err := os.Create(filename)
+	buf := bytes.NewBuffer([]byte{})
+	_, err = io.Copy(buf, src)
 	if err != nil {
-		go bootstrap.WriteLog("ERROR", "CopyFile: 建立檔案錯誤, "+err.Error())
+		logger.Error(errors.New("storage.CopyFile: 複製檔案錯誤: " + err.Error()))
 		return err
 	}
-	defer out.Close()
 
-	_, err = io.Copy(out, src)
-	if err != nil {
-		go bootstrap.WriteLog("ERROR", "CopyFile: 複製檔案錯誤, "+err.Error())
-		return err
-	}
-	return nil
+	return WriteFile(dst, buf.Bytes())
 }
 
 // DeleteFile 刪除檔案
-func DeleteFile(src string) {
-	filename := bootstrap.GetAppRoot() + "/storage/app/" + src
+func DeleteFile(filename string) {
+	filename = GetStorageAppFilePath(filename)
 	if CheckFileExists(filename) {
 		err := os.Remove(filename)
 		if err != nil {
-			go bootstrap.WriteLog("WARNING", "DeleteFile: 刪除檔案錯誤, "+err.Error())
+			if !os.IsNotExist(err) {
+				logger.Warn("storage.DeleteFile: 刪除檔案錯誤: " + err.Error())
+			}
 		}
 	}
 }
@@ -107,7 +106,7 @@ func CheckFileExists(filename string) (ok bool) {
 		ok = true
 		return
 	} else if !os.IsNotExist(err) {
-		go bootstrap.WriteLog("WARNING", "CheckFileExists: 檢查檔案失敗, "+err.Error())
+		logger.Warn("storage.CheckFileExists: 檢查檔案失敗: " + err.Error())
 	}
 	return
 }

@@ -1,7 +1,7 @@
 package router
 
 import (
-	errorcode "gola/app/common/error_code"
+	errorcode "gola/app/common/errorcode"
 	appGql "gola/app/graphql"
 
 	"github.com/gin-gonic/gin"

@@ -3,7 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/csv"
-	errorCode "gola/app/common/error_code"
+	errorCode "gola/app/common/errorcode"
 	"io"
 	"io/ioutil"
 	"net/http"

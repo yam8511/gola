@@ -1,17 +1,17 @@
 package business
 
 import (
-	"gola/app/common/data_struct"
+	"gola/app/common/def"
 	"sync"
 	"time"
 )
 
-var todos = map[int64]*datastruct.Todo{}
+var todos = map[int64]*def.Todo{}
 var mux = sync.RWMutex{}
 var count int64
 
 // GetTodo 取Todo
-func GetTodo(id int64) *datastruct.Todo {
+func GetTodo(id int64) *def.Todo {
 	mux.RLock()
 	defer mux.RUnlock()
 
@@ -23,11 +23,11 @@ func GetTodo(id int64) *datastruct.Todo {
 }
 
 // GetTodos 取Todos
-func GetTodos(done *bool) []*datastruct.Todo {
+func GetTodos(done *bool) []*def.Todo {
 	mux.RLock()
 	defer mux.RUnlock()
 
-	tmp := []*datastruct.Todo{}
+	tmp := []*def.Todo{}
 	for i := range todos {
 		todo := todos[i]
 		if done != nil {
@@ -44,13 +44,13 @@ func GetTodos(done *bool) []*datastruct.Todo {
 }
 
 // AddTodo 新增Todo
-func AddTodo(text string, done bool, expiredAt *time.Time, labels map[string]interface{}) (todo *datastruct.Todo) {
+func AddTodo(text string, done bool, expiredAt *time.Time, labels map[string]interface{}) (todo *def.Todo) {
 	mux.Lock()
 	defer mux.Unlock()
 
 	count++
 	id := count
-	todo = &datastruct.Todo{
+	todo = &def.Todo{
 		ID:        id,
 		Text:      text,
 		Done:      done,
@@ -62,7 +62,7 @@ func AddTodo(text string, done bool, expiredAt *time.Time, labels map[string]int
 }
 
 // ToggleTodoDone 更改狀態
-func ToggleTodoDone(id int64) *datastruct.Todo {
+func ToggleTodoDone(id int64) *def.Todo {
 	mux.Lock()
 	defer mux.Unlock()
 
@@ -74,7 +74,7 @@ func ToggleTodoDone(id int64) *datastruct.Todo {
 }
 
 // RemoveTodo 刪除Todo
-func RemoveTodo(id int64) *datastruct.Todo {
+func RemoveTodo(id int64) *def.Todo {
 	mux.Lock()
 	defer mux.Unlock()
 

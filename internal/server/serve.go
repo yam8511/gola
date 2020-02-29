@@ -3,10 +3,14 @@ package server
 import (
 	"fmt"
 	"gola/internal/bootstrap"
+	"gola/internal/logger"
 	"gola/router"
 	"net"
 	"net/http"
+	"os"
+	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,13 +28,24 @@ func SetupRouter() (r *gin.Engine) {
 }
 
 // CreateServer 建立伺服器
-func CreateServer(router *gin.Engine, port, host string, args ...string) *http.Server {
+func CreateServer(router *gin.Engine) *http.Server {
+	conf := bootstrap.GetAppConf().Server
+	// 設定 Port
+	var port = conf.Port
+	if conf.AutoPort && os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	}
+	if port != "" {
+		port = ":" + port
+	}
+	addr := conf.IP + port
+
 	// 建立 Server
 	server := &http.Server{
-		Addr:    port,
-		Handler: router,
-		// ReadTimeout:  5 * time.Second,
-		// WriteTimeout: 10 * time.Second,
+		Addr:         addr,
+		Handler:      router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 		// MaxHeaderBytes: 1 << 20,
 	}
 
@@ -38,35 +53,45 @@ func CreateServer(router *gin.Engine, port, host string, args ...string) *http.S
 }
 
 // SignalListenAndServe 開啟Server & 系統信號監聽
-func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup, maxConn int) {
+func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 	defer waitFinish.Done()
 	defer func() {
 		if err := recover(); err != nil {
-			errMessage := fmt.Sprintf("❌  Server 發生意外 Error: %v ❌", err)
-			bootstrap.WriteLog("ERROR", errMessage)
+			errMessage := fmt.Sprintf("Server 發生意外 Panic: %v", err)
+			logger.Danger(errMessage)
+			logger.Danger(string(debug.Stack()))
 		}
 	}()
 
 	l, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		bootstrap.WriteLog("ERROR", fmt.Sprintf("❌  Server 建立監聽連線失敗 (%v) ❌", err))
+		logger.Danger(fmt.Sprintf("Server 建立監聽連線失敗: %s", err.Error()))
 		return
 	}
 
-	dl := NewDozListner(l, maxConn)
+	conf := bootstrap.GetAppConf()
+	dl := NewDozListner(l, conf.Server.MaxConn, conf.App.Debug)
 
 	go func() {
 		// err := http.Serve(l, server)
 		err := server.Serve(dl)
-		bootstrap.WriteLog("WARNING", fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
+		logger.Warn(fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
 	}()
 
-	bootstrap.WriteLog("INFO", "🐳  Web Server 開始服務! "+l.Addr().String()+"🐳")
-	defer bootstrap.WriteLog("INFO", "🔥  Web Server 結束服務!🔥")
+	logger.Success("🐳  Web Server 開始服務! " + l.Addr().String() + "🐳")
+	defer logger.Success("🔥  Web Server 結束服務!🔥")
 
-	receivedSignal := <-bootstrap.GracefulDown()
+	<-bootstrap.GracefulDown()
 	go server.SetKeepAlivesEnabled(false)
-	bootstrap.WriteLog("INFO", fmt.Sprintf("🎃  接受訊號 <- %v 🎃", receivedSignal))
+	logger.Warn(fmt.Sprintf("🎃  接受訊號 🎃"))
 	dl.Close()
-	dl.Wait()
+
+	select {
+	case <-bootstrap.WaitFunc(func() {
+		dl.Wait()
+	}).Done():
+	case <-bootstrap.WaitOnceSignal():
+		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
+		os.Exit(2)
+	}
 }

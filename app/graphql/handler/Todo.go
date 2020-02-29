@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"gola/app/common/data_struct"
 	"time"
 
 	"gola/app/business"
-	"gola/app/common/error_code"
+	"gola/app/common/def"
+	errorcode "gola/app/common/errorcode"
 
 	"github.com/graphql-go/graphql"
 )
@@ -57,7 +57,7 @@ func AddTodo(p graphql.ResolveParams) (interface{}, error) {
 		return nil, errorcode.GetGqlError(p, "parse_err", err)
 	}
 
-	var input *datastruct.TodoInput
+	var input *def.TodoInput
 	err = json.Unmarshal(argByte, &input)
 	if err != nil {
 		return nil, errorcode.GetGqlError(p, "param_invalid", err)

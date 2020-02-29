@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"gola/app/common/error_code"
+	"gola/app/common/errorcode"
 
 	"github.com/graphql-go/graphql"
 )

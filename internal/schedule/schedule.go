@@ -1,25 +1,21 @@
 package schedule
 
 import (
+	"fmt"
 	"gola/internal/bootstrap"
-	"io/ioutil"
-	"log"
+	"gola/internal/logger"
 	"os"
-	"strings"
 
-	"github.com/naoina/toml"
+	"github.com/fatih/color"
 	cron "gopkg.in/robfig/cron.v2"
 )
 
 // Run 啟動排程
 func Run() {
-	jobs, err := loadSchedule()
-	if err != nil {
-		log.Fatal("❌ 載入排程錯誤 --->" + err.Error() + "❌")
-	}
+	jobs := loadSchedule()
 
 	if len(jobs) == 0 {
-		log.Println("🎃  無定義排程，結束程序 🎃")
+		logger.Success("🎃  無定義排程，結束程序 🎃")
 		return
 	}
 
@@ -28,72 +24,37 @@ func Run() {
 		job.Init()
 		pid, err := bg.AddJob(job.Spec, job)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Error(fmt.Errorf(
+				"%s 加入排程失敗: %s",
+				color.HiYellowString(job.Name), err.Error(),
+			))
+		} else {
+			job.SetEntryID(pid)
 		}
-		job.SetEntryID(pid)
 	}
 
 	// 開始排程
-	bootstrap.WriteLog("INFO", `
-	🐳  啟動排程囉~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 🐳
-	`)
+	logger.Success("🐳  排程開始啟動 🐳")
 	bg.Start()
 
 	// 等待結束訊號
 	<-bootstrap.GracefulDown()
-	bootstrap.WriteLog("WARNING", `
-	🚦  收到訊號囉~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 🚦
-	`)
+	logger.Warn("🚦  排程收到訊號囉，等待其他背景完成，準備結束排程 🚦")
 
 	// 停止排程
 	bg.Stop()
 
-	// 等待背景結束
-	for _, job := range jobs {
-		job.Wait()
-	}
-
-	bootstrap.WriteLog("INFO", `
-	🔥  結束囉~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 🔥
-	`)
-}
-
-func loadSchedule() ([]*CronJob, error) {
-	configDir := bootstrap.GetAppRoot() + "/config/schedule/" + bootstrap.GetAppEnv()
-	dir, err := os.Open(configDir)
-	if err != nil {
-		return nil, err
-	}
-
-	var fileList []os.FileInfo
-	fileList, err = dir.Readdir(-1)
-	if err != nil {
-		dir.Close()
-		return nil, err
-	}
-	defer dir.Close()
-
-	var jobs []*CronJob
-
-	for i := range fileList {
-		file := fileList[i]
-
-		if strings.HasSuffix(file.Name(), ".toml") {
-			tomlData, readFileErr := ioutil.ReadFile(configDir + "/" + file.Name())
-			if readFileErr != nil {
-				return nil, readFileErr
-			}
-
-			var jobsConf struct {
-				Jobs []*CronJob `toml:"job"`
-			}
-			err := toml.Unmarshal(tomlData, &jobsConf)
-			if err != nil {
-				return nil, err
-			}
-			jobs = append(jobs, jobsConf.Jobs...)
+	select {
+	case <-bootstrap.WaitFunc(func() {
+		// 等待背景結束
+		for _, job := range jobs {
+			job.Wait()
 		}
+	}).Done():
+	case <-bootstrap.WaitOnceSignal():
+		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
+		os.Exit(2)
 	}
 
-	return jobs, nil
+	logger.Success("🔥  排程結束囉 🔥")
 }

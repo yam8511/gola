@@ -3,10 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"gola/internal/bootstrap"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,9 +20,10 @@ import (
 // @Success 200 {object} errorcode.APIError
 // @Router /api/suggest [post]
 func Suggest(c *gin.Context) {
-	token := os.Getenv("TG_TOKEN")
-	chatID := os.Getenv("TG_CHAT_ID")
-	if token == "" || chatID == "" {
+	botConf := bootstrap.GetAppConf().Bot
+	token := botConf.Token
+	chatID := botConf.ChatID
+	if token == "" || chatID == 0 {
 		c.String(http.StatusOK, "failed: TELEGRAM ENV not assigned")
 		return
 	}
@@ -67,7 +69,7 @@ func Suggest(c *gin.Context) {
 	`, gameName, reqParams.Email, reqParams.Suggest)
 
 	query := url.Values{}
-	query.Add("chat_id", chatID)
+	query.Add("chat_id", strconv.FormatInt(chatID, 10))
 	query.Add("text", text)
 
 	url := "https://api.telegram.org/bot" + token + "/sendMessage?" + query.Encode()

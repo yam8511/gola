@@ -4,7 +4,8 @@ import (
 	realRand "crypto/rand"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
+	"gola/internal/logger"
 	"math/big"
 	"math/rand"
 	"runtime"
@@ -152,7 +153,7 @@ func 亂數洗牌(職業牌 []RULE) []RULE {
 			職業牌[i], 職業牌[j] = 職業牌[j], 職業牌[i]
 		})
 	}
-	log.Println("職業牌", 職業牌)
+	logger.Info(fmt.Sprint("職業牌", 職業牌))
 	return 職業牌
 }
 
@@ -160,7 +161,7 @@ func random(n int) int {
 	b := new(big.Int).SetInt64(time.Now().UnixNano())
 	r, err := realRand.Int(realRand.Reader, b)
 	if err != nil {
-		log.Println("🎃 硬體產生亂數失敗 : ", err)
+		logger.Warn("🎃 硬體產生亂數失敗 : " + err.Error())
 		rand.Seed(time.Now().UnixNano() / 347000)
 		return rand.Intn(n) + 1
 	}

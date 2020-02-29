@@ -2,13 +2,13 @@ package server
 
 import (
 	"errors"
-	"log"
+	"fmt"
+	"gola/internal/bootstrap"
+	"gola/internal/logger"
 	"math"
 	"net"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 )
 
 // DozListener 監聽
@@ -18,6 +18,7 @@ type DozListener struct {
 	buf   chan struct{}
 	out   chan struct{}
 	errCh chan error
+	debug bool
 }
 
 // DozConn 連線
@@ -85,7 +86,9 @@ func (l *DozListener) Accept() (net.Conn, error) {
 			err = doErr
 		}
 
-		log.Println("接收連線Error...", err)
+		if l.debug {
+			logger.Warn("接收連線Error... " + err.Error())
+		}
 		return nil, err
 	}
 	// log.Println("接收連線...", conn.RemoteAddr().String())
@@ -107,17 +110,22 @@ func (l *DozListener) Close() error {
 			return nil
 		})
 		err = l.Listener.Close()
+		text := "關閉監聽..."
+		if err != nil {
+			text += " " + err.Error()
+		}
+		if l.debug {
+			logger.Warn(text)
+		}
 	})
 
-	log.Println("關閉監聽...", err)
 	return err
 }
 
 // Wait 等待連線關閉
 func (l *DozListener) Wait() error {
 	err := l.onlyDoWithBuffer(func() error {
-		sig := make(chan os.Signal, 0)
-		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+		sig := bootstrap.WaitOnceSignal()
 
 		var notOver bool
 		var count int
@@ -126,7 +134,9 @@ func (l *DozListener) Wait() error {
 		notOver = count > 0
 
 		for notOver {
-			log.Printf("還有%d條連線，等待關閉...", count)
+			if l.debug {
+				logger.Warn(fmt.Sprintf("還有%d條連線，等待關閉...", count))
+			}
 			select {
 			case <-l.out:
 				count = len(l.buf)
@@ -138,7 +148,9 @@ func (l *DozListener) Wait() error {
 				os.Exit(127)
 			}
 		}
-		log.Println("連線已經清空")
+		if l.debug {
+			logger.Success("連線已經清空")
+		}
 
 		return nil
 	})
@@ -147,10 +159,11 @@ func (l *DozListener) Wait() error {
 }
 
 // NewDozListner 建立新的監聽
-func NewDozListner(l net.Listener, poolSize int) *DozListener {
+func NewDozListner(l net.Listener, poolSize int, debug bool) *DozListener {
 	dl := &DozListener{
 		Listener: l,
 		errCh:    make(chan error),
+		debug:    debug,
 	}
 
 	if poolSize == 0 {

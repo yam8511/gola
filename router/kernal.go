@@ -12,9 +12,6 @@ import (
 func RouteProvider(r *gin.Engine) {
 	Conf := bootstrap.GetAppConf()
 
-	// 設置Middleware
-	middleware.SetupMiddlewares(Conf.App.Site)
-
 	// 全域Middleware載入
 	r.Use(middleware.GlobalMiddlewares()...)
 

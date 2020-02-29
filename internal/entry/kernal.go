@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"gola/app/console"
 	"gola/internal/bootstrap"
+	"gola/internal/logger"
 	"gola/internal/schedule"
 	"gola/internal/server"
+	"log"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func usage(exitCode int, extraMessage ...interface{}) {
@@ -45,9 +49,9 @@ func usage(exitCode int, extraMessage ...interface{}) {
 
 	%s
 
-	📌  舉例： APP_ENV=local ./app server
-	📌  舉例： APP_ENV=local ./app schedule
-	📌  舉例： APP_ENV=local ./app run %s
+	📌  舉例： APP_ENV=local ./gola server
+	📌  舉例： APP_ENV=local ./gola schedule
+	📌  舉例： APP_ENV=local ./gola run %s
 
 `, builder.String(), commandName)
 
@@ -60,23 +64,25 @@ func usage(exitCode int, extraMessage ...interface{}) {
 
 // Run 執行CronJob的 Command Line
 func Run(payload ...func()) {
-	if bootstrap.GetAppEnv() == "" {
-		usage(0)
-	} else {
-		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_ROOT: %s", bootstrap.GetAppRoot()))
-		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_ENV: %s", bootstrap.GetAppEnv()))
-		bootstrap.WriteLog("INFO", fmt.Sprintf("⚙  APP_SITE: %s", bootstrap.GetAppSite()))
-	}
+	log.Println(color.HiCyanString("⚙  APP_ROOT: %s", bootstrap.GetAppRoot()))
+	log.Println(color.HiCyanString("⚙  APP_ENV: %s", bootstrap.GetAppEnv()))
+	log.Println(color.HiCyanString("⚙  APP_SITE: %s", bootstrap.GetAppSite()))
+
 	args := os.Args
 	if len(args) < 2 {
 		usage(0)
 		return
 	}
 
+	// 載入設定檔
 	bootstrap.LoadConfig()
 
 	// 設定優雅結束程序
 	bootstrap.SetupGracefulSignal()
+
+	for _, fn := range payload {
+		fn()
+	}
 
 	mainCmd := args[1]
 	switch mainCmd {
@@ -99,22 +105,22 @@ func Run(payload ...func()) {
 		}
 
 		go func() {
+			<-bootstrap.GracefulDown()
+			logger.Warn(`🚦  收到第一次訊號囉，若再收到一次，將會強制結束 🚦`)
 			<-bootstrap.WaitOnceSignal()
-			bootstrap.WriteLog("WARNING", `🚦  收到訊號囉，再收到一次，強制結束~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 🚦`)
-			<-bootstrap.WaitOnceSignal()
-			bootstrap.WriteLog("WARNING", `🚦  收到第二次訊號，強制結束~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 🚦`)
+			logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
 			os.Exit(2)
 		}()
 
 		err := cmd.Run()
 		if err != nil {
-			bootstrap.WriteLog("ERROR", fmt.Sprintf("背景[%s] (%s) 運行時，發生錯誤！ ---> %s\n", commandName, cmd.Description, err.Error()))
+			logger.Danger(fmt.Sprintf("指令[%s] (%s) 運行時，發生錯誤！ ---> %s\n", commandName, cmd.Description, err.Error()))
 			os.Exit(1)
 		}
-		bootstrap.WriteLog("INFO", fmt.Sprintf("背景[%s] (%s) 運行結束\n", commandName, cmd.Description))
+		logger.Success(fmt.Sprintf("背景[%s] (%s) 運行結束\n", commandName, cmd.Description))
 
 	default:
-		bootstrap.WriteLog("WARNING", fmt.Sprintf("Unknown Command : %s", strings.Join(args, " ")))
+		logger.Warn(fmt.Sprintf("Unknown Command : %s", strings.Join(args, " ")))
 		usage(1)
 	}
 }

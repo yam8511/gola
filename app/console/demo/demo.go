@@ -1,11 +1,13 @@
 package demo
 
 import (
-	"gola/internal/bootstrap"
+	"gola/internal/logger"
+	"time"
 )
 
 // Run 背景
 func Run() error {
-	bootstrap.WriteLog("INFO", "Demo Job")
+	logger.Info("Demo Job")
+	time.Sleep(time.Second * 5)
 	return nil
 }

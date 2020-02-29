@@ -1,4 +1,4 @@
-package datastruct
+package response
 
 // API 格式
 type API struct {
