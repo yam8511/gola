@@ -1,0 +1,49 @@
+# /**
+#  * ============================
+#  * 背景清單
+#  * ============================
+#  * 請依照背景資訊登記在下面的清單
+#  *
+#  * 背景資訊格式
+#  * name - 背景名稱
+#  * spec - 執行時間週期
+#  * cmd  - 執行指令，請參照 app/console/kernal.go
+#  * overlapping - 是否可重複執行
+#  * note - 背景說明
+#  *
+#  */
+
+[[job]]
+name = "demo"
+spec = "0 */10 * * * *"
+cmd = "demo"
+overlapping = false
+note = "只是Demo"
+
+[[job]]
+name = "send_audit_email"
+spec = "0 * 8-17 * * *"
+cmd = "send_audit_email"
+overlapping = false
+note = "寄送稽核通知案件"
+
+[[job]]
+name = "sync_site_data"
+spec = "0 0 * * * *"
+cmd = "sync_site_data"
+overlapping = false
+note = "同步新舊系統的工地資料"
+
+[[job]]
+name = "check_expired_punch"
+spec = "0 0 1 * * *"
+cmd = "check_expired_punch"
+overlapping = false
+note = "檢查過期的缺失"
+
+[[job]]
+name = "sync_user_data"
+spec = "0 0 * * * *"
+cmd = "sync_user_data"
+overlapping = false
+note = "同步新舊系統的使用者資料"
