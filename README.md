@@ -1,51 +1,73 @@
-# gola
+# GoLa
+
+- Werewolf 狼人殺
+- Crimnal Dance 犯人在跳舞
 
 ---
 
-## 啟動本機開發的資料庫
+## 啟動資料庫
 
-    ```shell
-    # 啟動開發用的DB
-    $ docker-compose up -d db
-    ```
+```shell
+make setup
 
-    ps. 啟動DB之後，稍等一下DB程序啟動完畢
-    ps. 看http://127.0.0.1:8080，手動調整DB的編碼，改成 utf8_general_ci
+# 開瀏覽器
+# Mysql介面 http://127.0.0.1:8080
+# Redis介面 http://127.0.0.1:8081
+```
 
----
 
-## 編譯程式
+## 產生API文件
 
-- 方法1. 啟動/關閉開發用的容器
+```shell
+make docs
+```
 
-    ```shell
-    # 啟動容器
-    $ docker-compose up web-dev
-    # 關閉所有容器
-    $ docker-compose down
-    ```
+## 產生vendor
 
-- 方法2. 手動編譯檔案
+```shell
+make clean && make vendor
+```
 
-    ```shell
-    # 使用 golang v1.11 版本
-    # 啟用 go mod (內建)
-    $ export GO111MODULE=on
-    # 編譯程式
-    $ go build -o server
-    # 啟動 server
-    $ APP_ENV=local ./server
-    ```
+## 單元測試
 
-- 方法3. 使用容器編譯，手動啟動server
-
-    ```shell
-    # 編譯程式
-    $ docker-compose up build
-    # 啟動 server
-    $ APP_ENV=local ./server
-    ```
+```shell
+make test FLAG=-mod,vendor,-v
+```
 
 ---
 
-## [查看頁面](http://127.0.0.1:8000)
+## 執行程式
+
+```shell
+# 編譯程式
+go build -o gola .
+
+# 啟動伺服器
+./gola server
+
+# 啟動排程
+./gola schedule
+
+# 執行指令
+# ./gola run [自定義指令]
+./gola run demo
+```
+
+---
+
+## 查看頁面
+
+- [GraphQL Demo](http://127.0.0.1:8000/graphql)
+- [狼人殺](http://127.0.0.1:8000/wf)
+- [犯人在跳舞](http://127.0.0.1:8000/cd)
+
+---
+
+## 部署程式
+
+```shell
+docker-compose build web
+docker-compose push web
+# 需登入 heroku
+heroku container:release web -a golar
+```

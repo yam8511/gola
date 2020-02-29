@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gola/internal/database"
 	"time"
 )
 
@@ -13,4 +14,17 @@ type User struct {
 	Enable    bool   // 啟用狀態
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+// TableName 資料表
+func (m User) TableName() string {
+	return TableUser
+}
+
+// Database 資料庫
+func (m User) Database(master bool) database.Type {
+	if master {
+		return DBMaster
+	}
+	return DBSlave
 }

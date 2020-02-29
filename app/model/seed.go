@@ -2,15 +2,13 @@ package model
 
 import (
 	"fmt"
-	"gola/internal/helper"
+	"gola/app/common/helper"
 	"strings"
 	"time"
-
-	"github.com/jinzhu/gorm"
 )
 
 // UserSeed 使用者的種子
-func UserSeed(db *gorm.DB) (err error) {
+func UserSeed() (err error) {
 	users := []User{
 		{Username: "Admin", Name: "Admin", Password: "123456", Enable: true},
 	}
@@ -20,6 +18,11 @@ func UserSeed(db *gorm.DB) (err error) {
 	for i := range users {
 		user := &users[i]
 		userID = append(userID, user.ID)
+	}
+
+	db, err := NewModelDB(User{}, true)
+	if err != nil {
+		return err
 	}
 
 	// 先撈取目前資料表中已有的使用者
@@ -44,7 +47,7 @@ func UserSeed(db *gorm.DB) (err error) {
 	needCreateUsers := []User{}
 	for i := range users {
 		user := &users[i]
-		if !helper.InArrayInt64(userID, user.ID) {
+		if !helper.InSliceInt64(userID, user.ID) {
 			needCreateUsers = append(needCreateUsers, *user)
 		}
 	}

@@ -1,45 +1,31 @@
 package middleware
 
 import (
-	dataStruct "gola/app/common/data_struct"
-	errorCode "gola/app/common/error_code"
+	errorCode "gola/app/common/errorcode"
+	"gola/app/common/response"
 	google "gola/app/service/google"
-	"gola/internal/bootstrap"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 // 驗證舊系統登入
-func checkOldSystemLogin(c *gin.Context) {
+func checkGoogleLogin(c *gin.Context) {
 	sid, err := c.Cookie("sid")
 	if err != nil {
-		apiErr := errorCode.GetAPIError(1000)
-		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
-		})
+		apiErr := errorCode.GetAPIError("no_cookie", nil)
+		response.FailedNow(c, apiErr)
 		return
 	}
 
 	isLogin, apiErr := google.CheckLogin(sid)
-	if apiErr.ErrorCode != 0 {
-		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
-		})
+	if apiErr != nil {
+		response.FailedNow(c, apiErr)
 		return
 	}
 
 	if !isLogin {
-		bootstrap.WriteLog("INFO", "登入失敗！")
-		apiErr := errorCode.GetAPIError(1004)
-		c.AbortWithStatusJSON(http.StatusOK, dataStruct.API{
-			ErrorCode: apiErr.ErrorCode,
-			ErrorText: apiErr.ErrorText,
-		})
-	} else {
-		bootstrap.WriteLog("INFO", "登入成功！")
+		apiErr := errorCode.GetAPIError("not_login", nil)
+		response.FailedNow(c, apiErr)
 	}
 
 	return
