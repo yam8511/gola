@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -48,4 +49,12 @@ func GetAppConf() *Config {
 		return conf
 	}
 	return LoadConfig()
+}
+
+// FatalLoad 載入錯誤
+func FatalLoad(filename string, err error) {
+	log.Fatalf(
+		"〖ERROR〗❌ 載入 %s 失敗： %s ❌\n",
+		color.HiYellowString(filename), color.HiRedString(err.Error()),
+	)
 }

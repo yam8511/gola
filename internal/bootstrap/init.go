@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -11,12 +11,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/viper"
 )
-
-// 全域設定變數
-var conf *Config
-
-// Default 預設值
-const Default = "default"
 
 // LoadConfig 載入 config
 func LoadConfig() *Config {
@@ -33,12 +27,11 @@ func LoadConfig() *Config {
 	// 先讀取預設檔
 	vip.SetConfigName(Default)
 	if err := vip.ReadInConfig(); err == nil {
+		filename := vip.ConfigFileUsed()
 		if err := vip.Unmarshal(&conf); err != nil {
-			filename := vip.ConfigFileUsed()
-			log.Fatalf(
-				"〖ERROR〗❌ 載入 %s 錯誤： %s ❌\n",
-				color.HiYellowString(filename), color.HiRedString(err.Error()),
-			)
+			FatalLoad(filename, err)
+		} else {
+			log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
 		}
 
 		hasLoad = true
@@ -48,12 +41,12 @@ func LoadConfig() *Config {
 	if appSite != Default {
 		vip.SetConfigName(appSite)
 		if err := vip.ReadInConfig(); err == nil {
+			filename := vip.ConfigFileUsed()
 			if err := vip.Unmarshal(&conf); err != nil {
 				filename := vip.ConfigFileUsed()
-				log.Fatalf(
-					"〖ERROR〗❌ 載入 %s 錯誤： %s ❌\n",
-					color.HiYellowString(filename), color.HiRedString(err.Error()),
-				)
+				FatalLoad(filename, err)
+			} else {
+				log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
 			}
 			hasLoad = true
 		}
@@ -61,9 +54,7 @@ func LoadConfig() *Config {
 
 	// 假如都沒有載入檔案，噴錯誤
 	if !hasLoad {
-		log.Fatalln(color.HiYellowString(
-			"〖ERROR〗❌ Config 沒有載入成功，請確認設定檔是否存在! ❌",
-		))
+		FatalLoad("Config", errors.New("請確認『設定檔』是否存在！"))
 	}
 
 	vip.SetDefault("bot.token", conf.Bot.Token)
@@ -76,6 +67,16 @@ func LoadConfig() *Config {
 	}
 
 	return conf
+}
+
+// SetRunMode 執行模式
+func SetRunMode(mode Mode) {
+	GetAppConf().mode = mode
+}
+
+// RunMode 目前執行模式
+func RunMode() Mode {
+	return GetAppConf().mode
 }
 
 var sig chan os.Signal
@@ -102,14 +103,4 @@ func WaitOnceSignal() (sig chan os.Signal) {
 	sig = make(chan os.Signal)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	return
-}
-
-// WaitFunc 等待Func完成
-func WaitFunc(fn func()) context.Context {
-	ctx, finish := context.WithCancel(context.Background())
-	go func() {
-		fn()
-		finish()
-	}()
-	return ctx
 }

@@ -1,10 +1,9 @@
 package schedule
 
 import (
-	"fmt"
+	"errors"
 	"gola/internal/bootstrap"
-	"gola/internal/logger"
-	"os"
+	"log"
 
 	"github.com/fatih/color"
 	"github.com/spf13/viper"
@@ -27,20 +26,15 @@ func loadSchedule() []*CronJob {
 	vip.AddConfigPath(appRoot + "/config/schedule/" + appEnv)
 
 	hasLoad := false
-	fatal := func(err error) {
-		logger.Error(err)
-		os.Exit(1)
-	}
 
 	vip.SetConfigName(bootstrap.Default)
 	if err := vip.ReadInConfig(); err == nil {
 		var defaultJobsConf crontabConf
+		filename := vip.ConfigFileUsed()
 		if err := vip.Unmarshal(&defaultJobsConf); err != nil {
-			filename := vip.ConfigFileUsed()
-			fatal(fmt.Errorf(
-				"載入 %s 錯誤： %s",
-				color.HiYellowString(filename), err.Error(),
-			))
+			bootstrap.FatalLoad(filename, err)
+		} else {
+			log.Println(color.HiCyanString("〖INFO〗讀取排程設定: " + filename))
 		}
 
 		jobs = append(jobs, defaultJobsConf.Jobs...)
@@ -51,12 +45,11 @@ func loadSchedule() []*CronJob {
 		vip.SetConfigName(appSite)
 		if err := vip.ReadInConfig(); err == nil {
 			var siteJobsConf crontabConf
+			filename := vip.ConfigFileUsed()
 			if err := vip.Unmarshal(&siteJobsConf); err != nil {
-				filename := vip.ConfigFileUsed()
-				fatal(fmt.Errorf(
-					"載入 %s 錯誤： %s",
-					color.HiYellowString(filename), err.Error(),
-				))
+				bootstrap.FatalLoad(filename, err)
+			} else {
+				log.Println(color.HiCyanString("〖INFO〗讀取排程設定: " + filename))
 			}
 
 			jobs = append(jobs, siteJobsConf.Jobs...)
@@ -66,7 +59,7 @@ func loadSchedule() []*CronJob {
 
 	// 假如都沒有載入檔案，噴錯誤
 	if !hasLoad {
-		fatal(fmt.Errorf("Schedule 沒有載入成功，請確認設定檔是否存在！"))
+		bootstrap.FatalLoad("Schedule", errors.New("請確認『排程設定』是否存在！"))
 	}
 
 	// 檢查背景是否有重複或是nil的
@@ -75,7 +68,7 @@ func loadSchedule() []*CronJob {
 		if job != nil {
 			_, ok := checkJob[job.Name]
 			if ok {
-				fatal(fmt.Errorf("Schedule 發現有重複定義的背景，請確認！ job.name只能唯一"))
+				bootstrap.FatalLoad("Schedule", errors.New("發現有重複定義的背景，請確認！ job.name只能唯一"))
 			}
 			checkJob[job.Name] = job
 		}

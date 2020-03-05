@@ -45,12 +45,13 @@ func Run() {
 	bg.Stop()
 
 	select {
-	case <-bootstrap.WaitFunc(func() {
+	case <-bootstrap.SingleFlightChan("Schedule.Jobs.Wait", func() (interface{}, error) {
 		// 等待背景結束
 		for _, job := range jobs {
 			job.Wait()
 		}
-	}).Done():
+		return nil, nil
+	}):
 	case <-bootstrap.WaitOnceSignal():
 		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
 		os.Exit(2)

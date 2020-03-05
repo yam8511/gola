@@ -33,10 +33,13 @@ func usage(exitCode int, extraMessage ...interface{}) {
 	需傳入以下環境變數：
 
 	⚙  APP_ENV : 專案環境
-		✏ docker 容器開發
-		✏ local 本機開發
-		✏ qatest 測試
-		✏ prod 正式
+		✏ default	預設值
+		✏ docker	容器開發
+		✏ local		本機開發
+		✏ prod		正式
+
+	⚙  APP_SITE : 專案端口
+		✏ default	預設值
 
 	--------------
 
@@ -49,9 +52,9 @@ func usage(exitCode int, extraMessage ...interface{}) {
 
 	%s
 
-	📌  舉例： APP_ENV=local ./gola server
-	📌  舉例： APP_ENV=local ./gola schedule
-	📌  舉例： APP_ENV=local ./gola run %s
+	📌  舉例： APP_ENV=local APP_SITE=default ./gola server
+	📌  舉例： APP_ENV=local APP_SITE=default ./gola schedule
+	📌  舉例： APP_ENV=local APP_SITE=default ./gola run %s
 
 `, builder.String(), commandName)
 
@@ -87,10 +90,13 @@ func Run(payload ...func()) {
 	mainCmd := args[1]
 	switch mainCmd {
 	case "server":
+		bootstrap.SetRunMode(bootstrap.ServerMode)
 		server.Run()
 	case "schedule":
+		bootstrap.SetRunMode(bootstrap.CommandMode)
 		schedule.Run()
 	case "run":
+		bootstrap.SetRunMode(bootstrap.CommandMode)
 		if len(args) < 3 {
 			usage(1, "請輸入欲執行命令")
 			return

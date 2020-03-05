@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
-	"math"
 	"net"
 	"os"
 	"sync"
@@ -158,8 +157,8 @@ func (l *DozListener) Wait() error {
 	return err
 }
 
-// NewDozListner 建立新的監聽
-func NewDozListner(l net.Listener, poolSize int, debug bool) *DozListener {
+// NewDozListener 建立新的監聽
+func NewDozListener(l net.Listener, poolSize int, debug bool) *DozListener {
 	dl := &DozListener{
 		Listener: l,
 		errCh:    make(chan error),
@@ -167,7 +166,7 @@ func NewDozListner(l net.Listener, poolSize int, debug bool) *DozListener {
 	}
 
 	if poolSize == 0 {
-		poolSize = math.MaxInt64
+		poolSize = 1000000 // 預設100萬
 	}
 	dl.buf = make(chan struct{}, poolSize)
 	return dl

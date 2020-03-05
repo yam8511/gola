@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // CheckLogin 確認登入
@@ -30,7 +31,11 @@ func CheckLogin(sid string) (isLogin bool, apiErr errorCode.Error) {
 		Value: sid,
 	})
 
-	res, err := http.DefaultClient.Do(req)
+	client := http.Client{}
+	if bootstrap.RunMode() == bootstrap.ServerMode {
+		client.Timeout = time.Second * 30
+	}
+	res, err := client.Do(req)
 	if err != nil {
 		apiErr = errorCode.GetAPIError("do_request_err", err)
 		logger.Danger("CheckLogin: 連線請求失敗, " + err.Error())

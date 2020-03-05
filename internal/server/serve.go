@@ -70,7 +70,7 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 	}
 
 	conf := bootstrap.GetAppConf()
-	dl := NewDozListner(l, conf.Server.MaxConn, conf.App.Debug)
+	dl := NewDozListener(l, conf.Server.MaxConn, conf.App.Debug)
 
 	go func() {
 		// err := http.Serve(l, server)
@@ -87,9 +87,10 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 	dl.Close()
 
 	select {
-	case <-bootstrap.WaitFunc(func() {
+	case <-bootstrap.SingleFlightChan("Server.DozListener.Wait", func() (interface{}, error) {
 		dl.Wait()
-	}).Done():
+		return nil, nil
+	}):
 	case <-bootstrap.WaitOnceSignal():
 		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
 		os.Exit(2)

@@ -3,12 +3,33 @@
 - Werewolf 狼人殺
 - Crimnal Dance 犯人在跳舞
 
----
-
 ## 啟動資料庫
 
 ```shell
 make setup
+
+# 開瀏覽器
+# Mysql介面 http://127.0.0.1:8080
+# Redis介面 http://127.0.0.1:8081
+```
+
+
+## 產生API文件
+
+```shell
+make docs
+```
+
+## 產生vendor
+
+```shell
+make clean && make vendor
+```
+
+## 單元測試
+
+```shell
+make test FLAG=-mod,vendor,-v
 ```
 
 ---

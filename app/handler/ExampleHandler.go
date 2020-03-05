@@ -49,7 +49,7 @@ func Config(c *gin.Context) {
 	}
 
 	if !req.Level.IsValid() {
-		apiErr := errorcode.GetAPIError("param_required", nil)
+		apiErr := errorcode.GetAPIError("param_invalid", nil)
 		response.Failed(c, apiErr)
 		return
 	}

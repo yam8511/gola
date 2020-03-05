@@ -2,6 +2,7 @@ package bootstrap
 
 // Config 型態
 type Config struct {
+	mode      Mode         // 程序執行模式
 	App       AppConf      `mapstructure:"app"`
 	Server    ServerConf   `mapstructure:"server"`
 	Log       LogConf      `mapstructure:"log"`
