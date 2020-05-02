@@ -2,15 +2,18 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [action]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - uses: docker/build-push-action@v1
+      - name: Build and Push the Docker image
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: yam8511/gola
+          build_args: ENTER=server,BOT_TOKEN=${{ secrets.BOT_TOKEN }},${{ secrets.BOT_CHAT_ID }}
+          tags: latest
