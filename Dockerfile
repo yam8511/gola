@@ -10,6 +10,7 @@ COPY . /app
 WORKDIR /app
 
 # 進行編譯
+RUN go mod vendor
 RUN go build -mod vendor -o gola
 
 
