@@ -12,6 +12,12 @@
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <style>
+        .bold {
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
@@ -29,8 +35,10 @@
                 <label for="n">*股數</label>
             </div>
             <div class="input-field col s6 m3">
-                <input id="disCount" type="number" step="any" class="validate" v-model="disCount">
-                <label for="disCount">手續費折扣</label>
+                <select id="disCount" v-model="disCount">
+                    <option v-for="opt in disOptions" :value="opt.value">{{ opt.text }}</option>
+                </select>
+                <label for="disCount">手續費折扣 {{disCount}}</label>
             </div>
             <div class="input-field col s6 m3">
                 <input id="gain" type="number" step="any" class="validate" v-model="gain">
@@ -43,9 +51,13 @@
             <hr>
             <ul class="collection">
                 <li class="collection-item" v-for="r of record">
-                    買入價錢: {{ r.inP }}, 股數: {{ r.n }}, 手續折扣: {{ r.disCount }}折<br />
-                    買入手續費: {{ r.buyTax }}, 賣出手續費: {{ r.sellTax }}, 交易稅: {{ r.tradeTax }}<br />
-                    賣出價錢: {{ r.outP }}, 可賺: {{ r.gain }}
+                    買入價錢: {{ r.inP }},<br />
+                    股數: {{ r.n }},<br />
+                    手續折扣: {{ r.disCount.text }}<br />
+                    買入手續費: {{ r.buyTax }}, 賣出手續費: {{ r.sellTax }},<br />
+                    交易稅: {{ r.tradeTax }}<br />
+                    賣出價錢: {{ r.outP }}, <br />
+                    可賺: {{ r.gain }}
                 </li>
             </ul>
         </div>
@@ -65,6 +77,28 @@
                 inP: 0,
                 n: 1000,
                 disCount: 100,
+                disOptions: [
+                    { value: 100, text: '不知道，沒打折吧' },
+                    { value: 0, text: '不用手續費' },
+                    { value: 95, text: '95折' },
+                    { value: 90, text: '9折' },
+                    { value: 85, text: '85折' },
+                    { value: 80, text: '8折' },
+                    { value: 75, text: '75折' },
+                    { value: 70, text: '7折' },
+                    { value: 65, text: '65折' },
+                    { value: 60, text: '6折' },
+                    { value: 55, text: '55折' },
+                    { value: 50, text: '5折' },
+                    { value: 45, text: '45折' },
+                    { value: 40, text: '4折' },
+                    { value: 35, text: '35折' },
+                    { value: 30, text: '3折' },
+                    { value: 25, text: '25折' },
+                    { value: 20, text: '2折' },
+                    { value: 15, text: '15折' },
+                    { value: 10, text: '1折' },
+                ],
                 gain: 0,
                 outP: 0,
                 record: [],
@@ -114,12 +148,47 @@
                     this.tradeTax = Number((this.outP * this.n * this.trade).toFixed(2))
                 },
                 rec() {
+                    let missing = []
+                    let price = parseFloat(this.inP)
+                    let number = parseFloat(this.n)
+                    let gain = parseFloat(this.gain)
+                    gain = isNaN(gain) ? 0 : gain
+
+                    if (isNaN(price)) {
+                        document.getElementById('inP').focus()
+                    } else if (isNaN(number)) {
+                        document.getElementById('n').focus()
+                    }
+
+                    if (isNaN(price)) {
+                        missing.push('股票買入價格')
+                    }
+
+                    if (isNaN(number)) {
+                        missing.push('股數')
+                    }
+
+                    if (missing.length > 0) {
+                        M.toast({
+                            html: `請填入 ${missing.join(',')}`,
+                            classes: 'bold blue text-darken-2'
+                        })
+                        return
+                    }
+
+                    disOpt = {}
+                    for (const opt of this.disOptions) {
+                        if (opt.value == this.disCount) {
+                            disOpt = { ...opt }
+                        }
+                    }
+
                     const obj = {
-                        inP: this.inP,
+                        inP: price.toFixed(2),
                         outP: this.outP,
-                        gain: this.gain,
-                        n: this.n,
-                        disCount: this.disCount,
+                        gain: gain,
+                        n: number,
+                        disCount: disOpt,
                         buyTax: this.buyTax,
                         sellTax: this.sellTax,
                         tradeTax: this.tradeTax
@@ -139,7 +208,7 @@
             watch: {
                 inP(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p) && v !== '') {
+                    if (isNaN(p)) {
                         return
                     }
                     p = Number(p.toFixed(2))
@@ -148,25 +217,26 @@
                 },
                 n(v) {
                     let p = parseInt(v)
-                    if (isNaN(p) || v === '') {
+                    if (isNaN(p)) {
                         return
                     }
 
                     this.cal()
-                    localStorage.setItem('n', v)
+                    localStorage.setItem('n', p)
                 },
                 disCount(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p) || v === '') {
+                    if (isNaN(p)) {
                         return
                     }
+
                     p = Number(p.toFixed(2))
                     this.cal()
                     localStorage.setItem('disCount', p)
                 },
                 gain(v) {
                     let p = parseFloat(v)
-                    if (isNaN(p) || v === '') {
+                    if (isNaN(p)) {
                         return
                     }
                     p = Number(p.toFixed(2))
@@ -175,9 +245,6 @@
                 },
             },
             mounted() {
-                var elems = document.querySelectorAll('.fixed-action-btn');
-                var instances = M.FloatingActionButton.init(elems);
-
                 try {
                     this.record = JSON.parse(localStorage.getItem("stock"))
                     if (!(this.record instanceof Array)) {
@@ -189,8 +256,14 @@
 
                 this.inP = localStorage.getItem('inP')
                 this.n = localStorage.getItem('n')
-                this.disCount = localStorage.getItem('disCount')
+                this.disCount = Number(localStorage.getItem('disCount'))
+                this.disCount = this.disCount == -1 ? 100 : this.disCount
                 this.gain = localStorage.getItem('gain')
+
+                var elems = document.querySelectorAll('.fixed-action-btn');
+                var instances = M.FloatingActionButton.init(elems);
+                var elems = document.querySelectorAll('select');
+                var instances = M.FormSelect.init(elems);
             }
         })
     </script>
