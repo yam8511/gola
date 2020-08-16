@@ -1,7 +1,16 @@
 package bootstrap
 
 // 全域設定變數
-var conf *Config
+var defaultConf = Config{
+	mode: CommandMode,
+	Log: LogConf{
+		Mode:   "std+file",
+		Prefix: "GOLA",
+	},
+}
+
+// 執行模式
+const modeKey = "_mode"
 
 // Default 預設值
 const Default = "default"

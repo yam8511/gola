@@ -2,7 +2,7 @@ package entry
 
 import (
 	"fmt"
-	"gola/app/console"
+	"gola/cmd/console"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"gola/internal/schedule"
@@ -24,7 +24,7 @@ func usage(exitCode int, extraMessage ...interface{}) {
 	for cmd := range commands {
 		command := commands[cmd]
 		commandName = cmd
-		builder.WriteString(fmt.Sprintf("		✏ %s %s\n", cmd, command.Description))
+		builder.WriteString(fmt.Sprintf("		✏ %s %s\n", cmd, command.Short))
 	}
 
 	fmt.Printf(`
@@ -118,12 +118,12 @@ func Run(payload ...func()) {
 			os.Exit(2)
 		}()
 
-		err := cmd.Run()
+		err := cmd.Execute()
 		if err != nil {
-			logger.Danger(fmt.Sprintf("指令[%s] (%s) 運行時，發生錯誤！ ---> %s\n", commandName, cmd.Description, err.Error()))
+			logger.Danger(fmt.Sprintf("指令[%s] (%s) 運行時，發生錯誤！ ---> %s\n", commandName, cmd.Short, err.Error()))
 			os.Exit(1)
 		}
-		logger.Success(fmt.Sprintf("背景[%s] (%s) 運行結束\n", commandName, cmd.Description))
+		logger.Success(fmt.Sprintf("背景[%s] (%s) 運行結束\n", commandName, cmd.Short))
 
 	default:
 		logger.Warn(fmt.Sprintf("Unknown Command : %s", strings.Join(args, " ")))

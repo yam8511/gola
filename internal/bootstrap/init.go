@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -12,42 +13,64 @@ import (
 	"github.com/spf13/viper"
 )
 
+var defaultVIP *viper.Viper
+var appVIP *viper.Viper
+
 // LoadConfig 載入 config
-func LoadConfig() *Config {
+func LoadConfig() {
 	appRoot := GetAppRoot()
 	appEnv := GetAppEnv()
 	appSite := GetAppSite()
-	vip := viper.New()
-	vip.AutomaticEnv()
-	vip.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	vip.AddConfigPath(appRoot + "/config/project/" + appEnv)
 
+	replacer := strings.NewReplacer(
+		".", "_",
+		"SERVER.PORT", "PORT",
+	)
+	configDir := filepath.Join(appRoot, "config", "project", appEnv)
+	conf := defaultConf
 	hasLoad := false
 
+	defaultVIP = viper.New()
+	defaultVIP.AutomaticEnv()
+	defaultVIP.SetEnvKeyReplacer(replacer)
+	defaultVIP.AddConfigPath(configDir)
+	defaultVIP.SetConfigType("toml")
+	defaultVIP.SetConfigName(Default)
+	defaultVIP.WatchConfig()
+
+	appVIP = viper.New()
+	appVIP.AutomaticEnv()
+	appVIP.SetEnvKeyReplacer(replacer)
+	appVIP.AddConfigPath(configDir)
+	appVIP.SetConfigType("toml")
+	appVIP.SetConfigName(appSite)
+	appVIP.WatchConfig()
+
 	// 先讀取預設檔
-	vip.SetConfigName(Default)
-	if err := vip.ReadInConfig(); err == nil {
-		filename := vip.ConfigFileUsed()
-		if err := vip.Unmarshal(&conf); err != nil {
+	if err := defaultVIP.ReadInConfig(); err == nil {
+		filename := defaultVIP.ConfigFileUsed()
+		if err := defaultVIP.Unmarshal(&conf); err != nil {
 			FatalLoad(filename, err)
 		} else {
 			log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
 		}
 
+		defaultVIP.WatchConfig()
 		hasLoad = true
 	}
 
 	// 再讀取指定Site檔
 	if appSite != Default {
-		vip.SetConfigName(appSite)
-		if err := vip.ReadInConfig(); err == nil {
-			filename := vip.ConfigFileUsed()
-			if err := vip.Unmarshal(&conf); err != nil {
-				filename := vip.ConfigFileUsed()
+		if err := appVIP.ReadInConfig(); err == nil {
+			filename := appVIP.ConfigFileUsed()
+			if err := appVIP.Unmarshal(&conf); err != nil {
+				filename := appVIP.ConfigFileUsed()
 				FatalLoad(filename, err)
 			} else {
 				log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
 			}
+
+			appVIP.WatchConfig()
 			hasLoad = true
 		}
 	}
@@ -57,21 +80,22 @@ func LoadConfig() *Config {
 		FatalLoad("Config", errors.New("請確認『設定檔』是否存在！"))
 	}
 
-	vip.SetDefault("bot.token", conf.Bot.Token)
-	vip.SetDefault("bot.chat_id", conf.Bot.ChatID)
-	vip.SetDefault("bot.debug", conf.Bot.Debug)
+	appVIP.Set("app.site", appSite)
+	appVIP.SetDefault("bot.token", conf.Bot.Token)
+	appVIP.SetDefault("bot.chat_id", conf.Bot.ChatID)
+	appVIP.SetDefault("bot.debug", conf.Bot.Debug)
 	conf.Bot = BotConf{
-		Token:  vip.GetString("bot.token"),
-		ChatID: vip.GetInt64("bot.chat_id"),
-		Debug:  vip.GetBool("bot.debug"),
+		Token:  appVIP.GetString("bot.token"),
+		ChatID: appVIP.GetInt64("bot.chat_id"),
+		Debug:  appVIP.GetBool("bot.debug"),
 	}
-
-	return conf
 }
 
 // SetRunMode 執行模式
 func SetRunMode(mode Mode) {
-	GetAppConf().mode = mode
+	if appVIP != nil {
+		appVIP.Set(modeKey, mode)
+	}
 }
 
 // RunMode 目前執行模式
@@ -86,7 +110,7 @@ var serverClose chan struct{}
 func SetupGracefulSignal() {
 	sig = make(chan os.Signal, 1)
 	serverClose = make(chan struct{})
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sig
 		close(serverClose)
@@ -100,7 +124,7 @@ func GracefulDown() <-chan struct{} {
 
 // WaitOnceSignal 等待一次的訊號
 func WaitOnceSignal() (sig chan os.Signal) {
-	sig = make(chan os.Signal)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	sig = make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	return
 }

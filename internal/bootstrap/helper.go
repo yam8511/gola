@@ -44,11 +44,22 @@ func GetAppRoot() string {
 }
 
 // GetAppConf 取專案的設定檔
-func GetAppConf() *Config {
-	if conf != nil {
-		return conf
+func GetAppConf() Config {
+	conf := defaultConf
+
+	if defaultVIP != nil {
+		_ = defaultVIP.Unmarshal(&conf)
 	}
-	return LoadConfig()
+
+	if appVIP != nil {
+		_ = appVIP.Unmarshal(&conf)
+		conf.mode = Mode(appVIP.GetString(modeKey))
+	}
+
+	if conf.mode != ServerMode {
+		conf.mode = CommandMode
+	}
+	return conf
 }
 
 // FatalLoad 載入錯誤

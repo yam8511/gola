@@ -2,31 +2,25 @@ package console
 
 import (
 	consoleDemo "gola/app/console/demo"
+
+	"github.com/spf13/cobra"
 )
 
 // 註冊指令
-var registeredCommand = map[string]Command{
-	"demo": {"範例指令", consoleDemo.Run},
+var registeredCommand = map[string]*cobra.Command{
+	"demo": {Use: "demo", Short: "範例指令", RunE: consoleDemo.Run},
 }
 
 // GetCommands 取所有註冊指令
-func GetCommands() map[string]Command {
+func GetCommands() map[string]*cobra.Command {
 	return registeredCommand
 }
 
 // GetCommand 取指定的註冊指令
-func GetCommand(name string) *Command {
+func GetCommand(name string) *cobra.Command {
 	cmd, ok := registeredCommand[name]
 	if !ok {
 		return nil
 	}
-	return &cmd
-}
-
-// Command 執行命令
-type Command struct {
-	// 指令描述
-	Description string
-	// 指令執行func
-	Run func() error
+	return cmd
 }

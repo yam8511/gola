@@ -13,10 +13,25 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package cmd
 
-import "gola/cmd"
+import (
+	"gola/app/console"
 
-func main() {
-	cmd.Execute()
+	"github.com/spf13/cobra"
+)
+
+// runCmd represents the run command
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "執行指令",
+	Long:  `執行 app/console/kernal.go 註冊的指令`,
+}
+
+func init() {
+	rootCmd.AddCommand(runCmd)
+
+	for _, cmd := range console.GetCommands() {
+		runCmd.AddCommand(cmd)
+	}
 }

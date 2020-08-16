@@ -3,6 +3,7 @@ package schedule
 import (
 	"fmt"
 	"gola/app/console"
+	"os"
 	"sync"
 	"time"
 
@@ -89,6 +90,6 @@ func (c *CronJob) Exec() error {
 	if cmd == nil {
 		return fmt.Errorf("指令尚未註冊: %s", c.Cmd)
 	}
-	err := cmd.Run()
-	return err
+
+	return cmd.RunE(cmd, os.Args)
 }
