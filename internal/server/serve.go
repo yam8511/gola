@@ -44,8 +44,8 @@ func CreateServer(router *gin.Engine) *http.Server {
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      router,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  31 * time.Second,
+		WriteTimeout: 31 * time.Second,
 		// MaxHeaderBytes: 1 << 20,
 	}
 
