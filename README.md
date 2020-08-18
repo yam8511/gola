@@ -3,14 +3,20 @@
 - Werewolf 狼人殺
 - Crimnal Dance 犯人在跳舞
 
-## 啟動資料庫
+## 啟動開發環境
 
 ```shell
-make setup
+make up
 
 # 開瀏覽器
 # Mysql介面 http://127.0.0.1:8080
 # Redis介面 http://127.0.0.1:8081
+```
+
+## 關閉開發環境
+
+```shell
+make down
 ```
 
 

@@ -9,7 +9,7 @@ services:
                 - ENTER=server
                 - BOT_TOKEN=${BOT_TOKEN}
                 - BOT_CHAT_ID=${BOT_CHAT_ID}
-        image: 127.0.0.1:5000/gola/web:latest
+        image: localhost:5000/gola/web:latest
         command: server
         restart: always
         ports:
@@ -30,7 +30,7 @@ services:
                 - ENTER=schedule
                 - BOT_TOKEN=${BOT_TOKEN}
                 - BOT_CHAT_ID=${BOT_CHAT_ID}
-        image: 127.0.0.1:5000/gola/web:latest
+        image: localhost:5000/gola/web:latest
         command: schedule
         restart: always
         environment:

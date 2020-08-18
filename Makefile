@@ -12,8 +12,13 @@ docs: # 產生swagger文檔
 	sed "s/^func init/func Init/" docs/docs.go > docs/gola.go
 	mv docs/gola.go docs/docs.go
 
-setup: # 開啟DB, Cache資料庫
-	docker-compose up -d db cache
+up: # 開啟DB, Cache資料庫
+	docker-compose up -d db cache || exit 0
+	./_setup/kind-with-registry.sh || exit 0
+
+down: # 關閉
+	docker-compose down
+	./_setup/down.sh
 
 # 單元測試
 test:

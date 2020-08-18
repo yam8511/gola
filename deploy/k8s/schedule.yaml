@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: gola-schedule
-          image: localhost:5000/golar/web:latest
+          image: localhost:5000/gola/web:latest
           command:
             - ./gola
           args:
