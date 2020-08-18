@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gola-server
+spec:
+  selector:
+    matchLabels:
+      app: gola-server
+  template:
+    metadata:
+      labels:
+        app: gola-server
+    spec:
+      containers:
+        - name: gola-server
+          image: localhost:5000/golar/web:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gola-schedule
+spec:
+  selector:
+    matchLabels:
+      app: gola-schedule
+  template:
+    metadata:
+      labels:
+        app: gola-schedule
+    spec:
+      containers:
+        - name: gola-schedule
+          image: localhost:5000/golar/web:latest
+          command:
+            - ./gola
+          args:
+            - schedule
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"

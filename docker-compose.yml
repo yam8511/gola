@@ -1,7 +1,6 @@
-version: '3'
+version: "3"
 
 services:
-
     # 網站服務
     web:
         build:
@@ -10,7 +9,7 @@ services:
                 - ENTER=server
                 - BOT_TOKEN=${BOT_TOKEN}
                 - BOT_CHAT_ID=${BOT_CHAT_ID}
-        image: registry.heroku.com/golar/web:latest
+        image: 127.0.0.1:5000/gola/web:latest
         command: server
         restart: always
         ports:
@@ -25,8 +24,13 @@ services:
 
     # 排程服務
     cronjob:
-        build: .
-        image: 127.0.0.1:5000/gola/web_${APP_ENV}
+        build:
+            context: .
+            args:
+                - ENTER=schedule
+                - BOT_TOKEN=${BOT_TOKEN}
+                - BOT_CHAT_ID=${BOT_CHAT_ID}
+        image: 127.0.0.1:5000/gola/web:latest
         command: schedule
         restart: always
         environment:
