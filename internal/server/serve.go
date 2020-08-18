@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
@@ -42,10 +43,10 @@ func CreateServer(router *gin.Engine) *http.Server {
 
 	// 建立 Server
 	server := &http.Server{
-		Addr:         addr,
-		Handler:      router,
-		ReadTimeout:  31 * time.Second,
-		WriteTimeout: 31 * time.Second,
+		Addr:        addr,
+		Handler:     router,
+		ReadTimeout: 30 * time.Second,
+		// WriteTimeout: 30 * time.Second,
 		// MaxHeaderBytes: 1 << 20,
 	}
 
@@ -69,12 +70,8 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 		return
 	}
 
-	conf := bootstrap.GetAppConf()
-	dl := NewDozListener(l, conf.Server.MaxConn, conf.App.Debug)
-
 	go func() {
-		// err := http.Serve(l, server)
-		err := server.Serve(dl)
+		err := server.Serve(l)
 		logger.Warn(fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
 	}()
 
@@ -82,14 +79,11 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 	defer logger.Success("🔥  Web Server 結束服務!🔥")
 
 	<-bootstrap.GracefulDown()
-	go server.SetKeepAlivesEnabled(false)
-	logger.Warn(fmt.Sprintf("🎃  接受訊號 🎃"))
-	dl.Close()
+	logger.Warn("🎃  接受訊號 🎃")
 
 	select {
 	case <-bootstrap.SingleFlightChan("Server.DozListener.Wait", func() (interface{}, error) {
-		dl.Wait()
-		return nil, nil
+		return nil, server.Shutdown(context.Background())
 	}):
 	case <-bootstrap.WaitOnceSignal():
 		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)
