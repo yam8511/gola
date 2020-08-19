@@ -1,3 +1,5 @@
+_setup/
+deploy/
 .vscode
 .git
 gola
