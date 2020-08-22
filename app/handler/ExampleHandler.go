@@ -6,6 +6,7 @@ import (
 	"gola/app/common/response"
 	"gola/app/common/swagger"
 	"gola/app/model"
+	"gola/grpc/greet"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"net/http"
@@ -20,7 +21,12 @@ import (
 // @Success 200 {string} string "hello world"
 // @Router /api/hello [get]
 func API(c *gin.Context) {
-	response.Success(c, "Hello World")
+	res, err := greet.Client(c.DefaultQuery("name", "world"))
+	if err != nil {
+		response.Failed(c, errorcode.GetAPIError("google_api_err", err))
+	} else {
+		response.Success(c, res.GetMessage())
+	}
 }
 
 // Config 範例

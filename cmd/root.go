@@ -66,6 +66,19 @@ func initConfig() {
 	bootstrap.SetupGracefulSignal()
 }
 
+func program(args ...string) string {
+	program := os.Args[0]
+	if strings.HasPrefix(program, "/var/") {
+		program = "go run ."
+	}
+
+	if len(args) > 0 {
+		program += " " + strings.Join(args, " ")
+	}
+
+	return program
+}
+
 func usage(extraMessage ...interface{}) string {
 	commands := console.GetCommands()
 
@@ -79,10 +92,7 @@ func usage(extraMessage ...interface{}) string {
 		builder.WriteString(fmt.Sprintf("		✏ %s %s\n", cmd, command.Short))
 	}
 
-	program := os.Args[0]
-	if strings.HasPrefix(program, "/var/") {
-		program = "go run ."
-	}
+	program := program()
 
 	return fmt.Sprintf(`
 	📖 環境說明 📖

@@ -52,7 +52,7 @@ func LoadConfig() {
 		if err := defaultVIP.Unmarshal(&conf); err != nil {
 			FatalLoad(filename, err)
 		} else {
-			log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
+			log.Println(color.HiCyanString("〖 GOLA 〗[INFO] 讀取設定檔: " + filename))
 		}
 
 		defaultVIP.WatchConfig()
@@ -67,7 +67,7 @@ func LoadConfig() {
 				filename := appVIP.ConfigFileUsed()
 				FatalLoad(filename, err)
 			} else {
-				log.Println(color.HiCyanString("〖INFO〗讀取設定檔: " + filename))
+				log.Println(color.HiCyanString("〖 GOLA 〗[INFO] 讀取設定檔: " + filename))
 			}
 
 			appVIP.WatchConfig()
@@ -84,11 +84,6 @@ func LoadConfig() {
 	appVIP.SetDefault("bot.token", conf.Bot.Token)
 	appVIP.SetDefault("bot.chat_id", conf.Bot.ChatID)
 	appVIP.SetDefault("bot.debug", conf.Bot.Debug)
-	conf.Bot = BotConf{
-		Token:  appVIP.GetString("bot.token"),
-		ChatID: appVIP.GetInt64("bot.chat_id"),
-		Debug:  appVIP.GetBool("bot.debug"),
-	}
 }
 
 // SetRunMode 執行模式

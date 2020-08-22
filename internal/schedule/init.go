@@ -2,10 +2,10 @@ package schedule
 
 import (
 	"errors"
+	"fmt"
 	"gola/internal/bootstrap"
-	"log"
+	"gola/internal/logger"
 
-	"github.com/fatih/color"
 	"github.com/spf13/viper"
 )
 
@@ -34,7 +34,7 @@ func loadSchedule() []*CronJob {
 		if err := vip.Unmarshal(&defaultJobsConf); err != nil {
 			bootstrap.FatalLoad(filename, err)
 		} else {
-			log.Println(color.HiCyanString("〖INFO〗讀取排程設定: " + filename))
+			logger.Info("讀取排程設定: " + filename)
 		}
 
 		jobs = append(jobs, defaultJobsConf.Jobs...)
@@ -49,7 +49,7 @@ func loadSchedule() []*CronJob {
 			if err := vip.Unmarshal(&siteJobsConf); err != nil {
 				bootstrap.FatalLoad(filename, err)
 			} else {
-				log.Println(color.HiCyanString("〖INFO〗讀取排程設定: " + filename))
+				logger.Info("讀取排程設定: " + filename)
 			}
 
 			jobs = append(jobs, siteJobsConf.Jobs...)
@@ -75,8 +75,18 @@ func loadSchedule() []*CronJob {
 	}
 
 	jobs = []*CronJob{}
-	for _, job := range checkJob {
-		jobs = append(jobs, job)
+
+	if len(checkJob) > 0 {
+		logger.Success("排程列表")
+		i := 0
+		for _, job := range checkJob {
+			i++
+			logger.Success(fmt.Sprintf(
+				"%d. %s [cmd=%s cron=%s] %s",
+				i, job.Name, job.Cmd, job.Spec, job.Note,
+			))
+			jobs = append(jobs, job)
+		}
 	}
 
 	return jobs

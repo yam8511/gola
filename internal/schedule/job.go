@@ -3,6 +3,7 @@ package schedule
 import (
 	"fmt"
 	"gola/app/console"
+	"gola/internal/logger"
 	"os"
 	"sync"
 	"time"
@@ -88,6 +89,7 @@ func (c *CronJob) Wait() {
 func (c *CronJob) Exec() error {
 	cmd := console.GetCommand(c.Cmd)
 	if cmd == nil {
+		logger.Warn("指令尚未註冊: " + c.Cmd)
 		return fmt.Errorf("指令尚未註冊: %s", c.Cmd)
 	}
 

@@ -2,14 +2,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gola-schedule
+  labels:
+    repo: gola
+    app: schedule
 spec:
+  replicas: 1
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: gola-schedule
+      repo: gola
+      app: schedule
   template:
     metadata:
       labels:
-        app: gola-schedule
+        repo: gola
+        app: schedule
     spec:
       containers:
         - name: gola-schedule
@@ -18,6 +25,12 @@ spec:
             - ./gola
           args:
             - schedule
+          env:
+            - name: APP_SITE
+              value: schedule
+          envFrom:
+            - configMapRef:
+                name: env-prod
           resources:
             limits:
               memory: "128Mi"

@@ -98,7 +98,13 @@ func writeLog(t level, text string) {
 	if prefix == "" {
 		prefix = "GOLA"
 	}
-	prefix = "〖 " + prefix + " 〗"
+
+	if conf.App.Site == "" {
+		prefix = "〖 " + prefix + " 〗"
+	} else {
+		prefix = "〖 " + prefix + " | " + conf.App.Site + " 〗"
+	}
+
 	if conf.Log.Mode == "file" || conf.Log.Mode == "std+file" {
 		w, err := createLogFile()
 		logger := log.New(w, prefix, log.LstdFlags|log.Lmsgprefix)
