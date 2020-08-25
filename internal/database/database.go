@@ -38,11 +38,17 @@ func GetPoolDB(t Type, conf *bootstrap.DatabaseConf) (*gorm.DB, error) {
 		return db, nil
 	}
 
+	mxDB.Lock()
+	db, ok = poolDB[t]
+	if ok {
+		mxDB.Unlock()
+		return db, nil
+	}
+
 	db, err := NewOrmConnectionWithConf(conf)
 	if err != nil {
 		return nil, err
 	}
-	mxDB.Lock()
 	poolDB[t] = db
 	mxDB.Unlock()
 	return db, nil
@@ -57,8 +63,14 @@ func GetPoolRedis(t Type, conf *bootstrap.CacheConf) (*redis.Client, error) {
 		return db, nil
 	}
 
-	db = NewRedisConnWithConf(conf)
 	mxCache.Lock()
+	db, ok = poolCache[t]
+	if ok {
+		mxCache.Unlock()
+		return db, nil
+	}
+
+	db = NewRedisConnWithConf(conf)
 	poolCache[t] = db
 	mxCache.Unlock()
 	return db, nil
