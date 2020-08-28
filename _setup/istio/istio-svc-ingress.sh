@@ -1,3 +1,8 @@
+# 若不想設定，可以直接port-forward
+# kubectl get pod -n istio-system istio-ingressgateway-xxxx-yyyy 8080
+# 或
+# kubectl port-forward -n istio-system $(kubectl get pod -n istio-system | grep istio-ingressgateway- | grep -v svc | awk '{print $1}' | xargs ) 8080
+
 # 如果連得到容器IP，直接使用以下指令即可
 # export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
 # export SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
