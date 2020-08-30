@@ -12,7 +12,8 @@ func LoadAPIRouter(r *gin.Engine) {
 		"/api",
 		// middleware.Middleware("check_google_login"),
 	)
-	api.GET("/hello", handler.API)
+	api.GET("/grpc/hello", handler.API)
+	api.GET("/gorpc/hello", handler.API2)
 	api.POST("/config", handler.Config)
 	// api.POST("/seed", handler.Seed)
 

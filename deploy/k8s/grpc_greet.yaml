@@ -6,7 +6,7 @@ metadata:
     repo: gola
     app: greet
 spec:
-  replicas: 2
+  replicas: 3
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -24,7 +24,7 @@ spec:
           command:
             - ./gola
           args:
-            - grpc
+            - gorpc
             - greet
           env:
             - name: APP_SITE

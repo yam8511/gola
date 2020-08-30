@@ -1,5 +1,6 @@
 !.gitignore
 !.env
 
+registry.yaml
 vendor/
 gola

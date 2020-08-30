@@ -17,6 +17,7 @@ RUN go build -mod vendor -o gola
 FROM golang:1.14-alpine
 
 COPY --from=builder /app/gola /app/gola
+COPY --from=builder /app/docs /app/docs
 COPY --from=builder /app/config /app/config
 COPY --from=builder /app/public /app/public
 COPY --from=builder /app/storage /app/storage

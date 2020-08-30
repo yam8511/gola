@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	gogreet "gola/gorpc/greet"
 	"gola/grpc/greet"
 	"gola/internal/logger"
 
@@ -40,8 +41,27 @@ var greetClientCmd = &cobra.Command{
 	},
 }
 
+// gorpcGreetClientCmd represents the greetClient command
+var gorpcGreetClientCmd = &cobra.Command{
+	Use:     "client",
+	Short:   "Greet Client",
+	Long:    `Greet Client 用來呼叫RPC`,
+	Example: program("gorpc", "greet", "client"),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := "World"
+		if len(args) > 0 {
+			name = args[0]
+		}
+		_, err := gogreet.Client(name)
+		if err != nil {
+			logger.Warn(err.Error())
+		}
+	},
+}
+
 func init() {
 	greetCmd.AddCommand(greetClientCmd)
+	goprcGreetCmd.AddCommand(gorpcGreetClientCmd)
 
 	// Here you will define your flags and configuration settings.
 

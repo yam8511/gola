@@ -1,4 +1,4 @@
 mirrors:
-  "localhost:5000":
+    "localhost:5000":
     endpoint:
-      - http://k3d-gola-registry:5000
+        - http://registry:5000

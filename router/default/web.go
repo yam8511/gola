@@ -2,12 +2,10 @@ package router
 
 import (
 	"gola/app/handler"
-	"gola/docs"
 	"net/url"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 // LoadWebRouter 載入 router 設定
@@ -22,8 +20,8 @@ func LoadWebRouter(r *gin.Engine) {
 		c.Status(404)
 	})
 
-	docs.Init()
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", static.Serve("/swagger", static.LocalFile("./public/swagger", true)))
+	r.GET("/swagger.json", func(c *gin.Context) { c.File("./docs/swagger.json") })
 
 	// 頁面進入點
 	r.NoRoute(handler.HomeFile())

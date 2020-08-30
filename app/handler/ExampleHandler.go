@@ -6,6 +6,7 @@ import (
 	"gola/app/common/response"
 	"gola/app/common/swagger"
 	"gola/app/model"
+	gogreet "gola/gorpc/greet"
 	"gola/grpc/greet"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
@@ -19,13 +20,28 @@ import (
 // @Description 範例
 // @Tags 範例
 // @Success 200 {string} string "hello world"
-// @Router /api/hello [get]
+// @Router /api/grpc/hello [get]
 func API(c *gin.Context) {
 	res, err := greet.Client(c.DefaultQuery("name", "world"))
 	if err != nil {
 		response.Failed(c, errorcode.GetAPIError("google_api_err", err))
 	} else {
 		response.Success(c, res.GetMessage())
+	}
+}
+
+// API 範例
+// @Summary 範例
+// @Description 範例
+// @Tags 範例
+// @Success 200 {string} string "hello world"
+// @Router /api/gorpc/hello [get]
+func API2(c *gin.Context) {
+	res, err := gogreet.Client(c.DefaultQuery("name", "world"))
+	if err != nil {
+		response.Failed(c, errorcode.GetAPIError("google_api_err", err))
+	} else {
+		response.Success(c, res.Message)
 	}
 }
 

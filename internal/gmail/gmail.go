@@ -42,7 +42,10 @@ func SendEmail(to []string, subject, from string, content ...[]byte) error {
 	// Mail Body Writer
 	w := multipart.NewWriter(mailBody)
 	defer w.Close()
-	w.SetBoundary(boundary)
+	err := w.SetBoundary(boundary)
+	if err != nil {
+		return err
+	}
 
 	// Mail Body
 	bw, err := w.CreatePart(map[string][]string{})
@@ -51,8 +54,15 @@ func SendEmail(to []string, subject, from string, content ...[]byte) error {
 	}
 
 	for i := range content {
-		bw.Write(content[i])
-		bw.Write([]byte("\r\n"))
+		_, err = bw.Write(content[i])
+		if err != nil {
+			return err
+		}
+
+		_, err = bw.Write([]byte("\r\n"))
+		if err != nil {
+			return err
+		}
 	}
 	err = SendRawEmail(to, mailBody.Bytes())
 	return err

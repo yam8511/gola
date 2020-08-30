@@ -1,0 +1,390 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {},
+        "license": {}
+    },
+    "paths": {
+        "/api/config": {
+            "post": {
+                "description": "範例",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "範例"
+                ],
+                "summary": "範例",
+                "parameters": [
+                    {
+                        "description": "使用者等級",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/swagger.ConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "回傳設定資料",
+                        "schema": {
+                            "$ref": "#/definitions/bootstrap.Config"
+                        }
+                    },
+                    "403": {
+                        "description": "回傳權限不足",
+                        "schema": {
+                            "$ref": "#/definitions/response.API"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gorpc/hello": {
+            "get": {
+                "description": "範例",
+                "tags": [
+                    "範例"
+                ],
+                "summary": "範例",
+                "responses": {
+                    "200": {
+                        "description": "hello world",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/grpc/hello": {
+            "get": {
+                "description": "範例",
+                "tags": [
+                    "範例"
+                ],
+                "summary": "範例",
+                "responses": {
+                    "200": {
+                        "description": "hello world",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/seed": {
+            "post": {
+                "description": "在DB產生資料",
+                "tags": [
+                    "範例"
+                ],
+                "summary": "種子",
+                "responses": {
+                    "200": {
+                        "description": "回傳執行狀態",
+                        "schema": {
+                            "$ref": "#/definitions/response.API"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/suggest": {
+            "post": {
+                "description": "建議",
+                "tags": [
+                    "Talk"
+                ],
+                "summary": "建議",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/errorcode.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wf/game": {
+            "get": {
+                "tags": [
+                    "遊戲"
+                ],
+                "summary": "犯人在跳舞",
+                "responses": {
+                    "200": {
+                        "description": "犯人在跳舞",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "bootstrap.AppConf": {
+            "type": "object",
+            "properties": {
+                "debug": {
+                    "description": "開啟Debug模式",
+                    "type": "boolean"
+                },
+                "env": {
+                    "description": "專案環境",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "專案名稱",
+                    "type": "string"
+                },
+                "salt": {
+                    "description": "專案雜湊碼",
+                    "type": "string"
+                },
+                "site": {
+                    "description": "專案站別",
+                    "type": "string"
+                }
+            }
+        },
+        "bootstrap.BotConf": {
+            "type": "object",
+            "properties": {
+                "chatID": {
+                    "type": "integer"
+                },
+                "debug": {
+                    "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "bootstrap.CacheConf": {
+            "type": "object",
+            "properties": {
+                "db": {
+                    "type": "integer"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "maxConn": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                }
+            }
+        },
+        "bootstrap.CacheList": {
+            "type": "object",
+            "properties": {
+                "defaultMaster": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.CacheConf"
+                },
+                "defaultSlave": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.CacheConf"
+                }
+            }
+        },
+        "bootstrap.Config": {
+            "type": "object",
+            "properties": {
+                "app": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.AppConf"
+                },
+                "bot": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.BotConf"
+                },
+                "caches": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.CacheList"
+                },
+                "databases": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.DatabaseList"
+                },
+                "log": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.LogConf"
+                },
+                "mode": {
+                    "description": "程序執行模式",
+                    "type": "string"
+                },
+                "server": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.ServerConf"
+                },
+                "services": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.ServiceList"
+                }
+            }
+        },
+        "bootstrap.DatabaseConf": {
+            "type": "object",
+            "properties": {
+                "db": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "maxConn": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "bootstrap.DatabaseList": {
+            "type": "object",
+            "properties": {
+                "defaultMaster": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.DatabaseConf"
+                },
+                "defaultSlave": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.DatabaseConf"
+                }
+            }
+        },
+        "bootstrap.LogConf": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "description": "Log紀錄模式： std, file, std+file",
+                    "type": "string"
+                },
+                "prefix": {
+                    "description": "Log前綴",
+                    "type": "string"
+                }
+            }
+        },
+        "bootstrap.ServerConf": {
+            "type": "object",
+            "properties": {
+                "autoPort": {
+                    "description": "啟用自動尋找環境變數:PORT",
+                    "type": "boolean"
+                },
+                "host": {
+                    "description": "伺服器的Host",
+                    "type": "string"
+                },
+                "ip": {
+                    "description": "伺服器的IP",
+                    "type": "string"
+                },
+                "maxConn": {
+                    "description": "最大連線數量",
+                    "type": "integer"
+                },
+                "port": {
+                    "description": "伺服器的Port",
+                    "type": "string"
+                },
+                "secure": {
+                    "description": "是否要安全憑證",
+                    "type": "boolean"
+                }
+            }
+        },
+        "bootstrap.ServiceConf": {
+            "type": "object",
+            "properties": {
+                "apikey": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                },
+                "secure": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "bootstrap.ServiceList": {
+            "type": "object",
+            "properties": {
+                "google": {
+                    "type": "object",
+                    "$ref": "#/definitions/bootstrap.ServiceConf"
+                }
+            }
+        },
+        "errorcode.APIError": {
+            "type": "object",
+            "properties": {
+                "error_code": {
+                    "type": "integer"
+                },
+                "error_text": {
+                    "type": "string"
+                },
+                "showLog": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.API": {
+            "type": "object",
+            "properties": {
+                "error_code": {
+                    "type": "integer"
+                },
+                "error_text": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "object"
+                }
+            }
+        },
+        "swagger.ConfigRequest": {
+            "type": "object",
+            "properties": {
+                "level": {
+                    "description": "使用者階層。 0:會員, 1:管理者, 2:系統管理者",
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        }
+    }
+}

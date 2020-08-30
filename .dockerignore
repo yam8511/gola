@@ -1,5 +1,6 @@
 _setup/
 deploy/
+resource/
 .vscode
 .git
 gola

@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	gogreet "gola/gorpc/greet"
 	"gola/grpc/greet"
 
 	"github.com/spf13/cobra"
@@ -32,8 +33,20 @@ var greetCmd = &cobra.Command{
 	},
 }
 
+// goprcGreetCmd represents the greet command
+var goprcGreetCmd = &cobra.Command{
+	Use:     "greet",
+	Short:   "Greet服務",
+	Long:    `啟動Greet服務的RPC Server`,
+	Example: program("gorpc", "greet"),
+	Run: func(cmd *cobra.Command, args []string) {
+		gogreet.Server()
+	},
+}
+
 func init() {
 	grpcCmd.AddCommand(greetCmd)
+	gorpcCmd.AddCommand(goprcGreetCmd)
 
 	// Here you will define your flags and configuration settings.
 
