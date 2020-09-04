@@ -3,7 +3,7 @@ CRE='\033[0m'
 CTEAL='\033[0;36m'
 echo "${CTEAL}🚢  KinD UP${CRE}"
 
-echo "⚙️ 輸入 registry port (映像檔倉庫的port) [預設: 5000]"
+echo "⚙️  輸入 registry port (映像檔倉庫的port) [預設: 5000]"
 printf "> "
 read reg_port
 reg_port=${reg_port:-5000}

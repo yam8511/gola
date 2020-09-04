@@ -8,7 +8,7 @@ if k3d cluster ls gola 1>/dev/null 2>&1; then
     exit 0
 fi
 
-echo "⚙️ 輸入 registry port (映像檔倉庫的port) [預設: 5000]"
+echo "⚙️  輸入 registry port (映像檔倉庫的port) [預設: 5000]"
 printf "> "
 read reg_port
 reg_port=${reg_port:-5000}

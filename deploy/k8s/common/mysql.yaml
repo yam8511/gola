@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init
+  annotations:
+    use: 用於建立多個資料庫
+data:
+  01.sql: |
+    CREATE DATABASE IF NOT EXISTS `gola`;
+    CREATE DATABASE IF NOT EXISTS `gola2`;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  labels:
+    app: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi #持久卷的容量是 1 GB
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          imagePullPolicy: IfNotPresent
+          image: mysql:5.7
+          env:
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_ROOT_PASSWORD
+              value: qwe123
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-storage # Pod上卷的名字，与“volumes”名字匹配
+              mountPath: /var/lib/mysql # 挂载的Pod的目录
+            - name: mysql-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes: # 挂载持久卷到Pod
+        - name: mysql-storage # 持久卷名字， 与“volumMounts”名字匹配
+          persistentVolumeClaim:
+            claimName: mysql-pvc # 持久卷申请名字
+        - name: mysql-init
+          configMap:
+            name: mysql-init

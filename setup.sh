@@ -19,8 +19,8 @@ CBLUE='\033[1;34m'
 CPURPLE='\033[1;35m'
 CYELLOW='\033[1;33m'
 BPURPLE='\033[1;45m'
-BTEAL='\033[1;44m'
-BBLUE='\033[1;46m'
+BTEAL='\033[1;46m'
+BBLUE='\033[1;44m'
 
 tool=$1
 opt=$2
@@ -30,16 +30,18 @@ cmdOpts=(
     ["1"]="up"
     ["2"]="down"
     ["3"]="addons"
-    ["4"]="install"
-    ["5"]="exit"
+    ["4"]="webui"
+    ["5"]="install"
+    ["6"]="exit"
 )
 
 cmdTxt=(
     ["1"]="🚀 啟動本地kube cluster"
     ["2"]="⛔️ 關閉本地kube cluster"
     ["3"]="🧩 安裝kube擴充插件"
-    ["4"]="🤖 安裝kube工具"
-    ["5"]="👋 結束腳本"
+    ["4"]="🌏 資料庫介面"
+    ["5"]="🤖 安裝kube工具"
+    ["6"]="👋 結束腳本"
 )
 
 kubeTool=(
@@ -55,8 +57,8 @@ kubeToolTxt=(
 )
 
 kubeToolExe=(
-    ["1"]="echo 🕹  請輸入以下指令，安裝${CTEAL}k3d${CRE}\ncurl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash"
-    ["2"]="echo 🤖 ${CPURPLE}On Linux:${CRE}\n${BPURPLE}\ncurl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.8.1/kind-linux-amd64\nchmod +x ./kind\nmv ./kind /usr/local/bin/kind\n${CRE}\n\n🤖 ${CTEAL}On Mac:${CRE}\n${BTEAL}\ncurl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.8.1/kind-darwin-amd64\nchmod +x ./kind\nmv ./kind /usr/local/bin/kind\n${CRE}\n\n🤖 ${CBLUE}On Windows:${CRE}\n${CBLACK}${BBLUE}\ncurl.exe -Lo kind-windows-amd64.exe https://kind.sigs.k8s.io/dl/v0.8.1/kind-windows-amd64\nMove-Item .\kind-windows-amd64.exe c:\\\%PATH%\kind.exe\n${CRE}\n${CYELLOW}ps. %PATH% 要手動改成系統可以判斷到的資料夾${CRE}\n\n\n詳細安裝請見 => https://kind.sigs.k8s.io/docs/user/quick-start/"
+    ["1"]=installK3D
+    ["2"]=installKinD
 )
 
 kubeUp=(
@@ -93,6 +95,17 @@ addonsDown=(
 
 addonsOptExe=(
     ["4"]="echo 請輸入以下指令，安裝${CTEAL}Istio${CRE}\n> curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.7.0 sh -\n> mv istio-1.7.0 \$HOME\n\n----\n加入以下環境變數到 $HOME/.bashrc 或 $HOME/.zshrc\n\n# Istio\nexport ISTIO_PATH=\$HOME/istio-1.7.0\nexport PATH=\$PATH:\$ISTIO_PATH/bin\nsource \$ISTIO_PATH/tools/_istioctl"
+)
+
+webuiOpt=(
+    ["1"]="mysql"
+    ["2"]="redis"
+    ["3"]="exit"
+)
+
+webuiOptExe=(
+    ["1"]="webuiMysql"
+    ["2"]="webuiRedis"
 )
 
 # wait user any key...
@@ -189,6 +202,39 @@ waitAddons(){
         read ons
         ons=${ons:-3}
     fi
+}
+
+installK3D () {
+    echo "🕹  請輸入以下指令，安裝${CTEAL}k3d${CRE}\ncurl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash"
+}
+
+installKinD() {
+    echo "
+    🕹  請輸入以下指令，安裝${CTEAL}kind${CRE}
+
+    🤖 ${CPURPLE}On Linux:${CRE}
+    ${CPURPLE}
+    curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.8.1/kind-linux-amd64
+    chmod +x ./kind
+    mv ./kind /usr/local/bin/kind
+    ${CRE}
+
+    🤖 ${CTEAL}On Mac:${CRE}
+    ${CTEAL}
+    curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.8.1/kind-darwin-amd64
+    chmod +x ./kind
+    mv ./kind /usr/local/bin/kind
+    ${CRE}
+
+    🤖 ${CBLUE}On Windows:${CRE}
+    ${CBLUE}
+    curl.exe -Lo kind-windows-amd64.exe https://kind.sigs.k8s.io/dl/v0.8.1/kind-windows-amd64
+    Move-Item .\kind-windows-amd64.exe c:\\\%PATH%\kind.exe
+    ${CRE}
+    ${CYELLOW}ps. %PATH% 要手動改成系統可以判斷到的資料夾${CRE}
+
+
+    詳細安裝請見 => https://kind.sigs.k8s.io/docs/user/quick-start/"
 }
 
 install() {
@@ -301,6 +347,62 @@ addons() {
         echo "what $opt"
     fi
     done
+}
+
+waitWebUI(){
+    for i in ${!webuiOpt[@]}; do
+        echo "${CBLUE}$i) ${webuiOpt[$i]}${CRE}"
+    done
+    printf "> "
+    read opt
+
+    if [ "$opt" = "" ]; then
+        return
+    fi
+}
+
+webui() {
+    while :
+    do
+    clear
+    if isset $webuiOpt $opt
+    then
+        case ${webuiOpt[$opt]} in
+        exit)
+            return 0
+        ;;
+        *)
+            if ! ${webuiOptExe[$opt]}
+            then
+                waitKey
+                exit 1
+            fi
+        ;;
+        esac
+        opt=''
+    else
+        echo ${cmdTxt[$tool]}
+        waitWebUI
+    fi
+    done
+}
+
+webuiMysql()
+{
+    echo "⚙️  輸入 phpmyadmin port [預設: 8080]"
+    printf "> "
+    read admin_port
+    admin_port=${admin_port:-8080}
+    kubectl port-forward $(kubectl get pod | grep phpmyadmin | grep Running | awk '{print $1}' | xargs) ${admin_port}:80
+}
+
+webuiRedis()
+{
+    echo "⚙️  輸入 redis-admin port [預設: 8081]"
+    printf "> "
+    read admin_port
+    admin_port=${admin_port:-8081}
+    kubectl port-forward $(kubectl get pod | grep redis-admin | grep Running | awk '{print $1}' | xargs) ${admin_port}:8081
 }
 
 while :

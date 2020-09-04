@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: redis-admin
+  name: redis-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: redis-admin
+  template:
+    metadata:
+      labels:
+        run: redis-admin
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: rediscommander/redis-commander:latest
+          imagePullPolicy: IfNotPresent
+          name: redis-admin
+          env:
+            - name: REDIS_HOSTS
+              value: redis:redis:6379:0
+          ports:
+            - containerPort: 8081
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
