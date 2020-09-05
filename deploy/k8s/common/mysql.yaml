@@ -6,8 +6,10 @@ metadata:
     use: 用於建立多個資料庫
 data:
   01.sql: |
-    CREATE DATABASE IF NOT EXISTS `gola`;
-    CREATE DATABASE IF NOT EXISTS `gola2`;
+    CREATE DATABASE IF NOT EXISTS `gola` CHARACTER SET utf8 COLLATE utf8_general_ci;
+    CREATE DATABASE IF NOT EXISTS `gola2` CHARACTER SET utf8 COLLATE utf8_general_ci;
+    -- GRANT ALL ON `gola`.* TO 'root'@'%';
+    -- FLUSH PRIVILEGES;
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

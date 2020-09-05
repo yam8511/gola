@@ -31,8 +31,9 @@ cmdOpts=(
     ["2"]="down"
     ["3"]="addons"
     ["4"]="webui"
-    ["5"]="install"
-    ["6"]="exit"
+    ["5"]="image"
+    ["6"]="install"
+    ["7"]="exit"
 )
 
 cmdTxt=(
@@ -40,10 +41,10 @@ cmdTxt=(
     ["2"]="⛔️ 關閉本地kube cluster"
     ["3"]="🧩 安裝kube擴充插件"
     ["4"]="🌏 資料庫介面"
-    ["5"]="🤖 安裝kube工具"
-    ["6"]="👋 結束腳本"
+    ["5"]="📦 建立映像檔並推上registy"
+    ["6"]="🤖 安裝kube工具"
+    ["7"]="👋 結束腳本"
 )
-
 kubeTool=(
     ["1"]="k3d"
     ["2"]="kind"
@@ -403,6 +404,13 @@ webuiRedis()
     read admin_port
     admin_port=${admin_port:-8081}
     kubectl port-forward $(kubectl get pod | grep redis-admin | grep Running | awk '{print $1}' | xargs) ${admin_port}:8081
+}
+
+image() {
+    env docker-compose build web
+    docker-compose push web
+    docker image prune -f
+    waitKey
 }
 
 while :
