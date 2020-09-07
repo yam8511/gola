@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -36,7 +35,6 @@ func LoadConfig() {
 	defaultVIP.AddConfigPath(configDir)
 	defaultVIP.SetConfigType("toml")
 	defaultVIP.SetConfigName(Default)
-	defaultVIP.WatchConfig()
 
 	appVIP = viper.New()
 	appVIP.AutomaticEnv()
@@ -44,7 +42,6 @@ func LoadConfig() {
 	appVIP.AddConfigPath(configDir)
 	appVIP.SetConfigType("toml")
 	appVIP.SetConfigName(appSite)
-	appVIP.WatchConfig()
 
 	// 先讀取預設檔
 	if err := defaultVIP.ReadInConfig(); err == nil {
@@ -77,7 +74,8 @@ func LoadConfig() {
 
 	// 假如都沒有載入檔案，噴錯誤
 	if !hasLoad {
-		FatalLoad("Config", errors.New("請確認『設定檔』是否存在！"))
+		// FatalLoad("Config", errors.New("請確認『設定檔』是否存在！"))
+		return
 	}
 
 	appVIP.Set("app.site", appSite)
