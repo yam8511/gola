@@ -6,19 +6,16 @@
 ## 啟動開發環境
 
 ```shell
-make up
-
-# 開瀏覽器
-# Mysql介面 http://127.0.0.1:8080
-# Redis介面 http://127.0.0.1:8081
+./setup.sh 1 2 # 啟動本地k8s
+kubectl apply -f deploy/k8s/common/  # 啟動 Mysql, Redis
+kubectl apply -f deploy/k8s/project/ # 啟動 服務容器
 ```
 
 ## 關閉開發環境
 
 ```shell
-make down
+./setup.sh 2 2 # 關閉本地k8s
 ```
-
 
 ## 產生API文件
 
