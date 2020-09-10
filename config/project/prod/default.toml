@@ -8,8 +8,7 @@
 [server]
     ip = ""             # 伺服器的IP
     host = "localhost"  # 伺服器的Host
-    port = "8000"       # 伺服器的Port
-    auto_port = true    # 啟用自動尋找環境變數:PORT
+    port = 8000         # 伺服器的Port
     secure = false      # 是否要安全憑證
     max_conn = 100000   # 最大連線數量
 

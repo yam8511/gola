@@ -27,7 +27,6 @@ func LoadConfig() {
 	)
 	configDir := filepath.Join(appRoot, "config", "project", appEnv)
 	conf := defaultConf
-	hasLoad := false
 
 	defaultVIP = viper.New()
 	defaultVIP.AutomaticEnv()
@@ -53,7 +52,6 @@ func LoadConfig() {
 		}
 
 		defaultVIP.WatchConfig()
-		hasLoad = true
 	}
 
 	// 再讀取指定Site檔
@@ -68,14 +66,7 @@ func LoadConfig() {
 			}
 
 			appVIP.WatchConfig()
-			hasLoad = true
 		}
-	}
-
-	// 假如都沒有載入檔案，噴錯誤
-	if !hasLoad {
-		// FatalLoad("Config", errors.New("請確認『設定檔』是否存在！"))
-		return
 	}
 
 	appVIP.Set("app.site", appSite)

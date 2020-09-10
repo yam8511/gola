@@ -40,12 +40,11 @@ type AppConf struct {
 
 // ServerConf 伺服器資訊
 type ServerConf struct {
-	IP       string `mapstructure:"ip"`        // 伺服器的IP
-	Host     string `mapstructure:"host"`      // 伺服器的Host
-	Port     string `mapstructure:"port"`      // 伺服器的Port
-	AutoPort bool   `mapstructure:"auto_port"` // 啟用自動尋找環境變數:PORT
-	Secure   bool   `mapstructure:"secure"`    // 是否要安全憑證
-	MaxConn  int    `mapstructure:"max_conn"`  // 最大連線數量
+	IP      string `mapstructure:"ip"`       // 伺服器的IP
+	Host    string `mapstructure:"host"`     // 伺服器的Host
+	Port    int    `mapstructure:"port"`     // 伺服器的Port
+	Secure  bool   `mapstructure:"secure"`   // 是否要安全憑證
+	MaxConn int    `mapstructure:"max_conn"` // 最大連線數量
 }
 
 // LogConf 紀錄Log資訊

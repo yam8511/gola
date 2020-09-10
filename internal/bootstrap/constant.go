@@ -3,6 +3,14 @@ package bootstrap
 // 全域設定變數
 var defaultConf = Config{
 	mode: CommandMode,
+	App: AppConf{
+		Name:  "default",
+		Site:  "default",
+		Debug: true,
+	},
+	Server: ServerConf{
+		Port: 8000,
+	},
 	Log: LogConf{
 		Mode:   "std+file",
 		Prefix: "GOLA",

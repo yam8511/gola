@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"strconv"
 	"sync"
 	"time"
 
@@ -32,12 +33,9 @@ func SetupRouter() (r *gin.Engine) {
 func CreateServer(router *gin.Engine) *http.Server {
 	conf := bootstrap.GetAppConf().Server
 	// 設定 Port
-	var port = conf.Port
-	if conf.AutoPort && os.Getenv("PORT") != "" {
-		port = os.Getenv("PORT")
-	}
-	if port != "" {
-		port = ":" + port
+	var port string
+	if conf.Port > 0 {
+		port = ":" + strconv.Itoa(conf.Port)
 	}
 	addr := conf.IP + port
 

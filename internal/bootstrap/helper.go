@@ -13,7 +13,7 @@ import (
 func GetAppEnv() string {
 	env := strings.TrimSpace(os.Getenv("APP_ENV"))
 	if env == "" {
-		env = "default"
+		env = "local"
 	}
 	return env
 }
