@@ -6,7 +6,7 @@
     salt = "this is your pernal salt"   # 專案雜湊碼
 
 [server]
-    ip = "127.0.0.1"    # 伺服器的IP
+    ip = "0.0.0.0"    # 伺服器的IP
     host = "localhost"  # 伺服器的Host
     port = 8000         # 伺服器的Port
     secure = false      # 是否要安全憑證
