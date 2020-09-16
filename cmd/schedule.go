@@ -29,6 +29,7 @@ var scheduleCmd = &cobra.Command{
 	Long:  `啟動背景排程管理，自動記錄排程運行時間與狀態`,
 	Run: func(cmd *cobra.Command, args []string) {
 		bootstrap.SetRunMode(bootstrap.CommandMode)
+		bootstrap.SetupGracefulSignal() // 設定優雅結束程序
 		schedule.Run()
 	},
 }

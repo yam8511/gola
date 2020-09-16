@@ -29,6 +29,7 @@ var serverCmd = &cobra.Command{
 	Long:  `啟動伺服器`,
 	Run: func(cmd *cobra.Command, args []string) {
 		bootstrap.SetRunMode(bootstrap.ServerMode)
+		bootstrap.SetupGracefulSignal() // 設定優雅結束程序
 		server.Run()
 	},
 }

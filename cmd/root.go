@@ -61,9 +61,6 @@ func initConfig() {
 	logger.Info(fmt.Sprintf("⚙  APP_SITE: %s", bootstrap.GetAppSite()))
 
 	bootstrap.LoadConfig()
-
-	// 設定優雅結束程序
-	bootstrap.SetupGracefulSignal()
 }
 
 func program(args ...string) string {
