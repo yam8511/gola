@@ -18,13 +18,13 @@ func SetupTable() {
 		for _, m := range modelList {
 			db, err := NewModelDB(m, true)
 			if err != nil {
-				errorcode.CheckGormConnError("DB連線失敗", err)
+				errorcode.Code_Undefined.New("DB連線失敗: %w", err)
 				return
 			}
 
 			err = db.AutoMigrate(m).Error
 			if err != nil {
-				errorcode.CheckGormConnError("建立資料表失敗", err)
+				errorcode.Code_Undefined.New("DB連線失敗: %w", err)
 				return
 			}
 		}
@@ -35,7 +35,7 @@ func SetupTable() {
 	for _, m := range modelList {
 		db, err := NewModelDB(m, false)
 		if err != nil {
-			errorcode.CheckGormConnError("DB連線失敗", err)
+			errorcode.Code_Undefined.New("DB連線失敗: %w", err)
 			return
 		}
 
@@ -45,7 +45,7 @@ func SetupTable() {
 	}
 
 	if len(missingTable) > 0 {
-		errorcode.CheckGormConnError("缺少資料表: "+strings.Join(missingTable, ", "), nil)
+		errorcode.Code_Param_Required.New("缺少資料表: " + strings.Join(missingTable, ", "))
 		return
 	}
 }

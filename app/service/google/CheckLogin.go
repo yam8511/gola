@@ -1,9 +1,8 @@
 package google
 
 import (
-	errorCode "gola/app/common/errorcode"
+	"gola/app/common/errorcode"
 	"gola/internal/bootstrap"
-	"gola/internal/logger"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,7 +10,7 @@ import (
 )
 
 // CheckLogin 確認登入
-func CheckLogin(sid string) (isLogin bool, apiErr errorCode.Error) {
+func CheckLogin(sid string) (isLogin bool, apiErr errorcode.Error) {
 	google := bootstrap.GetAppConf().Services.Google
 	url := "http://"
 	if google.Secure {
@@ -20,8 +19,7 @@ func CheckLogin(sid string) (isLogin bool, apiErr errorCode.Error) {
 	url += google.IP + google.Port + "/auth/check"
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
-		apiErr = errorCode.GetAPIError("new_http_err", err)
-		logger.Danger("CheckLogin: 建立連線請求失敗, " + err.Error())
+		apiErr = errorcode.Code_New_Request.New("CheckLogin: 建立連線請求失敗: %w", err)
 		return
 	}
 
@@ -37,16 +35,14 @@ func CheckLogin(sid string) (isLogin bool, apiErr errorCode.Error) {
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		apiErr = errorCode.GetAPIError("do_request_err", err)
-		logger.Danger("CheckLogin: 連線請求失敗, " + err.Error())
+		apiErr = errorcode.Code_Do_Request.New("CheckLogin: 連線請求失敗: %w", err)
 		return
 	}
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		apiErr = errorCode.GetAPIError("google_api_err", err)
-		logger.Danger("CheckLogin: 讀取回傳資料失敗, " + err.Error())
+		apiErr = errorcode.Code_Google_API_Return.New("CheckLogin: 讀取回傳資料失敗: %w", err)
 		return
 	}
 

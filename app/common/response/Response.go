@@ -42,7 +42,7 @@ func Response(
 	var code = 0
 	var text string
 	if apiErr != nil {
-		code = apiErr.ErrorCode()
+		code = int(apiErr.ErrorCode())
 		text = apiErr.ErrorText()
 	}
 

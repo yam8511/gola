@@ -16,7 +16,7 @@ func loadDictEN() {
 
 	book, err := json.Marshal(dict)
 	if err != nil {
-		errorcode.GetAPIError("載入『英文』語系的字典檔失敗!!!", nil)
+		errorcode.Code_Undefined.New("載入『英文』語系的字典檔失敗!!! %w", err)
 		return
 	}
 	enBook.content = book

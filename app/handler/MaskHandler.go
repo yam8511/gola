@@ -3,7 +3,8 @@ package handler
 import (
 	"bytes"
 	"encoding/csv"
-	errorCode "gola/app/common/errorcode"
+	"gola/app/common/errorcode"
+	"gola/app/common/response"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -44,14 +45,14 @@ func SearchMask(c *gin.Context) {
 
 	buffer, err := fetchMaskAPI()
 	if err != nil {
-		c.JSON(http.StatusOK, errorCode.GetAPIError("mask_api_error", err))
+		response.Failed(c, errorcode.Code_Mask_API.New(err.Error()))
 		return
 	}
 
 	r := csv.NewReader(buffer)
 	_, err = r.Read()
 	if err != nil {
-		c.JSON(http.StatusOK, errorCode.GetAPIError("read_mask_csv_error", err))
+		response.Failed(c, errorcode.Code_Mask_API.New(err.Error()))
 		return
 	}
 
@@ -73,7 +74,7 @@ func SearchMask(c *gin.Context) {
 			if err == io.EOF {
 				break
 			}
-			c.JSON(http.StatusOK, errorCode.GetAPIError("read_mask_csv_error", err))
+			response.Failed(c, errorcode.Code_Mask_API.New(err.Error()))
 			return
 		}
 

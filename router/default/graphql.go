@@ -35,7 +35,7 @@ func LoadGraphQLRouter(r *gin.Engine) {
 		FormatErrorFn: func(err error) (f gqlerrors.FormattedError) {
 			if err != nil {
 				f = gqlerrors.FormatError(err)
-				apiErr := errorcode.GetAPIError(err.Error(), nil)
+				apiErr := errorcode.Code_Undefined.New(err.Error())
 				f.Message = apiErr.Error()
 				f.Extensions = map[string]interface{}{
 					"error_code": apiErr.ErrorCode(),

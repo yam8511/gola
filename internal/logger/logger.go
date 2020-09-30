@@ -22,23 +22,23 @@ const (
 )
 
 // Info 一般資訊
-func Info(text string) {
-	writeLog(levelInfo, text)
+func Info(text string, args ...interface{}) {
+	writeLog(levelInfo, text, args...)
 }
 
 // Success 成功資訊
-func Success(text string) {
-	writeLog(levelSuccess, text)
+func Success(text string, v ...interface{}) {
+	writeLog(levelSuccess, text, v...)
 }
 
 // Warn 警告資訊
-func Warn(text string) {
-	writeLog(levelWarn, text)
+func Warn(text string, v ...interface{}) {
+	writeLog(levelWarn, text, v...)
 }
 
 // Danger 危險資訊
-func Danger(text string) {
-	writeLog(levelDanger, text)
+func Danger(text string, v ...interface{}) {
+	writeLog(levelDanger, text, v...)
 }
 
 // Error 錯誤資訊
@@ -48,25 +48,25 @@ func Error(err error) {
 	}
 }
 
-func writeLog(t level, text string) {
+func writeLog(t level, text string, v ...interface{}) {
 	conf := bootstrap.GetAppConf()
-	var coloarText string
+	var colorFmt *color.Color
 	switch t {
 	case levelInfo:
 		text = "[INFO]   " + text
-		coloarText = color.HiBlueString(text)
+		colorFmt = color.New(color.FgHiBlue)
 	case levelSuccess:
 		text = "[OK]     " + text
-		coloarText = color.HiGreenString(text)
+		colorFmt = color.New(color.FgHiGreen)
 	case levelWarn:
 		text = "[WARN]   " + text
-		coloarText = color.HiYellowString(text)
+		colorFmt = color.New(color.FgHiYellow)
 	case levelDanger:
 		text = "[DANGER] " + text
-		coloarText = color.HiRedString(text)
+		colorFmt = color.New(color.FgHiRed)
 	case levelError:
 		text = "[ERROR]  " + text
-		coloarText = color.New(color.BgHiRed, color.FgHiWhite).Sprint(text)
+		colorFmt = color.New(color.BgHiRed, color.FgHiWhite)
 	}
 
 	createLogFile := func() (io.WriteCloser, error) {
@@ -109,7 +109,8 @@ func writeLog(t level, text string) {
 		w, err := createLogFile()
 		logger := log.New(w, prefix, log.LstdFlags|log.Lmsgprefix)
 		if err == nil {
-			logger.Println(text)
+			colorFmt.DisableColor()
+			logger.Println(colorFmt.Sprintf(text, v...))
 			w.Close()
 
 			if conf.Log.Mode == "file" {
@@ -120,5 +121,6 @@ func writeLog(t level, text string) {
 		}
 	}
 
-	log.Printf("%s%s\n", prefix, coloarText)
+	colorFmt.EnableColor()
+	colorFmt.Printf(prefix+text+"\n", v...)
 }

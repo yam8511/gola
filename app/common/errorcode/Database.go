@@ -5,49 +5,57 @@ import (
 )
 
 // CheckGormConnError 確認DB連線錯誤
-func CheckGormConnError(key string, err error) (apiErr Error) {
+func CheckGormConnError(code Code, err error) (apiErr Error) {
+	if err == nil {
+		return
+	}
+
 	if err == database.ErrPoolHasNoConf {
-		apiErr = newAPIError("gorm_pool_no_config", err)
+		apiErr = Code_DB_No_Config.New("資料庫資訊尚未設定")
 		return
 	}
 
 	var yes bool
 	yes = database.IsPoolTimeout(err)
 	if yes {
-		apiErr = newAPIError("gorm_pool_is_timeout", err)
+		apiErr = Code_DB_Timeout.New("資料庫連線池逾時")
 		return
 	}
 
 	yes = database.IsPoolClosed(err)
 	if yes {
-		apiErr = newAPIError("gorm_pool_is_closed", err)
+		apiErr = Code_DB_Closed.New("資料庫連線池已經關閉")
 		return
 	}
 
-	apiErr = newAPIError(key, err)
+	apiErr = code.New(err.Error())
 	return
 }
 
 // CheckRedisConnError 確認快取連線錯誤
-func CheckRedisConnError(key string, err error) (apiErr Error) {
+func CheckRedisConnError(code Code, err error) (apiErr Error) {
+	if err == nil {
+		return
+	}
+
 	if err == database.ErrPoolHasNoConf {
-		apiErr = newAPIError("redis_pool_no_config", err)
+		apiErr = Code_DB_No_Config.New("Redis資訊尚未設定")
 		return
 	}
 
 	var yes bool
 	yes = database.IsPoolTimeout(err)
 	if yes {
-		apiErr = newAPIError("redis_pool_is_timeout", err)
+		apiErr = Code_DB_Timeout.New("Redis連線池逾時")
 		return
 	}
 
 	yes = database.IsPoolClosed(err)
 	if yes {
-		apiErr = newAPIError("redis_pool_is_closed", err)
+		apiErr = Code_DB_Closed.New("Redis連線池已經關閉")
 		return
 	}
 
-	apiErr = newAPIError(key, err)
+	apiErr = code.New(err.Error())
 	return
 }

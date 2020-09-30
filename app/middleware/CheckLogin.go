@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	errorCode "gola/app/common/errorcode"
+	"gola/app/common/errorcode"
 	"gola/app/common/response"
 	google "gola/app/service/google"
 
@@ -12,7 +12,7 @@ import (
 func checkGoogleLogin(c *gin.Context) {
 	sid, err := c.Cookie("sid")
 	if err != nil {
-		apiErr := errorCode.GetAPIError("no_cookie", nil)
+		apiErr := errorcode.Code_No_Cookie.New("")
 		response.FailedNow(c, apiErr)
 		return
 	}
@@ -24,7 +24,7 @@ func checkGoogleLogin(c *gin.Context) {
 	}
 
 	if !isLogin {
-		apiErr := errorCode.GetAPIError("not_login", nil)
+		apiErr := errorcode.Code_No_Login.New("")
 		response.FailedNow(c, apiErr)
 	}
 

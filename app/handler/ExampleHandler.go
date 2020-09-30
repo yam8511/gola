@@ -9,7 +9,6 @@ import (
 	gogreet "gola/gorpc/greet"
 	"gola/grpc/greet"
 	"gola/internal/bootstrap"
-	"gola/internal/logger"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,7 @@ import (
 func API(c *gin.Context) {
 	res, err := greet.Client(c.DefaultQuery("name", "world"))
 	if err != nil {
-		response.Failed(c, errorcode.GetAPIError("google_api_err", err))
+		response.Failed(c, errorcode.Code_Google_API_Return.New(err.Error()))
 	} else {
 		response.Success(c, res.GetMessage())
 	}
@@ -39,7 +38,7 @@ func API(c *gin.Context) {
 func API2(c *gin.Context) {
 	res, err := gogreet.Client(c.DefaultQuery("name", "world"))
 	if err != nil {
-		response.Failed(c, errorcode.GetAPIError("google_api_err", err))
+		response.Failed(c, errorcode.Code_Google_API_Return.New(err.Error()))
 	} else {
 		response.Success(c, res.Message)
 	}
@@ -59,19 +58,19 @@ func Config(c *gin.Context) {
 	req := swagger.ConfigRequest{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		apiErr := errorcode.GetAPIError("param_invalid", nil)
+		apiErr := errorcode.Code_param_Invalid.New("")
 		response.Failed(c, apiErr)
 		return
 	}
 
 	if req.Level == nil {
-		apiErr := errorcode.GetAPIError("param_required", nil)
+		apiErr := errorcode.Code_Param_Required.New("")
 		response.Failed(c, apiErr)
 		return
 	}
 
 	if !req.Level.IsValid() {
-		apiErr := errorcode.GetAPIError("param_invalid", nil)
+		apiErr := errorcode.Code_param_Invalid.New("")
 		response.Failed(c, apiErr)
 		return
 	}
@@ -81,7 +80,7 @@ func Config(c *gin.Context) {
 		return
 	}
 
-	apiErr := errorcode.GetAPIError("permission_denied", nil)
+	apiErr := errorcode.Code_Permission_Denied.New("")
 	response.Failed(c, apiErr, response.WithStatusCode(http.StatusForbidden))
 }
 
@@ -94,8 +93,8 @@ func Config(c *gin.Context) {
 func Seed(c *gin.Context) {
 	err := model.UserSeed()
 	if err != nil {
-		logger.Danger("Seed: 新增使用者資料失敗, " + err.Error())
-		c.JSON(http.StatusOK, errorcode.GetAPIError("seed_err", err))
+		response.Failed(c, errorcode.Code_Seed.New(err.Error()))
 		return
 	}
+	response.Success(c, nil)
 }
