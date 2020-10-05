@@ -2,10 +2,6 @@ package def
 
 // Option 選項
 type Option struct {
-	HTTPCode  int
-	ErrorCode int
-	ErrorText string
-	Data      interface{}
 }
 
 // ArgsF 參數

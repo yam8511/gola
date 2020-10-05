@@ -33,7 +33,7 @@ test:
 
 # 編譯
 build: vendor
-	go build -mod vendor $(FLAG_LIST) -o $(APP)
+	go build -mod vendor -v $(FLAG_LIST) -o $(APP)
 
 # 依賴套件
 vendor: go.sum
