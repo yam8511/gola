@@ -2,25 +2,19 @@ package i18n
 
 import (
 	"gola/app/common/request"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 )
-
-type book struct {
-	sync.Once
-	content []byte
-}
 
 // Trans 取得翻譯
 func Trans(code, lang string) (value string) {
 	switch lang {
 	case "en":
-		value = transEN(code)
-	case "zh-tw", "tw":
-		value = transTW(code)
+		value = enBook.Trans(code)
+	case "zh-cn", "cn":
+		value = cnBook.Trans(code)
 	default: // zh-cn
-		value = transCN(code)
+		value = twBook.Trans(code)
 	}
 
 	return
