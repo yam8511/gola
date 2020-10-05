@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-redis/redis"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // 資料表名稱

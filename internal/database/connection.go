@@ -2,15 +2,17 @@ package database
 
 import (
 	"gola/internal/bootstrap"
+	"strconv"
 	"time"
 
 	redis "github.com/go-redis/redis"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // NewOrmConnectionWithConf 用Conf建立新DB連線
 func NewOrmConnectionWithConf(conf *bootstrap.DatabaseConf) (db *gorm.DB, err error) {
-	connectName := getConnectName(
+	dsn := getConnectName(
 		"mysql",
 		conf.Host,
 		conf.Port,
@@ -19,9 +21,13 @@ func NewOrmConnectionWithConf(conf *bootstrap.DatabaseConf) (db *gorm.DB, err er
 		conf.Password,
 	)
 
-	db, err = gorm.Open("mysql", connectName)
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
 	if bootstrap.GetAppConf().App.Env == "local" {
-		db.LogMode(true)
+		db = db.Debug()
 	}
 	return
 }
@@ -29,8 +35,8 @@ func NewOrmConnectionWithConf(conf *bootstrap.DatabaseConf) (db *gorm.DB, err er
 // NewRedisConnWithConf 用設定建立Redis連線
 func NewRedisConnWithConf(conf *bootstrap.CacheConf) *redis.Client {
 	addr := conf.Host
-	if conf.Port != "" {
-		addr += conf.Port
+	if conf.Port > 0 {
+		addr += ":" + strconv.Itoa(conf.Port)
 	}
 	redisConn := redis.NewClient(&redis.Options{
 		Addr:        addr,

@@ -20,7 +20,7 @@
     [database.default_master]
         db = "gola"
         host = "db"
-        port = "3306"
+        port = 3306
         username = "root"
         password = "qwe123"
         max_conn = 10
@@ -28,7 +28,7 @@
     [database.default_slave]
         db = "gola"
         host = "db"
-        port = "3306"
+        port = 3306
         username = "root"
         password = "qwe123"
         max_conn = 10
@@ -36,20 +36,19 @@
 [cache]
     [cache.default_master]
         host = "cache"
-        port = "6379"
+        port = 6379
         password = ""
         max_conn = 100
 
     [cache.default_slave]
         host = "cache"
-        port = "6379"
+        port = 6379
         password = ""
         max_conn = 100
 
 [service]
     [service.google]
         ip = "google.com"
-        port = ""
         host = "google.com"
         secure = true
         api_key = ""

@@ -13,7 +13,6 @@ require (
 	github.com/gorilla/websocket v1.4.1
 	github.com/graphql-go/graphql v0.7.9
 	github.com/graphql-go/handler v0.2.3
-	github.com/jinzhu/gorm v1.9.12
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
@@ -30,4 +29,6 @@ require (
 	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
+	gorm.io/driver/mysql v1.0.2
+	gorm.io/gorm v1.20.2
 )

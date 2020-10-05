@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/go-redis/redis"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // Type 資料庫型態

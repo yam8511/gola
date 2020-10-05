@@ -22,7 +22,7 @@ func SetupTable() {
 				return
 			}
 
-			err = db.AutoMigrate(m).Error
+			err = db.AutoMigrate(m)
 			if err != nil {
 				errorcode.Code_Undefined.New("DB連線失敗: %w", err)
 				return
@@ -39,7 +39,7 @@ func SetupTable() {
 			return
 		}
 
-		if !db.HasTable(m.TableName()) {
+		if !db.Migrator().HasTable(m) {
 			missingTable = append(missingTable, m.TableName())
 		}
 	}

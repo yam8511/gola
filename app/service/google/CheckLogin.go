@@ -2,6 +2,7 @@ package google
 
 import (
 	"gola/app/common/errorcode"
+	"gola/app/common/helper"
 	"gola/internal/bootstrap"
 	"io/ioutil"
 	"net/http"
@@ -12,12 +13,9 @@ import (
 // CheckLogin 確認登入
 func CheckLogin(sid string) (isLogin bool, apiErr errorcode.Error) {
 	google := bootstrap.GetAppConf().Services.Google
-	url := "http://"
-	if google.Secure {
-		url = "https://"
-	}
-	url += google.IP + google.Port + "/auth/check"
-	req, err := http.NewRequest("POST", url, nil)
+	link := helper.ServiceURL(google)
+	link.Path = "/auth/check"
+	req, err := http.NewRequest("POST", link.String(), nil)
 	if err != nil {
 		apiErr = errorcode.Code_New_Request.New("CheckLogin: 建立連線請求失敗: %w", err)
 		return

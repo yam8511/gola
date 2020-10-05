@@ -57,7 +57,7 @@ type LogConf struct {
 type DatabaseConf struct {
 	DB       string `mapstructure:"db"`
 	Host     string `mapstructure:"host"`
-	Port     string `mapstructure:"port"`
+	Port     int    `mapstructure:"port"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	MaxConn  int    `mapstructure:"max_conn"`
@@ -66,7 +66,7 @@ type DatabaseConf struct {
 // CacheConf 快取資料庫設定
 type CacheConf struct {
 	Host     string `mapstructure:"host"`
-	Port     string `mapstructure:"port"`
+	Port     int    `mapstructure:"port"`
 	DB       int    `mapstructure:"db"`
 	Password string `mapstructure:"password"`
 	MaxConn  int    `mapstructure:"max_conn"`
@@ -75,7 +75,7 @@ type CacheConf struct {
 // ServiceConf 服務資訊
 type ServiceConf struct {
 	IP     string `mapstructure:"ip"`
-	Port   string `mapstructure:"port"`
+	Port   int    `mapstructure:"port"`
 	Host   string `mapstructure:"host"`
 	Secure bool   `mapstructure:"secure"`
 	APIKey string `mapstructure:"api_key"`
