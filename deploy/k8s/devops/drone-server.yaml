@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: devops
+  name: droneci-pv
+  labels:
+    run: drone
+    role: server
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/drone
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: devops
+  name: droneci-pvc
+  labels:
+    run: drone
+    role: server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  volumeName: droneci-pv
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: devops
+  name: droneci-server
+  labels:
+    run: drone
+    role: server
+spec:
+  selector:
+    run: drone
+    role: server
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: devops
+  name: droneci-server
+  labels:
+    run: drone
+    role: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: drone
+      role: server
+  template:
+    metadata:
+      labels:
+        run: drone
+        role: server
+    spec:
+      containers:
+        - name: droneci-server
+          image: drone/drone:1.9.1
+          ports:
+            - containerPort: 80
+          env:
+            - name: DRONE_GITEA_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: gitea-oauth2
+                  key: DRONE_GITEA_CLIENT_ID
+            - name: DRONE_GITEA_CLIENT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: gitea-oauth2
+                  key: DRONE_GITEA_CLIENT_SECRET
+            - name: DRONE_GITEA_SERVER
+              value: http://gitea-server
+            - name: DRONE_RPC_SECRET
+              value: bea26a2221fd8090ea38720fc445eca6
+            - name: DRONE_SERVER_PROTO
+              value: http
+            - name: DRONE_SERVER_HOST
+              value: droneci-server
+            - name: DRONE_USER_CREATE
+              value: username:root,admin:true
+          volumeMounts:
+            - mountPath: /data
+              name: droneci-storage
+      volumes:
+        - name: droneci-storage
+          persistentVolumeClaim:
+            claimName: droneci-pvc

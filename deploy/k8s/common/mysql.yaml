@@ -1,9 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  namespace: default
   name: mysql-init
+  labels:
+    run: mysql
   annotations:
-    use: 用於建立多個資料庫
+    use: 用於建立HHSLOT_DB、HHSLOT_RECORD_DB、HHSLOT_CASH_DB
 data:
   01.sql: |
     CREATE DATABASE IF NOT EXISTS `gola` CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -12,42 +15,110 @@ data:
     -- FLUSH PRIVILEGES;
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: mysql-cfg
+  labels:
+    run: mysql
+  annotations:
+    use: 設定MySQL參數
+data:
+  mysqld.cnf: |
+    # permission to link the program and your derivative works with the
+    # separately licensed software that they have included with MySQL.
+    #
+    # This program is distributed in the hope that it will be useful,
+    # but WITHOUT ANY WARRANTY; without even the implied warranty of
+    # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    # GNU General Public License, version 2.0, for more details.
+    #
+    # You should have received a copy of the GNU General Public License
+    # along with this program; if not, write to the Free Software
+    # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+    #
+    # The MySQL  Server configuration file.
+    #
+    # For explanations see
+    # http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    #log-error      = /var/log/mysql/error.log
+    # By default we only accept connections from localhost
+    #bind-address   = 127.0.0.1
+    # Disabling symbolic-links is recommended to prevent assorted security risks
+    symbolic-links=0
+    sql_mode = "STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: default
+  name: mysql-pv
+  labels:
+    run: mysql
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/mysql
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: standard
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  namespace: default
   name: mysql-pvc
   labels:
-    app: mysql
+    run: mysql
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi #持久卷的容量是 1 GB
+      storage: 2Gi
+  storageClassName: standard
+  volumeName: mysql-pv
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: default
   name: mysql
+  labels:
+    run: mysql
 spec:
   selector:
-    app: mysql
-  type: ClusterIP
+    run: mysql
+  type: NodePort
   ports:
     - port: 3306
       targetPort: 3306
+      nodePort: 30306
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: default
   name: mysql
+  labels:
+    run: mysql
 spec:
   selector:
     matchLabels:
-      app: mysql
+      run: mysql
   template:
     metadata:
       labels:
-        app: mysql
+        run: mysql
     spec:
       containers:
         - name: mysql
@@ -66,6 +137,8 @@ spec:
               mountPath: /var/lib/mysql # 挂载的Pod的目录
             - name: mysql-init
               mountPath: /docker-entrypoint-initdb.d
+            - name: mysql-cfg
+              mountPath: /etc/mysql/mysql.conf.d
       volumes: # 挂载持久卷到Pod
         - name: mysql-storage # 持久卷名字， 与“volumMounts”名字匹配
           persistentVolumeClaim:
@@ -73,3 +146,6 @@ spec:
         - name: mysql-init
           configMap:
             name: mysql-init
+        - name: mysql-cfg
+          configMap:
+            name: mysql-cfg

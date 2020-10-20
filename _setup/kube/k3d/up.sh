@@ -17,17 +17,18 @@ reg_name='registry'
 echo "mirrors:
     \"localhost:${reg_port}\":
     endpoint:
-        - http://${reg_name}:${reg_port}" > $(PWD)/_setup/kube/k3d/registry.yaml
+        - http://${reg_name}:${reg_port}" > $HOME/.cache/gola/kube/k3d/registry.yaml
 
 
 k3d cluster create gola \
     --servers 1 \
     --agents 3 \
-    --api-port 0.0.0.0:6550 \
-    -v $(PWD)/_setup/kube/k3d/registry.yaml:/etc/rancher/k3s/registries.yaml \
+    --api-port 0.0.0.0:16443 \
+    -v $HOME/.cache/gola/data:/data \
+    -v $HOME/.cache/gola/kube/k3d/registry.yaml:/etc/rancher/k3s/registries.yaml \
     -p 80:80@loadbalancer \
     -p 443:443@loadbalancer \
-    -p 30007-30008:30007-30008@server[0] || exit 1
+    -p 30001-30009:30001-30009@server[0] || exit 1
 
 # create registry container unless it already exists
 running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
@@ -40,3 +41,6 @@ if [ "${running}" != 'true' ]; then
 fi
 
 docker network connect "k3d-gola" "${reg_name}"
+
+# 建立新的namespace
+kubectl create namespace devops

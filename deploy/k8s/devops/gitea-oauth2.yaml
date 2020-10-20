@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: devops
+  name: gitea-oauth2
+data:
+  DRONE_GITEA_CLIENT_ID: "填入 Gitea Oauth2 Client ID"
+  DRONE_GITEA_CLIENT_SECRET: "填入 Gitea Oauth2 Client Secret"

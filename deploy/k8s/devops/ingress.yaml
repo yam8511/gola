@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: devops
+  name: gola-devops-ingress
+  annotations:
+    # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size
+    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+spec:
+  rules:
+    - host: gitea-server
+      http:
+        paths:
+          - backend:
+              serviceName: gitea-server
+              servicePort: 3000
+            path: /
+    - host: droneci-server
+      http:
+        paths:
+          - backend:
+              serviceName: droneci-server
+              servicePort: 80
+            path: /

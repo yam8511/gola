@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: devops
+  name: droneci-runner
+  labels:
+    run: drone
+    role: runner
+spec:
+  selector:
+    run: drone
+    role: runner
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: devops
+  name: droneci-runner
+  labels:
+    app.kubernetes.io/name: drone
+    run: drone
+    role: runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: drone
+      run: drone
+      role: runner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: drone
+        run: drone
+        role: runner
+    spec:
+      containers:
+        - name: runner
+          image: drone/drone-runner-kube:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DRONE_RPC_HOST
+              value: droneci-server
+            - name: DRONE_RPC_PROTO
+              value: http
+            - name: DRONE_RPC_SECRET
+              value: bea26a2221fd8090ea38720fc445eca6
+            - name: DRONE_NAMESPACE_DEFAULT
+              value: devops
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: devops
+  name: drone
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - watch
+      - update
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: drone
+  namespace: devops
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: devops
+roleRef:
+  kind: Role
+  name: drone
+  apiGroup: rbac.authorization.k8s.io

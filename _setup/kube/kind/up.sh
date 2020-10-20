@@ -21,6 +21,9 @@ fi
 cat <<EOF | kind create cluster --name gola --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  apiServerAddress: "127.0.0.1"
+  apiServerPort: 16443
 nodes:
 - role: control-plane
   kubeadmConfigPatches:
@@ -29,6 +32,9 @@ nodes:
     nodeRegistration:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
+  extraMounts:
+  - hostPath: $HOME/.cache/gola/data
+    containerPath: /data
   extraPortMappings:
   - containerPort: 80
     hostPort: 80
@@ -36,11 +42,38 @@ nodes:
   - containerPort: 443
     hostPort: 443
     protocol: TCP
+  - containerPort: 30001
+    hostPort: 30001
+    protocol: TCP
+  - containerPort: 30002
+    hostPort: 30002
+    protocol: TCP
+  - containerPort: 30003
+    hostPort: 30003
+    protocol: TCP
+  - containerPort: 30004
+    hostPort: 30004
+    protocol: TCP
+  - containerPort: 30005
+    hostPort: 30005
+    protocol: TCP
+  - containerPort: 30006
+    hostPort: 30006
+    protocol: TCP
   - containerPort: 30007
     hostPort: 30007
     protocol: TCP
   - containerPort: 30008
     hostPort: 30008
+    protocol: TCP
+  - containerPort: 30009
+    hostPort: 30009
+    protocol: TCP
+  - containerPort: 30306
+    hostPort: 30306
+    protocol: TCP
+  - containerPort: 30679
+    hostPort: 30679
     protocol: TCP
 containerdConfigPatches:
 - |-
@@ -57,6 +90,9 @@ for node in $(kind get nodes); do
   kubectl annotate node "${node}" "kind.x-k8s.io/registry=localhost:${reg_port}";
 done
 
+# 建立新的namespace
+kubectl create namespace devops
+
 # 建置 ingress-nginx
 # 可以用 kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/usage.yaml 驗證
 # 使用 curl localhost/foo 檢測，應該會顯示 foo
@@ -66,5 +102,5 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 # 等待ingress建立完成
 kubectl wait --namespace ingress-nginx \
   --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
+  --selector=app.kubernetes.io/component=controller
+kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission

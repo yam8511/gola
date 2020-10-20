@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: default
+  name: gola-common-ingress
+  annotations:
+    # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size
+    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+spec:
+  rules:
+    - host: mysql-server
+      http:
+        paths:
+          - backend:
+              serviceName: phpmyadmin
+              servicePort: 80
+            path: /
+    - host: redis-server
+      http:
+        paths:
+          - backend:
+              serviceName: redisadmin
+              servicePort: 8081
+            path: /
