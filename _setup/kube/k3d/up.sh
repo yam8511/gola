@@ -3,31 +3,47 @@ CRE='\033[0m'
 CTEAL='\033[0;36m'
 echo "${CTEAL}🛳  K3D UP${CRE}"
 
-if k3d cluster ls gola 1>/dev/null 2>&1; then
-    k3d cluster start gola
+echo "⚙️  請輸入 kubernetes cluster 名稱 [預設: default]"
+printf "> "
+read cluster
+cluster=${cluster:-default}
+
+if k3d cluster ls ${cluster} 1>/dev/null 2>&1; then
+    k3d cluster start ${cluster}
     exit 0
 fi
 
-echo "⚙️  輸入 registry port (映像檔倉庫的port) [預設: 5000]"
+echo "⚙️  輸入 kubernetes cluster port [預設: 16443]"
+printf "> "
+read cluster_port
+cluster_port=${cluster_port:-16443}
+
+echo "⚙️  請輸入 registry port (映像檔倉庫的port) [預設: 5000]"
 printf "> "
 read reg_port
 reg_port=${reg_port:-5000}
 reg_name='registry'
 
-echo "mirrors:
-    \"localhost:${reg_port}\":
-    endpoint:
-        - http://${reg_name}:${reg_port}" > $HOME/.cache/gola/kube/k3d/registry.yaml
+K3D_FD=$HOME/.cache/.k3d
+K8S_CLUSTER_FD=$HOME/.cache/gola/k8s/cluster-${cluster}
 
+mkdir -p $K3D_FD
+mkdir -p $K8S_CLUSTER_FD/data
 
-k3d cluster create gola \
+printf "mirrors:
+    registry:${reg_port}:
+        endpoint:
+            - http://${reg_name}:${reg_port}" > $K3D_FD/registry.yaml
+
+k3d cluster create ${cluster} \
     --servers 1 \
-    --agents 3 \
-    --api-port 0.0.0.0:16443 \
-    -v $HOME/.cache/gola/data:/data \
-    -v $HOME/.cache/gola/kube/k3d/registry.yaml:/etc/rancher/k3s/registries.yaml \
+    --api-port 0.0.0.0:${cluster_port} \
+    -v $K8S_CLUSTER_FD/data:/data \
+    -v $K3D_FD/registry.yaml:/etc/rancher/k3s/registries.yaml \
     -p 80:80@loadbalancer \
     -p 443:443@loadbalancer \
+    -p 30306:30306@server[0] \
+    -p 30679:30679@server[0] \
     -p 30001-30009:30001-30009@server[0] || exit 1
 
 # create registry container unless it already exists
@@ -40,7 +56,14 @@ if [ "${running}" != 'true' ]; then
     registry:2
 fi
 
-docker network connect "k3d-gola" "${reg_name}"
+docker network connect "k3d-${cluster}" "${reg_name}"
+
+echo "⚙️  請輸入要使用的 kubernetes namespace [預設: default]"
+printf "> "
+read namespace
+namespace=${namespace:-default}
 
 # 建立新的namespace
+kubectl create namespace ${namespace}
 kubectl create namespace devops
+kubectl config set-context --current --namespace ${namespace}
