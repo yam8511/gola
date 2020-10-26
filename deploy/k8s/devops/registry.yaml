@@ -1,0 +1,31 @@
+# 如果有使用 kind or k3d，再打開以下註解
+# apiVersion: v1
+# kind: Endpoints
+# metadata:
+#   namespace: devops
+#   name: registry
+#   labels:
+#     run: registry
+# subsets:
+#   - addresses:
+#       # 填入 registry 的 docker ip
+#       # 如果是使用 kind
+#       # docker inspect registry -f '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s %s\n" $k $v.IPAddress}}{{end}}' | grep kind
+#       # 如果是使用 k3d
+#       # docker inspect registry -f '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s %s\n" $k $v.IPAddress}}{{end}}' | grep k3d-default
+#       - ip: docker registry ip
+#     ports:
+#       - port: 5000
+#         protocol: TCP
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   namespace: devops
+#   name: registry
+#   labels:
+#     run: registry
+# spec:
+#   ports:
+#     - port: 5000
+#       targetPort: 5000

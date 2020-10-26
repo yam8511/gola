@@ -2,6 +2,7 @@ package greet
 
 import (
 	"context"
+	"gola/global"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"log"
@@ -9,7 +10,6 @@ import (
 	"net/rpc"
 	"strconv"
 	"sync"
-	"time"
 )
 
 type GreetServer struct {
@@ -20,22 +20,22 @@ type GreetServer struct {
 func (gs *GreetServer) SayHello(req *HelloRequest, res *HelloReply) error {
 	gs.mx.Lock()
 	gs.count++
-	logger.Success("#" + strconv.Itoa(gs.count) + ": Get Hello from " + req.Name)
+	logger.Success("#" + strconv.Itoa(gs.count) + ": Get Hello " + global.AppVersion + " from " + req.Name)
 	gs.mx.Unlock()
 
-	res.Message = "Hello " + req.Name
+	res.Message = "Hello " + global.AppVersion + " " + req.Name
 	return nil
 }
 
 func (gs *GreetServer) SayHelloAgain(req *HelloRequest, res *HelloReply) error {
 	gs.mx.Lock()
 	gs.count++
-	logger.Success("#" + strconv.Itoa(gs.count) + ": Get Hello Again from " + req.Name)
+	logger.Success("#" + strconv.Itoa(gs.count) + ": Get Hello Again " + global.AppVersion + " from " + req.Name)
 	gs.mx.Unlock()
 
-	time.Sleep(time.Second * 2)
+	// time.Sleep(time.Second * 2)
 
-	res.Message = "Hello Again " + req.Name
+	res.Message = "Hello Again " + global.AppVersion + " " + req.Name
 	return nil
 	// return nil, status.Errorf(codes.Unimplemented, "method SayHelloAgain not implemented")
 }

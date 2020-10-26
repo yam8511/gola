@@ -10,7 +10,7 @@ import (
 )
 
 func Client(name string) (*greet.HelloReply, error) {
-	conn, err := grpc.Dial(discover.Discover("greet"), grpc.WithInsecure())
+	conn, err := grpc.Dial(discover.Discover("greet", "grpc"), grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-greet-v2
+  labels:
+    repo: gola
+    app: http-greet
+    version: v2
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      repo: gola
+      app: http-greet
+      version: v2
+  template:
+    metadata:
+      labels:
+        repo: gola
+        app: http-greet
+        version: v2
+    spec:
+      containers:
+        - name: server
+          image: registry:5000/gola/web:v2
+          command:
+            - ./gola
+          args:
+            - server
+          env:
+            - name: APP_SITE
+              value: http-greet
+          envFrom:
+            - configMapRef:
+                name: env-prod
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+          ports:
+            - containerPort: 80

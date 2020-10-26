@@ -5,37 +5,43 @@ metadata:
   labels:
     repo: gola
     app: server
+    version: v1
 spec:
-  replicas: 2
+  replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
       repo: gola
       app: server
+      version: v1
   template:
     metadata:
       labels:
         repo: gola
         app: server
+        version: v1
     spec:
       containers:
-        - name: gola-server
-          image: localhost:5000/gola/web:latest
+        - name: server
+          image: registry:5000/gola/web:latest
+          args:
+            - "server"
           env:
             - name: APP_SITE
               value: server
           envFrom:
             - configMapRef:
                 name: env-prod
-          # env:
-          #   - name: APP_ENV
-          #     value: prod
           resources:
             limits:
               memory: "128Mi"
-              cpu: "500m"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
           ports:
-            - containerPort: 8000
+            - containerPort: 80
 
 ---
 apiVersion: v1
@@ -51,5 +57,6 @@ spec:
     repo: gola
     app: server
   ports:
-    - port: 8000
-      targetPort: 8000
+    - port: 80
+      targetPort: 80
+      name: http

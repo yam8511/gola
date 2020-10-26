@@ -27,7 +27,7 @@ if [ "${running}" != 'true' ]; then
     registry:2
 fi
 
-K8S_CLUSTER_FD=$HOME/.cache/gola/k8s/cluster-${cluster}
+K8S_CLUSTER_FD=$HOME/.gola/k8s/cluster-${cluster}
 
 mkdir -p $K8S_CLUSTER_FD/data
 

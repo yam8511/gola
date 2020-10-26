@@ -14,7 +14,7 @@ type rpcClient struct {
 
 func (c *rpcClient) New() *rpc.Client {
 	c.Do(func() {
-		client, err := rpc.Dial("tcp", discover.Discover("greet"))
+		client, err := rpc.Dial("tcp", discover.Discover("greet", "gorpc"))
 		if err != nil {
 			panic(err)
 		}

@@ -8,7 +8,7 @@
 [server]
     ip = "0.0.0.0"             # 伺服器的IP
     host = "localhost"  # 伺服器的Host
-    port = 8000         # 伺服器的Port
+    port = 80         # 伺服器的Port
     secure = false      # 是否要安全憑證
     max_conn = 100000   # 最大連線數量
 

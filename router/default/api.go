@@ -14,6 +14,8 @@ func LoadAPIRouter(r *gin.Engine) {
 	)
 	api.GET("/grpc/hello", handler.API)
 	api.GET("/gorpc/hello", handler.API2)
+	api.GET("/http/hello", handler.API3)
+	api.GET("/greet", handler.Greet)
 	api.POST("/config", handler.Config)
 	// api.POST("/seed", handler.Seed)
 

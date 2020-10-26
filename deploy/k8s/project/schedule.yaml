@@ -12,15 +12,17 @@ spec:
     matchLabels:
       repo: gola
       app: schedule
+      version: v1
   template:
     metadata:
       labels:
         repo: gola
         app: schedule
+        version: v1
     spec:
       containers:
         - name: gola-schedule
-          image: localhost:5000/gola/web:latest
+          image: registry:5000/gola/web:latest
           command:
             - ./gola
           args:
@@ -34,4 +36,4 @@ spec:
           resources:
             limits:
               memory: "128Mi"
-              cpu: "500m"
+              cpu: "50m"

@@ -37,43 +37,31 @@ definitions:
       password:
         type: string
       port:
-        type: string
+        type: integer
     type: object
   bootstrap.CacheList:
     properties:
       defaultMaster:
         $ref: '#/definitions/bootstrap.CacheConf'
-        type: object
       defaultSlave:
         $ref: '#/definitions/bootstrap.CacheConf'
-        type: object
     type: object
   bootstrap.Config:
     properties:
       app:
         $ref: '#/definitions/bootstrap.AppConf'
-        type: object
       bot:
         $ref: '#/definitions/bootstrap.BotConf'
-        type: object
       caches:
         $ref: '#/definitions/bootstrap.CacheList'
-        type: object
       databases:
         $ref: '#/definitions/bootstrap.DatabaseList'
-        type: object
       log:
         $ref: '#/definitions/bootstrap.LogConf'
-        type: object
-      mode:
-        description: 程序執行模式
-        type: string
       server:
         $ref: '#/definitions/bootstrap.ServerConf'
-        type: object
       services:
         $ref: '#/definitions/bootstrap.ServiceList'
-        type: object
     type: object
   bootstrap.DatabaseConf:
     properties:
@@ -86,7 +74,7 @@ definitions:
       password:
         type: string
       port:
-        type: string
+        type: integer
       username:
         type: string
     type: object
@@ -94,10 +82,8 @@ definitions:
     properties:
       defaultMaster:
         $ref: '#/definitions/bootstrap.DatabaseConf'
-        type: object
       defaultSlave:
         $ref: '#/definitions/bootstrap.DatabaseConf'
-        type: object
     type: object
   bootstrap.LogConf:
     properties:
@@ -110,9 +96,6 @@ definitions:
     type: object
   bootstrap.ServerConf:
     properties:
-      autoPort:
-        description: 啟用自動尋找環境變數:PORT
-        type: boolean
       host:
         description: 伺服器的Host
         type: string
@@ -124,7 +107,7 @@ definitions:
         type: integer
       port:
         description: 伺服器的Port
-        type: string
+        type: integer
       secure:
         description: 是否要安全憑證
         type: boolean
@@ -138,7 +121,7 @@ definitions:
       ip:
         type: string
       port:
-        type: string
+        type: integer
       secure:
         type: boolean
     type: object
@@ -146,7 +129,6 @@ definitions:
     properties:
       google:
         $ref: '#/definitions/bootstrap.ServiceConf'
-        type: object
     type: object
   errorcode.APIError:
     properties:
@@ -154,8 +136,6 @@ definitions:
         type: integer
       error_text:
         type: string
-      showLog:
-        type: boolean
     type: object
   response.API:
     properties:
@@ -175,7 +155,6 @@ definitions:
     type: object
 info:
   contact: {}
-  license: {}
 paths:
   /api/config:
     post:
@@ -189,7 +168,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/swagger.ConfigRequest'
-          type: object
       produces:
       - application/json
       responses:
@@ -212,7 +190,7 @@ paths:
           description: hello world
           schema:
             type: string
-      summary: 範例
+      summary: gorpc greet
       tags:
       - 範例
   /api/grpc/hello:
@@ -223,7 +201,18 @@ paths:
           description: hello world
           schema:
             type: string
-      summary: 範例
+      summary: grpc greet
+      tags:
+      - 範例
+  /api/http/hello:
+    get:
+      description: 範例
+      responses:
+        "200":
+          description: hello world
+          schema:
+            type: string
+      summary: http greet
       tags:
       - 範例
   /api/seed:

@@ -24,8 +24,9 @@ read reg_port
 reg_port=${reg_port:-5000}
 reg_name='registry'
 
-K3D_FD=$HOME/.cache/.k3d
+K3D_FD=$HOME/.gola/k3d
 K8S_CLUSTER_FD=$HOME/.cache/gola/k8s/cluster-${cluster}
+REGISTRY_FILE=$K3D_FD/registry.yaml
 
 mkdir -p $K3D_FD
 mkdir -p $K8S_CLUSTER_FD/data
@@ -33,13 +34,13 @@ mkdir -p $K8S_CLUSTER_FD/data
 printf "mirrors:
     registry:${reg_port}:
         endpoint:
-            - http://${reg_name}:${reg_port}" > $K3D_FD/registry.yaml
+            - http://${reg_name}:${reg_port}" > $REGISTRY_FILE
 
 k3d cluster create ${cluster} \
     --servers 1 \
     --api-port 0.0.0.0:${cluster_port} \
     -v $K8S_CLUSTER_FD/data:/data \
-    -v $K3D_FD/registry.yaml:/etc/rancher/k3s/registries.yaml \
+    -v $REGISTRY_FILE:/etc/rancher/k3s/registries.yaml \
     -p 80:80@loadbalancer \
     -p 443:443@loadbalancer \
     -p 30306:30306@server[0] \

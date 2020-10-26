@@ -1,30 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grpc-greet
+  name: grpc-greet-v1
   labels:
     repo: gola
-    app: greet
+    app: grpc-greet
+    version: v1
 spec:
-  replicas: 3
+  replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
       repo: gola
-      app: greet
+      app: grpc-greet
+      version: v1
   template:
     metadata:
       labels:
         repo: gola
-        app: greet
+        app: grpc-greet
+        version: v1
     spec:
       containers:
-        - name: grpc-greet
-          image: localhost:5000/gola/web:latest
+        - name: server
+          image: registry:5000/gola/web:v1
           command:
             - ./gola
           args:
-            - gorpc
+            - grpc
             - greet
           env:
             - name: APP_SITE
@@ -32,13 +35,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: env-prod
-          # env:
-          #   - name: APP_ENV
-          #     value: prod
           resources:
             limits:
               memory: "128Mi"
-              cpu: "500m"
+              cpu: "50m"
           ports:
             - containerPort: 50051
 
@@ -47,10 +47,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grpc-greet
+  labels:
+    repo: gola
+    app: grpc-greet
 spec:
   selector:
     repo: gola
-    app: greet
+    app: grpc-greet
   ports:
     - port: 50051
       targetPort: 50051
+      name: http2

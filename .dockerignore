@@ -1,6 +1,5 @@
 _setup/
 deploy/
 resource/
-.vscode
+.vscode/
 .git
-gola
