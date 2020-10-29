@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gola-server
+  name: gola-server-v2
   labels:
     repo: gola
-    app: server
-    version: v1
+    app: gola-server
+    version: v2
 spec:
   replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
       repo: gola
-      app: server
-      version: v1
+      app: gola-server
+      version: v2
   template:
     metadata:
       labels:
         repo: gola
-        app: server
-        version: v1
+        app: gola-server
+        version: v2
     spec:
       containers:
         - name: server
@@ -29,6 +29,8 @@ spec:
           env:
             - name: APP_SITE
               value: server
+            - name: VERSION
+              value: v2
           envFrom:
             - configMapRef:
                 name: env-prod
@@ -36,27 +38,9 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "50m"
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 80
+          # readinessProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 80
           ports:
             - containerPort: 80
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: gola-server
-  labels:
-    repo: gola
-    app: server
-spec:
-  type: ClusterIP
-  selector:
-    repo: gola
-    app: server
-  ports:
-    - port: 80
-      targetPort: 80
-      name: http

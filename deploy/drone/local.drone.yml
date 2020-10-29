@@ -27,8 +27,13 @@ steps:
       - name: gocache
         path: /root/.cache/go-build
     commands:
-      - go build -mod vendor -v -ldflags "-X 'gola/global.AppVersion=v1' -X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola_v1
-      - go build -mod vendor -v -ldflags "-X 'gola/global.AppVersion=v2' -X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola_v2
+      # - go build -mod vendor -v -ldflags "-X 'gola/global.AppVersion=v1' -X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola_v1
+      # - go build -mod vendor -v -ldflags "-X 'gola/global.AppVersion=v2' -X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola_v2
+      # - go build -mod vendor -v -ldflags "-X 'gola/global.AppVersion=v3' -X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola_v3
+      - go build -mod vendor -v -ldflags "-X 'gola/global.BuildTime=$(date -u '+%Y-%m-%dT%I:%M:%SZ')' -X 'gola/global.GoVersion=$(go version)'" -o gola
+      # - make build
+    depends_on:
+      - clone
 
   - name: publish
     image: docker:dind
@@ -39,39 +44,63 @@ steps:
         path: /var/lib
     commands:
       - docker version
-      - docker build -t registry:5000/gola/web:v1_${DRONE_COMMIT} -t registry:5000/gola/web:v1 -f ./docker/drone.Dockerfile --build-arg version=_v1 .
-      - docker build -t registry:5000/gola/web:v2_${DRONE_COMMIT} -t registry:5000/gola/web:v2 -f ./docker/drone.Dockerfile --build-arg version=_v2 .
-      - docker push registry:5000/gola/web:v1_${DRONE_COMMIT}
-      - docker push registry:5000/gola/web:v1
-      - docker push registry:5000/gola/web:v2_${DRONE_COMMIT}
-      - docker push registry:5000/gola/web:v2
+      - docker build -t registry:5000/gola/web:${DRONE_COMMIT} -t registry:5000/gola/web:latest -f ./docker/drone.Dockerfile .
+      # - docker build -t registry:5000/gola/web:v2_${DRONE_COMMIT} -t registry:5000/gola/web:v2 -f ./docker/drone.Dockerfile --build-arg version=_v2 .
+      # - docker build -t registry:5000/gola/web:v3_${DRONE_COMMIT} -t registry:5000/gola/web:v3 -f ./docker/drone.Dockerfile --build-arg version=_v3 .
+      - docker push registry:5000/gola/web:${DRONE_COMMIT}
+      - docker push registry:5000/gola/web:latest
+      # - docker push registry:5000/gola/web:v1_${DRONE_COMMIT}
+      # - docker push registry:5000/gola/web:v1
+      # - docker push registry:5000/gola/web:v2_${DRONE_COMMIT}
+      # - docker push registry:5000/gola/web:v2
+      # - docker push registry:5000/gola/web:v3_${DRONE_COMMIT}
+      # - docker push registry:5000/gola/web:v3
       - docker system prune -f
       - docker volume prune -f
+    depends_on:
+      - build
 
-  - name: deploy_v1
+  - name: deploy
     image: quay.io/honestbee/drone-kubernetes
     settings:
       namespace: default
       deployment:
-        - gola-server
+        - gola-server-v1
         - gorpc-greet-v1
         - grpc-greet-v1
         - http-greet-v1
-      container: server
-      repo: registry:5000/gola/web
-      tag: v1_${DRONE_COMMIT}
-
-  - name: deploy_v2
-    image: quay.io/honestbee/drone-kubernetes
-    settings:
-      namespace: default
-      deployment:
+        - gola-server-v2
         - gorpc-greet-v2
         - grpc-greet-v2
         - http-greet-v2
+        - grpc-greet-v3
+        - http-greet-v3
       container: server
       repo: registry:5000/gola/web
-      tag: v2_${DRONE_COMMIT}
+      tag: ${DRONE_COMMIT}
+    depends_on:
+      - publish
+
+  # - name: deploy_v2
+  #   image: quay.io/honestbee/drone-kubernetes
+  #   settings:
+  #     namespace: default
+  #     deployment:
+  #     container: server
+  #     repo: registry:5000/gola/web
+  #     tag: v2_${DRONE_COMMIT}
+  #   depends_on:
+  #     - publish
+  # - name: deploy_v3
+  #   image: quay.io/honestbee/drone-kubernetes
+  #   settings:
+  #     namespace: default
+  #     deployment:
+  #     container: server
+  #     repo: registry:5000/gola/web
+  #     tag: v3_${DRONE_COMMIT}
+  #   depends_on:
+  #     - publish
 
 services:
   - name: dind

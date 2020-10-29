@@ -16,8 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	gogreet "gola/gorpc/greet"
-	"gola/grpc/greet"
+	gogreet "gola/gorpc/greet/client"
+	greet "gola/grpc/greet/client"
 	"gola/internal/logger"
 
 	"github.com/spf13/cobra"

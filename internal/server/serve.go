@@ -68,8 +68,11 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 		return
 	}
 
+	dl := NewDozListener(l, 0, true)
+
 	go func() {
-		err := server.Serve(l)
+		// err := server.Serve(l)
+		err := server.Serve(dl)
 		logger.Warn(fmt.Sprintf("🎃  Server 回傳 error (%v) 🎃", err))
 	}()
 
@@ -81,7 +84,17 @@ func SignalListenAndServe(server *http.Server, waitFinish *sync.WaitGroup) {
 
 	select {
 	case <-bootstrap.SingleFlightChan("Server.DozListener.Wait", func() (interface{}, error) {
-		return nil, server.Shutdown(context.Background())
+		err := server.Shutdown(context.Background())
+		if err != nil {
+			logger.Danger("Shutdown 失敗: %v", err)
+		}
+
+		err = dl.Wait()
+		if err != nil {
+			logger.Danger("DozListener Wait 失敗: %v", err)
+		}
+
+		return nil, err
 	}):
 	case <-bootstrap.WaitOnceSignal():
 		logger.Danger(`🚦  收到第二次訊號，強制結束 🚦`)

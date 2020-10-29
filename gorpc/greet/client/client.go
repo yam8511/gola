@@ -1,6 +1,7 @@
 package greet
 
 import (
+	"gola/gorpc/proto"
 	"gola/grpc/discover"
 	"gola/internal/logger"
 	"net/rpc"
@@ -25,17 +26,17 @@ func (c *rpcClient) New() *rpc.Client {
 
 var greetClient = &rpcClient{}
 
-func Client(name string) (*HelloReply, error) {
+func Client(name string) (*proto.HelloReply, error) {
 	client := greetClient.New()
 
-	var res = &HelloReply{}
-	err := client.Call("GreetServer.SayHello", &HelloRequest{Name: name}, &res)
+	var res = &proto.HelloReply{}
+	err := client.Call("GreetServer.SayHello", &proto.HelloRequest{Name: name}, &res)
 	if err != nil {
 		return nil, err
 	}
 	logger.Success(res.Message)
 
-	err = client.Call("GreetServer.SayHelloAgain", &HelloRequest{Name: name}, &res)
+	err = client.Call("GreetServer.SayHelloAgain", &proto.HelloRequest{Name: name}, &res)
 	if err != nil {
 		return nil, err
 	}

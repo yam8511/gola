@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: registry:5000/gola/web:v1
+          image: registry:5000/gola/web:latest
           command:
             - ./gola
           args:
@@ -32,6 +32,8 @@ spec:
           env:
             - name: APP_SITE
               value: gorpc-greet
+            - name: VERSION
+              value: v1
           envFrom:
             - configMapRef:
                 name: env-prod

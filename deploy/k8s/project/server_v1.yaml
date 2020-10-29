@@ -1,38 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: http-greet-v2
+  name: gola-server-v1
   labels:
     repo: gola
-    app: http-greet
-    version: v2
+    app: gola-server
+    version: v1
 spec:
   replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
       repo: gola
-      app: http-greet
-      version: v2
+      app: gola-server
+      version: v1
   template:
     metadata:
       labels:
         repo: gola
-        app: http-greet
-        version: v2
+        app: gola-server
+        version: v1
     spec:
       containers:
         - name: server
           image: registry:5000/gola/web:latest
-          command:
-            - ./gola
           args:
-            - server
+            - "server"
           env:
             - name: APP_SITE
-              value: http-greet
+              value: server
             - name: VERSION
-              value: v2
+              value: v1
           envFrom:
             - configMapRef:
                 name: env-prod
@@ -46,3 +44,20 @@ spec:
           #     port: 80
           ports:
             - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gola-server
+  labels:
+    repo: gola
+    app: gola-server
+spec:
+  type: ClusterIP
+  selector:
+    repo: gola
+    app: gola-server
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http

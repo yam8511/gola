@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: http-greet-v2
+  name: grpc-greet-v3
   labels:
     repo: gola
-    app: http-greet
-    version: v2
+    app: grpc-greet
+    version: v3
 spec:
   replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
       repo: gola
-      app: http-greet
-      version: v2
+      app: grpc-greet
+      version: v3
   template:
     metadata:
       labels:
         repo: gola
-        app: http-greet
-        version: v2
+        app: grpc-greet
+        version: v3
     spec:
       containers:
         - name: server
@@ -27,12 +27,13 @@ spec:
           command:
             - ./gola
           args:
-            - server
+            - grpc
+            - greet
           env:
             - name: APP_SITE
-              value: http-greet
+              value: grpc-greet
             - name: VERSION
-              value: v2
+              value: v3
           envFrom:
             - configMapRef:
                 name: env-prod
@@ -40,9 +41,5 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "50m"
-          # readinessProbe:
-          #   httpGet:
-          #     path: /healthz
-          #     port: 80
           ports:
-            - containerPort: 80
+            - containerPort: 50051

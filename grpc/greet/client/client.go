@@ -5,18 +5,32 @@ import (
 	"gola/grpc/discover"
 	"gola/grpc/proto/greet"
 	"gola/internal/logger"
+	"sync"
 
 	"google.golang.org/grpc"
 )
 
-func Client(name string) (*greet.HelloReply, error) {
-	conn, err := grpc.Dial(discover.Discover("greet", "grpc"), grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
+type grpcClient struct {
+	sync.Once
+	conn *grpc.ClientConn
+}
 
-	client := greet.NewGreeterClient(conn)
+func (c *grpcClient) New() *grpc.ClientConn {
+	c.Do(func() {
+		conn, err := grpc.Dial(discover.Discover("greet", "grpc"), grpc.WithInsecure())
+		if err != nil {
+			panic(err)
+		}
+		c.conn = conn
+	})
+	return c.conn
+}
+
+var greetClient = &grpcClient{}
+
+func Client(name string) (*greet.HelloReply, error) {
+
+	client := greet.NewGreeterClient(greetClient.New())
 
 	res, err := client.SayHello(
 		context.Background(),

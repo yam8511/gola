@@ -11,9 +11,8 @@ WORKDIR ${WORKSPACE}
 ENV PROJECT_ROOT=${WORKSPACE}
 ENV TZ=Asia/Taipei
 
-ARG version
 # 最後放置執行檔，為了加快編譯速度
-COPY ./gola${version} ${WORKSPACE}/gola
+COPY ./gola ${WORKSPACE}/gola
 
 # 啟動服務
 ENTRYPOINT [ "./gola" ]

@@ -121,6 +121,7 @@ func writeLog(t level, text string, v ...interface{}) {
 		}
 	}
 
+	prefix = time.Now().Format("2006-01-02 15:04:05 ") + prefix
 	colorFmt.EnableColor()
 	colorFmt.Printf(prefix+text+"\n", v...)
 }

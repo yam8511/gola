@@ -1,4 +1,4 @@
-package greet
+package proto
 
 // The request message containing the user's name.
 type HelloRequest struct {

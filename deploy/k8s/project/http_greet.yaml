@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: registry:5000/gola/web:v1
+          image: registry:5000/gola/web:latest
           command:
             - ./gola
           args:
@@ -31,6 +31,8 @@ spec:
           env:
             - name: APP_SITE
               value: http-greet
+            - name: VERSION
+              value: v1
           envFrom:
             - configMapRef:
                 name: env-prod
@@ -38,10 +40,10 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "50m"
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 80
+          # readinessProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 80
           ports:
             - containerPort: 80
 

@@ -7,9 +7,9 @@ import (
 	"gola/app/common/swagger"
 	"gola/app/model"
 	"gola/global"
-	gogreet "gola/gorpc/greet"
+	gogreet "gola/gorpc/greet/client"
 	"gola/grpc/discover"
-	"gola/grpc/greet"
+	greet "gola/grpc/greet/client"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"io/ioutil"
@@ -65,12 +65,20 @@ func API3(c *gin.Context) {
 		response.Failed(c, errorcode.Code_Google_API_Return.New(err.Error()))
 		return
 	}
-	_ = res.Body.Close()
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		response.Failed(c, errorcode.Code_Google_API_Return.New(res.Status))
 		return
 	}
+
+	msg, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		response.Failed(c, errorcode.Code_Google_API_Return.New(err.Error()))
+		return
+	}
+
+	logger.Success(string(msg))
 
 	query := link.Query()
 	query.Set("again", "Y")
@@ -89,12 +97,13 @@ func API3(c *gin.Context) {
 
 	defer res.Body.Close()
 
-	msg, err := ioutil.ReadAll(res.Body)
+	msg, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		response.Failed(c, errorcode.Code_Google_API_Return.New(err.Error()))
 		return
 	}
 
+	logger.Success(string(msg))
 	response.Success(c, string(msg))
 }
 

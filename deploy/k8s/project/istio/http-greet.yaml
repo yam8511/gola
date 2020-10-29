@@ -9,6 +9,7 @@ spec:
     - route:
         - destination:
             host: http-greet
+            subset: v1
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
@@ -23,3 +24,6 @@ spec:
     - name: v2
       labels:
         version: v2
+    - name: v3
+      labels:
+        version: v3
