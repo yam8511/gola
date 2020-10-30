@@ -1,3 +1,7 @@
+# github.com/arl/statsviz v0.2.1
+## explicit
+github.com/arl/statsviz
+github.com/arl/statsviz/websocket
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.1.1
