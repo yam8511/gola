@@ -11,15 +11,15 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - gola.local
+        - "*"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: gola-server
+  name: gola-vs
 spec:
   hosts:
-    - gola.local
+    - "*"
   gateways:
     - gola-gateway
   http:

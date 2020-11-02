@@ -13,7 +13,7 @@
 #       # docker inspect registry -f '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s %s\n" $k $v.IPAddress}}{{end}}' | grep kind
 #       # 如果是使用 k3d
 #       # docker inspect registry -f '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s %s\n" $k $v.IPAddress}}{{end}}' | grep k3d-default
-#       - ip: docker registry ip
+#       - ip: "填入 registry 的容器ip"
 #     ports:
 #       - port: 5000
 #         protocol: TCP

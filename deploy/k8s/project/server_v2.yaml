@@ -20,6 +20,12 @@ spec:
         repo: gola
         app: gola-server
         version: v2
+      # annotations:
+      #   telegraf.influxdata.com/port: "80"
+      #   telegraf.influxdata.com/path: /metrics
+      #   telegraf.influxdata.com/scheme: http
+      #   telegraf.influxdata.com/interval: 5s
+      #   telegraf.influxdata.com/class: basic
     spec:
       containers:
         - name: server
