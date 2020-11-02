@@ -2,13 +2,20 @@ package server
 
 import (
 	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Run 啟動伺服器
-func Run() {
+func Run(provider func(*gin.Engine)) {
 
 	// 設置 router
 	r := SetupRouter()
+
+	// 自定義route
+	if provider != nil {
+		provider(r)
+	}
 
 	// 建立 server
 	server := CreateServer(r)

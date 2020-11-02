@@ -20,7 +20,7 @@ func UserSeed() (err error) {
 		userID = append(userID, user.ID)
 	}
 
-	db, err := NewModelDB(User{}, true)
+	db, err := User{}.Database(true).New()
 	if err != nil {
 		return err
 	}

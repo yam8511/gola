@@ -18,6 +18,7 @@ package cmd
 import (
 	"gola/internal/bootstrap"
 	"gola/internal/server"
+	defaultR "gola/router/default"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +31,22 @@ var serverCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		bootstrap.SetRunMode(bootstrap.ServerMode)
 		bootstrap.SetupGracefulSignal() // 設定優雅結束程序
-		server.Run()
+
+		conf := bootstrap.GetAppConf()
+		switch conf.App.Site {
+		case "admin":
+			// 專屬admin的route
+		case "member":
+			// 專屬member的route
+		default:
+			// 檢查資料庫資料表
+			// modelList := []model.IModel{
+			// 	new(model.User),
+			// }
+			// model.SetupTable(modelList...)
+
+			server.Run(defaultR.LoadRoutes)
+		}
 	},
 }
 

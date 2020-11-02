@@ -1,7 +1,6 @@
 package model
 
 import (
-	"gola/internal/database"
 	"time"
 )
 
@@ -22,9 +21,9 @@ func (m User) TableName() string {
 }
 
 // Database 資料庫
-func (m User) Database(master bool) database.Type {
+func (m User) Database(master bool) databaseType {
 	if master {
-		return DBMaster
+		return DB_Master
 	}
-	return DBSlave
+	return DB_Slave
 }

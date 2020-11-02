@@ -3,7 +3,6 @@ package router
 import (
 	"gola/app/middleware"
 	"gola/internal/bootstrap"
-	defaultR "gola/router/default"
 	"net/http"
 	"net/http/pprof"
 	"strings"
@@ -15,7 +14,6 @@ import (
 
 // RouteProvider 路由提供者
 func RouteProvider(r *gin.Engine) {
-	conf := bootstrap.GetAppConf()
 	pprofHandle := map[string]http.HandlerFunc{
 		"/allocs":       pprof.Handler("allocs").ServeHTTP,
 		"/block":        pprof.Handler("block").ServeHTTP,
@@ -50,14 +48,4 @@ func RouteProvider(r *gin.Engine) {
 			statsviz.Index.ServeHTTP(c.Writer, c.Request)
 		}
 	})
-
-	// 載入Route
-	switch conf.App.Site {
-	case "admin":
-		// 專屬admin的route
-	case "member":
-		// 專屬member的route
-	default:
-		defaultR.LoadRoutes(r)
-	}
 }
