@@ -66,15 +66,18 @@ metadata:
   namespace: telegraf-operator
   labels:
     app: telegraf-operator
+    version: latest
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: telegraf-operator
+      version: latest
   template:
     metadata:
       labels:
         app: telegraf-operator
+        version: latest
     spec:
       serviceAccountName: telegraf-operator
       containers:
@@ -92,7 +95,7 @@ spec:
             - --telegraf-classes-directory=/config/classes
             # allow injecting telegraf-istio sidecar for pods with
             # istio sidecar annotations enabled
-            - --enable-istio-injection=true
+            # - --enable-istio-injection=true
           env:
             - name: POD_NAMESPACE
               valueFrom:

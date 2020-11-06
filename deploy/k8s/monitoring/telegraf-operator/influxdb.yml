@@ -2,23 +2,39 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: influxdb
-  namespace: monitoring
+  namespace: telegraf-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: influxdb
+      version: latest
   template:
     metadata:
       labels:
         app: influxdb
+        version: latest
     spec:
       containers:
         - name: influxdb
           image: influxdb:1.8
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
         - name: chronograf
           image: chronograf:1.8
           args: ["--influxdb-url=http://localhost:8086"]
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+        - name: grafana
+          image: grafana/grafana:7.3.1
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
 ---
 apiVersion: v1
 kind: Service
@@ -26,12 +42,14 @@ metadata:
   labels:
     app: influxdb
   name: influxdb
-  namespace: monitoring
+  namespace: telegraf-operator
 spec:
   ports:
-    - name: server
+    - name: http-server
       port: 8086
-    - name: chronograf
+    - name: http-chronograf
       port: 8888
+    - name: http-grafana
+      port: 3000
   selector:
     app: influxdb

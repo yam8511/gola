@@ -8,7 +8,7 @@ stringData:
   # report to InfluxDB v1 in same cluster as well as to stdout for convenience
   basic: |+
     [[outputs.influxdb]]
-      urls = ["http://influxdb.monitoring:8086"]
+      urls = ["http://influxdb.telegraf-operator:8086"]
     [[outputs.file]]
       files = ["stdout"]
     [global_tags]
@@ -16,7 +16,7 @@ stringData:
       nodename = "$NODENAME"
   app: |+
     [[outputs.influxdb]]
-      urls = ["http://influxdb.monitoring:8086"]
+      urls = ["http://influxdb.telegraf-operator:8086"]
     [[outputs.file]]
       files = ["stdout"]
     [global_tags]
@@ -25,7 +25,7 @@ stringData:
       type = "app"
   infra: |+
     [[outputs.influxdb]]
-      urls = ["http://influxdb.monitoring:8086"]
+      urls = ["http://influxdb.telegraf-operator:8086"]
     [[outputs.file]]
       files = ["stdout"]
     [global_tags]
@@ -65,4 +65,4 @@ stringData:
   # example for gathering istio
   istio: |+
     [[outputs.influxdb]]
-      urls = ["http://influxdb.monitoring:8086"]
+      urls = ["http://influxdb.telegraf-operator:8086"]

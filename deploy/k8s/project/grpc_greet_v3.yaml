@@ -20,6 +20,13 @@ spec:
         repo: gola
         app: grpc-greet
         version: v3
+      annotations:
+        telegraf.influxdata.com/port: "80"
+        telegraf.influxdata.com/path: /metrics
+        telegraf.influxdata.com/scheme: http
+        telegraf.influxdata.com/interval: 5s
+        telegraf.influxdata.com/class: basic
+        telegraf.influxdata.com/image: telegraf:1.16
     spec:
       containers:
         - name: server

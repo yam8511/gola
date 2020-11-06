@@ -53,6 +53,4 @@ namespace=${namespace:-default}
 # 建立新的namespace
 kubectl create namespace ${namespace}
 kubectl create namespace devops
-kubectl create namespace monitoring
-kubectl create namespace logging
 kubectl config set-context --current --namespace ${namespace}
