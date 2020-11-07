@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegraf-conf-kubernetes
+  namespace: monitoring
+  annotations:
+    note: 用來掛載到容器裡的預設資料夾`/etc/telegraf/`
+data:
+  telegraf.conf: |
+
+    [agent]
+      interval = "2s"
+
+    [[inputs.prometheus]]
+
+      ## An array of urls to scrape metrics from.
+      urls = ["https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/nodes/${NODE_NAME}/proxy/metrics/cadvisor"]
+
+      ## Metric version controls the mapping from Prometheus metrics into
+      ## Telegraf metrics.  When using the prometheus_client output, use the same
+      ## value in both plugins to ensure metrics are round-tripped without
+      ## modification.
+      ##
+      ##   example: metric_version = 1; deprecated in 1.13
+      ##            metric_version = 2; recommended version
+      metric_version = 2
+
+      ## An array of Kubernetes services to scrape metrics from.
+      # kubernetes_services = ["http://my-service-dns.my-namespace:9100/metrics"]
+
+      ## Kubernetes config file to create client from.
+      # kube_config = "/path/to/kubernetes.config"
+
+      ## Scrape Kubernetes pods for the following prometheus annotations:
+      ## - prometheus.io/scrape: Enable scraping for this pod
+      ## - prometheus.io/scheme: If the metrics endpoint is secured then you will need to
+      ##     set this to `https` & most likely set the tls config.
+      ## - prometheus.io/path: If the metrics path is not /metrics, define it with this annotation.
+      ## - prometheus.io/port: If port is not 9102 use this annotation
+      # monitor_kubernetes_pods = true
+
+      ## Restricts Kubernetes monitoring to a single namespace
+      ##   ex: monitor_kubernetes_pods_namespace = "default"
+      # monitor_kubernetes_pods_namespace = ""
+      # label selector to target pods which have the label
+      # kubernetes_label_selector = "env=dev,app=nginx"
+      # field selector to target pods
+      # eg. To scrape pods on a specific node
+      # kubernetes_field_selector = "spec.nodeName=${NODE_NAME}"
+
+      ## Use bearer token for authorization. ('bearer_token' takes priority)
+      bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      ## OR
+      # bearer_token_string = "abc_123"
+
+      ## HTTP Basic Authentication username and password. ('bearer_token' and
+      ## 'bearer_token_string' take priority)
+      # username = "admin"
+      # password = "d193f56081e4cd4167ba3ffb3eecba9b"
+
+      ## Specify timeout duration for slower prometheus clients (default is 3s)
+      response_timeout = "3s"
+
+      ## Optional TLS Config
+      # tls_ca = /path/to/cafile
+      # tls_cert = /path/to/certfile
+      # tls_key = /path/to/keyfile
+      ## Use TLS but skip chain & host verification
+      insecure_skip_verify = true
+
+    [[outputs.influxdb]]
+      urls = ["http://influxdb:8086"]
+      timeout = "5s"
+      content_encoding = "gzip"
+      database = "telegraf"
+      retention_policy = "monitoring"

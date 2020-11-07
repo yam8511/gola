@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegraf-conf-kube-inventory
+  namespace: monitoring
+  annotations:
+    note: 用來掛載到容器裡的預設資料夾`/etc/telegraf/`
+data:
+  telegraf.conf: |
+
+    [[inputs.kube_inventory]]
+      ## URL for the Kubernetes API
+      url = "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+
+      ## Namespace to use. Set to "" to use all namespaces.
+      namespace = ""
+
+      ## Use bearer token for authorization. ('bearer_token' takes priority)
+      # bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      ## OR
+      # bearer_token_string = "abc_123"
+
+      ## Set response_timeout (default 5 seconds)
+      # response_timeout = "5s"
+
+      ## Optional Resources to exclude from gathering
+      ## Leave them with blank with try to gather everything available.
+      ## Values can be - "daemonsets", "deployments", "nodes", "persistentvolumes",
+      ## "persistentvolumeclaims", "pods", "statefulsets"
+      # resource_exclude = [ "deployments", "nodes", "statefulsets" ]
+
+      ## Optional Resources to include when gathering
+      ## Overrides resource_exclude if both set.
+      resource_include = [
+        "pods",
+        "deployments",
+        "daemonsets",
+        "statefulsets",
+        "persistentvolumes",
+        "persistentvolumeclaims",
+        "nodes",
+      ]
+
+      ## Optional TLS Config
+      # tls_ca = "/path/to/cafile"
+      # tls_cert = "/path/to/certfile"
+      # tls_key = "/path/to/keyfile"
+      ## Use TLS but skip chain & host verification
+      insecure_skip_verify = true
+
+    [[outputs.influxdb]]
+      urls = ["http://influxdb:8086"]
+      timeout = "5s"
+      content_encoding = "gzip"
+      database = "telegraf"
+      retention_policy = "monitoring"

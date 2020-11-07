@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegraf-kube-inventory
+  namespace: monitoring
+  labels:
+    app: telegraf-kube-inventory
+    run: telegraf
+spec:
+  selector:
+    matchLabels:
+      app: telegraf-kube-inventory
+      run: telegraf
+  template:
+    metadata:
+      labels:
+        app: telegraf-kube-inventory
+        run: telegraf
+    spec:
+      serviceAccount: telegraf-kube-inventory
+      containers:
+        - name: telegraf
+          image: telegraf:1.16
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: telegraf-conf
+              mountPath: /etc/telegraf
+      volumes:
+        - name: telegraf-conf
+          configMap:
+            name: telegraf-conf-kube-inventory
