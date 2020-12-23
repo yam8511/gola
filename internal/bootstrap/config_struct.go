@@ -2,7 +2,6 @@ package bootstrap
 
 // Config 型態
 type Config struct {
-	mode      Mode         // 程序執行模式
 	App       AppConf      `mapstructure:"app"`
 	Server    ServerConf   `mapstructure:"server"`
 	Log       LogConf      `mapstructure:"log"`
@@ -40,11 +39,20 @@ type AppConf struct {
 
 // ServerConf 伺服器資訊
 type ServerConf struct {
-	IP      string `mapstructure:"ip"`       // 伺服器的IP
-	Host    string `mapstructure:"host"`     // 伺服器的Host
-	Port    int    `mapstructure:"port"`     // 伺服器的Port
-	Secure  bool   `mapstructure:"secure"`   // 是否要安全憑證
-	MaxConn int    `mapstructure:"max_conn"` // 最大連線數量
+	IP       string `mapstructure:"ip"`       // 伺服器的IP
+	Host     string `mapstructure:"host"`     // 伺服器的Host
+	Port     int    `mapstructure:"port"`     // 伺服器的Port
+	MaxConn  int    `mapstructure:"max_conn"` // 最大連線數量
+	Secure   bool   `toml:"secure"`           // 是否要安全憑證
+	TLS_Cert string `toml:"tls_cert"`         // 安全憑證Cert
+	TLS_Key  string `toml:"tls_key"`          // 安全憑證Key
+	// 1. Go 快速產生憑證
+	// go run $GOROOT/src/crypto/tls/generate_cert.go --host gola.local
+	// 2. openssl 產生憑證
+	// 產生憑證金鑰 > openssl genrsa -out [金鑰名稱.key] 2048
+	// 產生安全憑證 > openssl req -new -x509 -key [金鑰名稱.key] -out [安全憑證.pem] -days [有效天數]
+	// openssl genrsa -out key.pem 2048
+	// openssl req -new -x509 -key key.pem -out cert.pem -days 3650
 }
 
 // LogConf 紀錄Log資訊

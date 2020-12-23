@@ -1,8 +1,17 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: gola-ingress
+  annotations:
+    note: kubectl -n kube-system create secret tls gola-server-tls --key=tls.key --cert=tls.crt
+    reference: https://doc.traefik.io/traefik/v1.7/configuration/backends/kubernetes/#tls-communication-between-traefik-and-backend-pods
+    # ingress.kubernetes.io/protocol: https
 spec:
+  backend:
+    serviceName: gola-server
+    servicePort: 80
+  # tls:
+  #   - secretName: gola-server-tls
   rules:
     - http:
         paths:
@@ -10,3 +19,4 @@ spec:
             backend:
               serviceName: gola-server
               servicePort: 80
+      # host: gola.local

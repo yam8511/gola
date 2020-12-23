@@ -20,19 +20,26 @@ spec:
         app: schedule
         version: v1
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: gola-server
       containers:
         - name: gola-schedule
-          image: registry:5000/gola/web:latest
-          command:
-            - ./gola
+          image: registry:5000/gola/app:latest
           args:
             - schedule
           env:
             - name: APP_SITE
               value: schedule
+            - name: GOLA_CONFIG
+              value: /go/src/gola/config/project/server.toml
           envFrom:
             - configMapRef:
                 name: env-prod
+          volumeMounts:
+            - mountPath: /go/src/gola/config/project
+              name: config
           resources:
             limits:
               memory: "128Mi"

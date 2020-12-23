@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: dashboard
+  name: grafana-pv
+  labels:
+    run: grafana
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/grafana
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: dashboard
+  name: grafana-pvc
+  labels:
+    run: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
+  volumeName: grafana-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+  namespace: dashboard
+  annotations:
+    note_1: 如果跳通知上的網址想要可以連得到，需設定正確網址到`GF_SERVER_ROOT_URL`環境變數
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      version: latest
+  template:
+    metadata:
+      labels:
+        app: grafana
+        version: latest
+      annotations:
+        note_1: grafana's username/password = admin/admin
+    spec:
+      volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+      containers:
+        - name: grafana
+          image: grafana/grafana:7.3.1
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: admin
+            - name: GF_SERVER_ROOT_URL
+              value: http://grafana.local
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+          resources:
+            limits:
+              memory: "30Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+  namespace: dashboard
+spec:
+  ports:
+    - name: http-grafana
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: grafana

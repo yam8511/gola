@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -43,22 +44,29 @@ func GetAppRoot() string {
 	return root
 }
 
+// 取Config檔案名稱
+func GetConfigFilename() string {
+	filename := strings.TrimSpace(os.Getenv("GOLA_CONFIG"))
+	if filename == "" {
+		filename = filepath.Join(
+			GetAppRoot(),
+			"config/project",
+			GetAppEnv(),
+			GetAppSite()+".toml",
+		)
+	}
+
+	return filename
+}
+
 // GetAppConf 取專案的設定檔
 func GetAppConf() Config {
 	conf := defaultConf
 
-	if defaultVIP != nil {
-		_ = defaultVIP.Unmarshal(&conf)
+	if vip != nil {
+		_ = vip.Unmarshal(&conf)
 	}
 
-	if appVIP != nil {
-		_ = appVIP.Unmarshal(&conf)
-		conf.mode = Mode(appVIP.GetString(modeKey))
-	}
-
-	if conf.mode != ServerMode {
-		conf.mode = CommandMode
-	}
 	return conf
 }
 

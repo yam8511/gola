@@ -4,12 +4,40 @@ metadata:
   name: telegraf-conf-kubernetes
   namespace: monitoring
   annotations:
-    note: 用來掛載到容器裡的預設資料夾`/etc/telegraf/`
+    note_1: 用來掛載到容器裡的預設資料夾`/etc/telegraf/`
+    note_2: "[inputs.kubernetes]會去抓`https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/nodes/${NODE_NAME}/proxy/stats/summary`"
+    note_3: "[inputs.prometheus]會去抓`https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/nodes/${NODE_NAME}/proxy/metrics/cadvisor`"
+    note_4: "[inputs.kubernetes]與[inputs.prometheus]可擇一使用即可"
 data:
   telegraf.conf: |
 
     [agent]
-      interval = "2s"
+      interval = "15s"
+
+    [[inputs.kubernetes]]
+      url = "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/nodes/${NODE_NAME}/proxy"
+
+      ## Use bearer token for authorization. ('bearer_token' takes priority)
+      ## If both of these are empty, we'll use the default serviceaccount:
+      ## at: /run/secrets/kubernetes.io/serviceaccount/token
+      bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      ## OR
+      # bearer_token_string = "abc_123"
+
+      ## Pod labels to be added as tags.  An empty array for both include and
+      ## exclude will include all labels.
+      # label_include = []
+      # label_exclude = ["*"]
+
+      ## Set response_timeout (default 5 seconds)
+      response_timeout = "5s"
+
+      ## Optional TLS Config
+      # tls_ca = /path/to/cafile
+      # tls_cert = /path/to/certfile
+      # tls_key = /path/to/keyfile
+      ## Use TLS but skip chain & host verification
+      insecure_skip_verify = true
 
     [[inputs.prometheus]]
 
@@ -68,9 +96,12 @@ data:
       ## Use TLS but skip chain & host verification
       insecure_skip_verify = true
 
+      [inputs.prometheus.tags]
+        node_name = "${NODE_NAME}"
+
     [[outputs.influxdb]]
       urls = ["http://influxdb:8086"]
       timeout = "5s"
       content_encoding = "gzip"
       database = "telegraf"
-      retention_policy = "monitoring"
+      # retention_policy = "autogen"

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: dashboard
+spec:
+  rules:
+    - host: grafana.local
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: grafana
+              servicePort: 3000
+    - host: influx.local
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: chronograf
+              servicePort: 8888

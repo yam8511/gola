@@ -53,4 +53,4 @@ data:
       timeout = "5s"
       content_encoding = "gzip"
       database = "telegraf"
-      retention_policy = "monitoring"
+      # retention_policy = "autogen"

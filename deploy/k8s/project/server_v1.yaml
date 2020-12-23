@@ -6,6 +6,8 @@ metadata:
     repo: gola
     app: gola-server
     version: v1
+  annotations:
+    note: kubectl create secret tls gola-server-tls --key=tls.key --cert=tls.crt
 spec:
   replicas: 1
   revisionHistoryLimit: 2
@@ -28,9 +30,16 @@ spec:
         telegraf.influxdata.com/class: basic
         telegraf.influxdata.com/image: telegraf:1.16
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: gola-server
+        # - name: tls
+        #   secret:
+        #     secretName: gola-server-tls
       containers:
         - name: server
-          image: registry:5000/gola/web:latest
+          image: registry:5000/gola/app:latest
           args:
             - "server"
           env:
@@ -38,9 +47,16 @@ spec:
               value: server
             - name: VERSION
               value: v1
+            - name: GOLA_CONFIG
+              value: /go/src/gola/config/project/server.toml
           envFrom:
             - configMapRef:
                 name: env-prod
+          volumeMounts:
+            - mountPath: /go/src/gola/config/project
+              name: config
+            # - mountPath: /go/src/gola/config/tls
+            #   name: tls
           resources:
             limits:
               memory: "128Mi"
@@ -51,6 +67,9 @@ spec:
           #     port: 80
           ports:
             - containerPort: 80
+              name: http
+            # - containerPort: 443
+            #   name: https
 ---
 apiVersion: v1
 kind: Service

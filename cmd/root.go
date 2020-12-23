@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"gola/app/console"
+	"gola/cmd/supervisord"
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"os"
@@ -34,6 +35,9 @@ var rootCmd = &cobra.Command{
 	啟動伺服器，提供「狼人殺」、「犯人在跳舞」...等遊戲服務
 	亦可執行單一指令，或者執行背景排程功能
 	`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		bootstrap.LoadConfig()
+	},
 	Example: usage(),
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -51,16 +55,33 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().String("config", "", "指定配置檔")
+	rootCmd.PersistentFlags().StringP("site", "s", "", "指定專案端口")
+	rootCmd.PersistentFlags().BoolP("daemon", "d", false, "執行守護進程")
 	cobra.OnInitialize(initConfig)
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	logger.Info(fmt.Sprintf("⚙  APP_ROOT: %s", bootstrap.GetAppRoot()))
-	logger.Info(fmt.Sprintf("⚙  APP_ENV: %s", bootstrap.GetAppEnv()))
-	logger.Info(fmt.Sprintf("⚙  APP_SITE: %s", bootstrap.GetAppSite()))
+	site, err := rootCmd.PersistentFlags().GetString("site")
+	if err != nil {
+		logger.Error(err)
+	}
 
-	bootstrap.LoadConfig()
+	if site != "" {
+		os.Setenv("APP_SITE", site)
+	}
+
+	cfg, err := rootCmd.PersistentFlags().GetString("config")
+	if err != nil {
+		logger.Error(err)
+	}
+
+	if cfg != "" {
+		os.Setenv("GOLA_CONFIG", cfg)
+	}
+
+	supervisord.DaemonExec(rootCmd)
 }
 
 func program(args ...string) string {

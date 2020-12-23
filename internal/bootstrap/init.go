@@ -1,10 +1,8 @@
 package bootstrap
 
 import (
-	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -12,79 +10,45 @@ import (
 	"github.com/spf13/viper"
 )
 
-var defaultVIP *viper.Viper
-var appVIP *viper.Viper
+var vip *viper.Viper
 
 // LoadConfig 載入 config
 func LoadConfig() {
-	appRoot := GetAppRoot()
-	appEnv := GetAppEnv()
-	appSite := GetAppSite()
+	filename := GetConfigFilename()
+
+	_, err := os.Stat(filename)
+	if err != nil {
+		FatalLoad(filename, err)
+	}
 
 	replacer := strings.NewReplacer(
 		".", "_",
 		"SERVER.PORT", "PORT",
 	)
-	configDir := filepath.Join(appRoot, "config", "project", appEnv)
-	conf := defaultConf
 
-	defaultVIP = viper.New()
-	defaultVIP.AutomaticEnv()
-	defaultVIP.SetEnvKeyReplacer(replacer)
-	defaultVIP.AddConfigPath(configDir)
-	defaultVIP.SetConfigType("toml")
-	defaultVIP.SetConfigName(Default)
+	vip = viper.New()
+	vip.AutomaticEnv()
+	vip.SetEnvKeyReplacer(replacer)
+	vip.SetConfigFile(filename)
 
-	appVIP = viper.New()
-	appVIP.AutomaticEnv()
-	appVIP.SetEnvKeyReplacer(replacer)
-	appVIP.AddConfigPath(configDir)
-	appVIP.SetConfigType("toml")
-	appVIP.SetConfigName(appSite)
-
-	// 先讀取預設檔
-	if err := defaultVIP.ReadInConfig(); err == nil {
-		filename := defaultVIP.ConfigFileUsed()
-		if err := defaultVIP.Unmarshal(&conf); err != nil {
-			FatalLoad(filename, err)
-		} else {
-			log.Println(color.HiCyanString("〖 GOLA 〗[INFO] 讀取設定檔: " + filename))
-		}
-
-		defaultVIP.WatchConfig()
+	err = vip.ReadInConfig()
+	if err != nil {
+		FatalLoad(filename, err)
 	}
+	color.Cyan("載入配置檔: %s", vip.ConfigFileUsed())
+	vip.WatchConfig()
 
-	// 再讀取指定Site檔
-	if appSite != Default {
-		if err := appVIP.ReadInConfig(); err == nil {
-			filename := appVIP.ConfigFileUsed()
-			if err := appVIP.Unmarshal(&conf); err != nil {
-				filename := appVIP.ConfigFileUsed()
-				FatalLoad(filename, err)
-			} else {
-				log.Println(color.HiCyanString("〖 GOLA 〗[INFO] 讀取設定檔: " + filename))
-			}
-
-			appVIP.WatchConfig()
-		}
-	}
-
-	appVIP.Set("app.site", appSite)
-	appVIP.SetDefault("bot.token", conf.Bot.Token)
-	appVIP.SetDefault("bot.chat_id", conf.Bot.ChatID)
-	appVIP.SetDefault("bot.debug", conf.Bot.Debug)
+	vip.Set("app.site", GetAppSite())
 }
 
 // SetRunMode 執行模式
-func SetRunMode(mode Mode) {
-	if appVIP != nil {
-		appVIP.Set(modeKey, mode)
-	}
+func SetRunMode(m Mode) {
+	mode = m
 }
 
 // RunMode 目前執行模式
 func RunMode() Mode {
-	return GetAppConf().mode
+	return mode
 }
 
 var sig chan os.Signal

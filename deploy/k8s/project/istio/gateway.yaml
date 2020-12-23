@@ -6,12 +6,20 @@ spec:
   selector:
     istio: ingressgateway # use istio default controller
   servers:
-    - port:
+    - hosts:
+        - "*"
+      port:
         number: 80 # 對應 LoadBalancer 的 80 Port
         name: http
         protocol: HTTP
-      hosts:
-        - "*"
+    # - hosts:
+    #     - gola.local
+    #   port:
+    #     number: 443
+    #     name: https
+    #     protocol: HTTPS
+    #   tls:
+    #     mode: PASSTHROUGH
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -20,10 +28,12 @@ metadata:
 spec:
   hosts:
     - "*"
+    # - gola.local
   gateways:
     - gola-gateway
   http:
     - match:
+        # - port: 443
         - uri:
             prefix: /
       route:
@@ -32,6 +42,7 @@ spec:
             subset: v1
             port:
               number: 80
+              # number: 443
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule

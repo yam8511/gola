@@ -1,11 +1,17 @@
 version: "3"
 
 services:
+    local:
+        build:
+            context: .
+            dockerfile: ./docker/local.Dockerfile
+        image: localhost:5000/gola/app:latest
+
     # 網站服務
     web:
         build:
             context: .
-            dockerfile: ./docker/Dockerfile
+            dockerfile: ./docker/heroku.Dockerfile
             args:
                 - ENTER=server
                 - BOT_TOKEN=${BOT_TOKEN}
@@ -27,12 +33,12 @@ services:
     cronjob:
         build:
             context: .
-            dockerfile: ./docker/Dockerfile
+            dockerfile: ./docker/heroku.Dockerfile
             args:
                 - ENTER=schedule
                 - BOT_TOKEN=${BOT_TOKEN}
                 - BOT_CHAT_ID=${BOT_CHAT_ID}
-        image: localhost:5000/gola/web:latest
+        image: localhost:5000/gola/cronjob:latest
         command: schedule
         restart: always
         environment:

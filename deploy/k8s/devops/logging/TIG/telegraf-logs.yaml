@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: telegraf-logs
+  namespace: logging
+  labels:
+    app: telegraf-logs
+    run: telegraf
+spec:
+  selector:
+    matchLabels:
+      app: telegraf-logs
+      run: telegraf
+  template:
+    metadata:
+      labels:
+        app: telegraf-logs
+        run: telegraf
+    spec:
+      # serviceAccount: telegraf-logs
+
+      containers:
+        - name: telegraf
+          image: telegraf:1.16
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: telegraf-conf
+              mountPath: /etc/telegraf
+            - name: container-logs
+              mountPath: /var/log/containers
+              readOnly: true
+            - name: pod-logs
+              mountPath: /var/log/pods
+              readOnly: true
+      volumes:
+        - name: telegraf-conf
+          configMap:
+            name: telegraf-conf-logs
+        - name: container-logs
+          hostPath:
+            path: /var/log/containers
+        - name: pod-logs
+          hostPath:
+            path: /var/log/pods

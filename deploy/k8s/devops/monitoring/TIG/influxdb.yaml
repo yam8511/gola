@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: monitoring
+  name: influx-pv
+  labels:
+    run: influx
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/influx
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: monitoring
+  name: influx-pvc
+  labels:
+    run: influx
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  volumeName: influx-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  labels:
+    app: influxdb
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+      version: latest
+  template:
+    metadata:
+      labels:
+        app: influxdb
+        version: latest
+    spec:
+      volumes:
+        - name: influx-storage
+          persistentVolumeClaim:
+            claimName: influx-pvc
+      containers:
+        - name: influxdb
+          image: influxdb:1.8
+          volumeMounts:
+            - name: influx-storage
+              mountPath: /var/lib/influxdb
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  labels:
+    app: influxdb
+  namespace: monitoring
+spec:
+  ports:
+    - name: http-influxdb
+      port: 8086
+  selector:
+    app: influxdb
