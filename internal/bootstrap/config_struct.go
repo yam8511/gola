@@ -59,6 +59,7 @@ type ServerConf struct {
 type LogConf struct {
 	Mode   string `mapstructure:"mode"`   // Log紀錄模式： std, file, std+file
 	Prefix string `mapstructure:"prefix"` // Log前綴
+	Format string `mapstructure:"format"` // Log格式
 }
 
 // DatabaseConf 資料庫設定

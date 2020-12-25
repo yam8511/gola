@@ -1,14 +1,7 @@
 package logger
 
 import (
-	"gola/internal/bootstrap"
-	"io"
-	"log"
-	"os"
-	"path/filepath"
-	"time"
-
-	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 )
 
 type level string
@@ -49,79 +42,16 @@ func Error(err error) {
 }
 
 func writeLog(t level, text string, v ...interface{}) {
-	conf := bootstrap.GetAppConf()
-	var colorFmt *color.Color
 	switch t {
 	case levelInfo:
-		text = "[INFO]   " + text
-		colorFmt = color.New(color.FgHiBlue)
+		logrus.WithField("lvl", levelInfo).Infof(text, v...)
 	case levelSuccess:
-		text = "[OK]     " + text
-		colorFmt = color.New(color.FgHiGreen)
+		logrus.WithField("lvl", levelSuccess).Infof(text, v...)
 	case levelWarn:
-		text = "[WARN]   " + text
-		colorFmt = color.New(color.FgHiYellow)
+		logrus.WithField("lvl", levelWarn).Warnf(text, v...)
 	case levelDanger:
-		text = "[DANGER] " + text
-		colorFmt = color.New(color.FgHiRed)
+		logrus.WithField("lvl", levelDanger).Errorf(text, v...)
 	case levelError:
-		text = "[ERROR]  " + text
-		colorFmt = color.New(color.BgHiRed, color.FgHiWhite)
+		logrus.WithField("lvl", levelError).Errorf(text, v...)
 	}
-
-	createLogFile := func() (io.WriteCloser, error) {
-		name := conf.App.Name
-		if name == "" {
-			name = "default"
-		}
-		name += ".log"
-		now := time.Now()
-		filename := bootstrap.GetAppRoot() + now.Format("/storage/logs/2006-01-02/15/") + name
-
-	CREATE:
-		f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
-		if err != nil {
-			if os.IsNotExist(err) {
-				//建立資料夾
-				err := os.MkdirAll(filepath.Dir(filename), 0777)
-				if err != nil {
-					log.Fatal("ERROR", "CreateFile: 建立相關資料夾錯誤, "+err.Error())
-				}
-				goto CREATE
-			}
-			return nil, err
-		}
-		return f, nil
-	}
-
-	prefix := conf.Log.Prefix
-	if prefix == "" {
-		prefix = "GOLA"
-	}
-
-	if conf.App.Site == "" {
-		prefix = "〖 " + prefix + " 〗"
-	} else {
-		prefix = "〖 " + prefix + " | " + conf.App.Site + " 〗"
-	}
-
-	if conf.Log.Mode == "file" || conf.Log.Mode == "std+file" {
-		w, err := createLogFile()
-		logger := log.New(w, prefix, log.LstdFlags|log.Lmsgprefix)
-		if err == nil {
-			colorFmt.DisableColor()
-			logger.Println(colorFmt.Sprintf(text, v...))
-			w.Close()
-
-			if conf.Log.Mode == "file" {
-				return
-			}
-		} else {
-			color.Yellow("[WARN]   因為打開Log檔失敗，所以直接顯示在stdout")
-		}
-	}
-
-	prefix = time.Now().Format("2006-01-02 15:04:05 ") + prefix
-	colorFmt.EnableColor()
-	colorFmt.Printf(prefix+text+"\n", v...)
 }

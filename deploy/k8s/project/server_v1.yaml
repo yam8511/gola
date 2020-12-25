@@ -53,8 +53,8 @@ spec:
             - configMapRef:
                 name: env-prod
           volumeMounts:
-            - mountPath: /go/src/gola/config/project
-              name: config
+            - name: config
+              mountPath: /go/src/gola/config/project
             # - mountPath: /go/src/gola/config/tls
             #   name: tls
           resources:

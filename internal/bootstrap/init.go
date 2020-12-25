@@ -6,7 +6,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -35,10 +35,11 @@ func LoadConfig() {
 	if err != nil {
 		FatalLoad(filename, err)
 	}
-	color.Cyan("載入配置檔: %s", vip.ConfigFileUsed())
+	// vip.Set("app.site", GetAppSite())
 	vip.WatchConfig()
 
-	vip.Set("app.site", GetAppSite())
+	resetLogger()
+	logrus.Infof("載入配置檔: %s", vip.ConfigFileUsed())
 }
 
 // SetRunMode 執行模式

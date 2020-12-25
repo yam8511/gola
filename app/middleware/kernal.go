@@ -4,8 +4,10 @@ import (
 	"gola/internal/bootstrap"
 	"gola/internal/logger"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var m = struct {
@@ -22,7 +24,30 @@ func setupMiddlewares() {
 		gin.Recovery(),
 	}
 	if bootstrap.GetAppConf().App.Debug {
-		m.globalMiddlewares = append(m.globalMiddlewares, gin.Logger())
+		formatter := func(param gin.LogFormatterParams) string {
+			if param.Latency > time.Minute {
+				// Truncate in a golang < 1.8 safe way
+				param.Latency = param.Latency - param.Latency%time.Second
+			}
+
+			if param.ErrorMessage == "" {
+				param.ErrorMessage = "nil"
+			}
+
+			logrus.WithFields(logrus.Fields{
+				// "req_time":  param.Keys["request_time"].(time.Time).Format(time.RFC3339Nano),
+				// "res_time":  param.TimeStamp.Format(time.RFC3339Nano),
+				"ip":        param.ClientIP,
+				"execution": param.Latency,
+				"status":    param.StatusCode,
+				"path":      param.Path,
+				"method":    param.Method,
+				"error":     param.ErrorMessage,
+			}).Infof("[GOLA-Request] %s", param.TimeStamp.Format(time.RFC3339Nano))
+			return ""
+		}
+
+		m.globalMiddlewares = append(m.globalMiddlewares, gin.LoggerWithFormatter(formatter))
 	}
 
 	// 中介層群組
