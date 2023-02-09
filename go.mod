@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/fatih/color v1.9.0
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
-	github.com/gin-gonic/gin v1.5.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.1.1
